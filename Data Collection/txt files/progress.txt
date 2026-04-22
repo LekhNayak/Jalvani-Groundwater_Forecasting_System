@@ -1,0 +1,31 @@
+Akola
+Amravati
+Aurangabad
+Beed
+Bhandara
+Chandrapur
+Dhule
+Gadchiroli
+Gondia
+Hingoli
+Jalgaon
+Jalna
+Kolhapur
+Mumbai City
+Mumbai Suburban
+Nagpur
+Nanded
+Nandurbar
+Nashik
+Osmanabad
+Parbhani
+Pune
+Raigad
+Ratnagiri
+Sangli
+Satara
+Solapur
+Thane
+Wardha
+Washim
+Yavatmal
