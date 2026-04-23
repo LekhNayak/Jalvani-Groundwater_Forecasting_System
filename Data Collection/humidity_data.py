@@ -2,10 +2,11 @@ import requests
 import pandas as pd
 import time
 import logging
+import urllib.parse
 from pathlib import Path
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
-BASE_URL   = "https://indiawris.gov.in/Dataset/Relative Humidity"
+BASE_URL   = "https://indiawris.gov.in/Dataset/" + urllib.parse.quote("Relative Humidity")
 STATE      = "Maharashtra"
 AGENCY     = "CWC"
 START_DATE = "2023-01-01"
@@ -216,7 +217,34 @@ def print_summary(total_fetched: int):
         log.info("Validation                     : No issues [OK]")
 
 # ─── MAIN ──────────────────────────────────────────────────────────────────────
+def probe():
+    """Fetch 1 record from Pune to verify URL + agency are correct before full run."""
+    log.info(f"Probing API ... URL: {BASE_URL}")
+    params = {
+        "stateName": STATE, "districtName": "Pune", "agencyName": AGENCY,
+        "startdate": START_DATE, "enddate": "2023-01-07",
+        "download": "false", "page": 0, "size": 1,
+    }
+    try:
+        r = requests.post(BASE_URL, params=params, headers=HEADERS, timeout=30)
+        log.info(f"  HTTP {r.status_code} | body: {r.text[:300]}")
+        body = r.json()
+        if body.get("data"):
+            log.info("  Probe OK — API is reachable and returning data.")
+            return True
+        else:
+            log.error(f"  Probe FAILED — no data. message: {body.get('message')}")
+            return False
+    except Exception as e:
+        log.error(f"  Probe FAILED — exception: {e}")
+        return False
+
+
 def main():
+    if not probe():
+        log.error("Aborting — fix the URL or agency before running the full fetch.")
+        return
+
     done      = load_done()
     remaining = [d for d in DISTRICTS if d not in done]
 
