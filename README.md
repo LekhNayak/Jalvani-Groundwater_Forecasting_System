@@ -42,7 +42,7 @@ Every dataset collected maps to one of these three forces. The model's job is to
 - `rainfall_mm` on day D does not recharge groundwater on day D. The percolation lag is 3–21 days depending on soil depth and aquifer type. This is why `rainfall_7d` and `rainfall_30d` are more powerful features than the raw daily value.
 - A single 100mm rain event is very different from 100mm spread over 30 days — rolling windows capture this distinction.
 - **Monsoon arithmetic:** Maharashtra's primary recharge window is June–September. If June–August rainfall is below average, GWL in October–December will be depressed regardless of September rainfall. The `rainfall_30d` feature carries this seasonal memory.
-- **District-specific infiltration:** Sandy soils (Akola, Amravati, Buldhana) infiltrate faster than black cotton soil dominant in Vidarbha. The model learns this from district identity once it has seen sufficient training data.
+- **District-specific infiltration:** Infiltration rate varies significantly across Maharashtra — sandy soils in eastern districts (Akola, Amravati, Buldhana) behave very differently from the black cotton (Vertisol) soils dominant in Vidarbha and Marathwada. This dataset does not include explicit soil type data. The district embedding implicitly absorbs these fixed district-level soil characteristics from the GWL response patterns seen in training data, but it is not a substitute for actual soil texture features. See note below on adding ISRIC SoilGrids data to make this explicit.
 
 **What the model learns:** A function like — "if 30-day cumulative rainfall in Nashik exceeds 150mm AND soil moisture is already above 0.3, expect GWL to rise ~0.8m over the next 14 days."
 
@@ -171,6 +171,22 @@ Every dataset collected maps to one of these three forces. The model's job is to
 - VH backscatter tracks soil moisture independent of cloud cover.
 - VH/VV ratio in July–August tells the model "soil is saturated in Pune district this week" → expect GWL rise in 7–14 days.
 - In drier months, SAR serves as a second, independent soil moisture estimate alongside the WRIS soil moisture data.
+
+---
+
+## 2.10 Data Gaps & Recommended Additions
+
+The following features are referenced in the methodology but are **not currently collected**. Adding them would strengthen the model significantly.
+
+| Feature | Why it matters | Source |
+|---------|---------------|--------|
+| **Soil texture** (sand %, clay %, silt %) | Controls infiltration rate — the single biggest factor determining how much rainfall reaches the aquifer. Currently approximated by district embedding. | ISRIC SoilGrids (250m, global, free) — spatial mean over district polygon via GEE, same method as Sentinel indices |
+| **Hydraulic conductivity** | Directly governs how fast water moves through the unsaturated zone to the water table | ISRIC SoilGrids (`hcc` layer) |
+| **Aquifer type per station** (alluvial vs. hard rock basalt) | Hard rock aquifers (most of Deccan Plateau) behave very differently from alluvial aquifers — much lower storage, faster response to pumping | CGWB district aquifer maps (available as PDFs; would need manual digitisation per district) |
+| **Crop area by type per district** (irrigated vs. rainfed, crop species) | NDVI encodes vegetation greenness but cannot distinguish irrigated wheat from a forest. Explicit crop-type area gives the model a direct pumping demand estimate. | ICRISAT Village Dynamics in South Asia (VDSA) or Kharif/Rabi crop area reports from Maharashtra Agriculture Dept |
+| **Reservoir storage levels** (Jayakwadi, Ujani, Koyna, etc.) | NDWI detects surface water presence but not volume. Reservoir storage directly drives lateral recharge downstream. | India WRIS reservoir data (same API, different endpoint) |
+
+> **Priority recommendation:** Add ISRIC SoilGrids sand fraction and clay fraction via GEE. It takes one script similar to `sentinel_indices.py`, gives explicit soil texture per district, and directly addresses the largest gap in the current feature set.
 
 ---
 
