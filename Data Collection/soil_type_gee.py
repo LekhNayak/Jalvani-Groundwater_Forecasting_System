@@ -32,7 +32,7 @@ import ee
 import pandas as pd
 from pathlib import Path
 
-ee.Initialize()
+ee.Initialize(project="major-project-495508")
 
 Path("datasets").mkdir(exist_ok=True)
 OUTPUT = Path("datasets/soil_texture_maharashtra.csv")
