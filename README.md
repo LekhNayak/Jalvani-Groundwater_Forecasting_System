@@ -158,7 +158,25 @@ Every dataset collected maps to one of these three forces. The model's job is to
 
 ---
 
-### 2.9 Sentinel-1 VV/VH SAR Backscatter → All-Weather Soil Moisture
+### 2.9 Soil Texture (Sand / Clay / Silt %) → Infiltration Rate per District
+
+**Causal chain:**
+> Soil texture determines how fast water moves through the unsaturated zone. Sandy soils drain quickly → fast but small recharge pulses. Clay-heavy soils (black cotton Vertisols of Marathwada) hold water longer → slower percolation but sustained recharge.
+
+**Why it matters:**
+- The single largest fixed factor controlling how much of any rainfall actually reaches the aquifer. Without it, the model cannot distinguish between equally rainy districts that have very different recharge rates.
+- Explicitly resolves what the district embedding was previously forced to approximate: soil-driven infiltration capacity.
+- Static feature — collected once per district, reused across all model training.
+
+**Data collected:** Sand %, clay %, silt % at depths 0 cm, 10 cm, 30 cm for all 36 districts.
+
+**Primary source:** OpenLandMap SoilGrids assets in Google Earth Engine (`soil_type_gee.py`) — full raster coverage over Maharashtra, spatially aggregated to district mean at 250 m resolution.
+
+**Fallback source:** ISRIC SoilGrids REST API (`soil_type_api.py`) — point query at district centroids, no GEE required.
+
+---
+
+### 2.10 Sentinel-1 VV/VH SAR Backscatter → All-Weather Soil Moisture
 
 **Why this matters:**
 > Sentinel-2 (NDVI/NDWI/NDMI) goes blind during monsoon due to cloud cover. June–September is the most critical recharge period. Without SAR, there is no satellite signal during the most important months of the year.
@@ -174,19 +192,18 @@ Every dataset collected maps to one of these three forces. The model's job is to
 
 ---
 
-## 2.10 Data Gaps & Recommended Additions
+## 2.11 Data Gaps & Recommended Additions
 
 The following features are referenced in the methodology but are **not currently collected**. Adding them would strengthen the model significantly.
 
 | Feature | Why it matters | Source |
 |---------|---------------|--------|
-| **Soil texture** (sand %, clay %, silt %) | Controls infiltration rate — the single biggest factor determining how much rainfall reaches the aquifer. Currently approximated by district embedding. | ISRIC SoilGrids (250m, global, free) — spatial mean over district polygon via GEE, same method as Sentinel indices |
-| **Hydraulic conductivity** | Directly governs how fast water moves through the unsaturated zone to the water table | ISRIC SoilGrids (`hcc` layer) |
+| **Hydraulic conductivity** | Directly governs how fast water moves through the unsaturated zone to the water table | ISRIC SoilGrids (`hcc` layer) via GEE |
 | **Aquifer type per station** (alluvial vs. hard rock basalt) | Hard rock aquifers (most of Deccan Plateau) behave very differently from alluvial aquifers — much lower storage, faster response to pumping | CGWB district aquifer maps (available as PDFs; would need manual digitisation per district) |
 | **Crop area by type per district** (irrigated vs. rainfed, crop species) | NDVI encodes vegetation greenness but cannot distinguish irrigated wheat from a forest. Explicit crop-type area gives the model a direct pumping demand estimate. | ICRISAT Village Dynamics in South Asia (VDSA) or Kharif/Rabi crop area reports from Maharashtra Agriculture Dept |
 | **Reservoir storage levels** (Jayakwadi, Ujani, Koyna, etc.) | NDWI detects surface water presence but not volume. Reservoir storage directly drives lateral recharge downstream. | India WRIS reservoir data (same API, different endpoint) |
 
-> **Priority recommendation:** Add ISRIC SoilGrids sand fraction and clay fraction via GEE. It takes one script similar to `sentinel_indices.py`, gives explicit soil texture per district, and directly addresses the largest gap in the current feature set.
+> **Note:** Soil texture (sand %, clay %, silt %) has been added as dataset #9 via `soil_type_gee.py` and is no longer a gap.
 
 ---
 
@@ -327,6 +344,9 @@ INPUT LAYER
 
   Static (fixed per district):
     district_id → learned embedding (dim=16)
+    sand_0cm, clay_0cm, silt_0cm       (soil texture at surface)
+    sand_10cm, clay_10cm, silt_10cm    (soil texture at root zone)
+    sand_30cm, clay_30cm, silt_30cm    (soil texture at deeper zone)
 
   Time-varying KNOWN (future values available at inference time):
     month, season (one-hot)
@@ -568,9 +588,12 @@ MajorProject-Jalvani/
 │   ├── CWC_Rainfall.py              # CWC rainfall from India WRIS
 │   ├── ET_data.py                   # NRSC ET from India WRIS
 │   ├── soil_moisture_data.py        # NRSC soil moisture from India WRIS
-│   ├── humidity_data.py             # CWC humidity from India WRIS (superseded)
-│   ├── temperature_openmeteo.py     # ERA5 temp + humidity from Open-Meteo
+│   ├── temperature_openmeteo.py     # ERA5 temp + humidity from Open-Meteo (primary)
+│   ├── temperature_data.py          # CWC temperature from India WRIS (superseded by Open-Meteo)
+│   ├── humidity_data.py             # CWC humidity from India WRIS (superseded by Open-Meteo)
 │   ├── sentinel_indices.py          # Sentinel-1 and Sentinel-2 from GEE
+│   ├── soil_type_gee.py             # Soil texture (sand/clay/silt) via OpenLandMap in GEE (primary)
+│   ├── soil_type_api.py             # Soil texture via ISRIC SoilGrids REST API (fallback, no GEE needed)
 │   └── txt files/                   # Per-dataset progress tracking files
 │
 ├── Data Preprocessing/
@@ -604,6 +627,9 @@ python ET_data.py
 python soil_moisture_data.py
 python temperature_openmeteo.py
 python sentinel_indices.py          # requires: earthengine authenticate
+python soil_type_gee.py             # requires: earthengine authenticate + registered GCP project
+# fallback if GEE unavailable:
+# python soil_type_api.py           # uses ISRIC REST API, no GEE needed
 
 # ── Step 2: Data Preprocessing (run from Data Preprocessing/) ──────────
 python extract_station_geojson.py   # optional — exports station map

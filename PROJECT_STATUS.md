@@ -25,10 +25,11 @@
 | 2 | **Rainfall** | Twice-daily per station (08:30 & 17:30) | 2023–2025 | CWC via India WRIS |
 | 3 | **Evapotranspiration (ET)** | Daily per district | 2023–2025 | NRSC VIC MODEL via India WRIS |
 | 4 | **Soil Moisture** | Daily per district | 2023–2025 | NRSC VIC MODEL via India WRIS |
-| 5 | **Relative Humidity** | Sub-daily per station | 2023–2025 | CWC via India WRIS |
+| 5 | **Relative Humidity** | Sub-daily per station | 2023–2025 | CWC via India WRIS (superseded by #6) |
 | 6 | **Temperature + Humidity (ERA5)** | Daily per district centroid | 2023–2025-04-22 | Open-Meteo Historical Archive |
 | 7 | **Sentinel-2 Indices** (NDVI, NDWI, NDMI) | Monthly per district | 2023–2025 | Google Earth Engine (Copernicus S2) |
 | 8 | **Sentinel-1 SAR Backscatter** (VV, VH) | Monthly per district | 2023–2025 | Google Earth Engine (Copernicus S1) |
+| 9 | **Soil Texture** (sand %, clay %, silt %) | Static per district (3 depths) | — | OpenLandMap/SoilGrids via GEE (primary) · ISRIC REST API (fallback) |
 
 ### Why Open-Meteo for Temperature instead of WRIS?
 WRIS temperature/humidity comes from sparse CWC gauge stations with coverage gaps. Open-Meteo provides ERA5 reanalysis data — continuous daily values at every district centroid, no missing days, no station gaps. It also returns relative humidity in the same call, so it replaces the WRIS humidity dataset as well.
@@ -60,6 +61,23 @@ Sentinel-2 is optical — it fails during heavy monsoon cloud cover. Sentinel-1 
 - **Timezone:** Asia/Kolkata
 - **Coordinates:** District centroids (hardcoded lat/lon for all 36 districts)
 - **No API key required**
+
+### ISRIC SoilGrids / OpenLandMap (Soil Texture)
+- **Primary script:** `soil_type_gee.py` — uses OpenLandMap GEE assets
+  - Assets: `OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02`, `SOL_CLAY-WFRACTION_USDA-3A1A1A_M/v02`
+  - Depths: 0 cm, 10 cm, 30 cm (bands `b0`, `b10`, `b30`)
+  - Silt derived as `100 − sand − clay` (no separate asset)
+  - Spatial aggregation: mean reducer at 250 m over district geometry (FAO GAUL Level-2)
+  - Requires: `earthengine authenticate` + GCP project registered for Earth Engine
+- **Fallback script:** `soil_type_api.py` — uses ISRIC SoilGrids REST API
+  - Base URL: `https://rest.isric.org/soilgrids/v2.0/properties/query`
+  - Method: GET with `lat`, `lon`, `property`, `depth` params
+  - Depths: 0-5 cm, 5-15 cm, 15-30 cm
+  - Point query at district centroid (same coordinates as `temperature_openmeteo.py`)
+  - Values returned in g/kg — converted to % by dividing by 10
+  - No API key or GEE required; rate-limited with retry backoff
+- **Output:** `datasets/soil_texture_maharashtra.csv`
+- **Static dataset** — run once, reuse for all training
 
 ### Google Earth Engine
 - **Sentinel-2:** `COPERNICUS/S2_SR_HARMONIZED` — harmonised surface reflectance
@@ -202,6 +220,7 @@ Extracted unique groundwater station metadata to a GeoJSON FeatureCollection for
 | `unclean datasets/temperature_humidity_maharashtra_23_25.csv` | ERA5 temperature & humidity from Open-Meteo (already clean) |
 | `datasets/sentinel2_indices_maharashtra_23_25.csv` | Monthly NDVI, NDWI, NDMI per district from GEE |
 | `datasets/sentinel1_backscatter_maharashtra_23_25.csv` | Monthly VV, VH, VH/VV per district from GEE |
+| `datasets/soil_texture_maharashtra.csv` | Static sand %, clay %, silt % per district at 3 depths (OpenLandMap/GEE or ISRIC API) |
 
 ### Clean / Processed
 | File | Contents |
@@ -226,6 +245,8 @@ python ET_data.py
 python soil_moisture_data.py
 python temperature_openmeteo.py
 python sentinel_indices.py          # requires GEE authentication
+python soil_type_gee.py             # requires GEE + registered GCP project
+# python soil_type_api.py           # fallback: ISRIC REST API, no GEE needed
 
 # Step 2 — Data Preprocessing (run from Data Preprocessing/)
 python extract_station_geojson.py   # exports station map (optional)
