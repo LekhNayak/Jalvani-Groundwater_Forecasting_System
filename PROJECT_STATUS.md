@@ -1,6 +1,6 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-13
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2025-04-22
 **Geography:** All 36 districts of Maharashtra
@@ -257,3 +257,178 @@ python merge_master.py              # must run last
 ```
 
 All collection scripts are resumable — they track completed districts in `txt files/*.txt` and skip already-fetched districts on re-run.
+
+---
+
+## 7. Model Training — Phase 1 Baselines (COMPLETE)
+
+All baseline models have been trained and evaluated. Outputs live in `Models/baselines/outputs/`.
+
+### 7.1 t+1 Next-Day Prediction Baselines
+
+Run notebooks `01_arima_sarima.ipynb`, `02_xgboost_baseline.ipynb`, `03_lstm_baseline.ipynb`, `04_evaluate_baselines.ipynb`.
+
+| Model | Val RMSE | Val MAE | Test RMSE | Test MAE | Test MAPE |
+|-------|----------|---------|-----------|----------|-----------|
+| SARIMA | 90.8492m* | 18.2621m | 3.6335m | 1.8725m | 16.22% |
+| XGBoost | 0.5566m | 0.1957m | 1.6818m | 0.4616m | 2.43% |
+| LSTM | 1.4465m | 0.7060m | 2.7346m | 1.0636m | 8.91% |
+
+*SARIMA val RMSE is inflated due to rolling-window refit instability on 5 districts.
+
+**Key finding:** XGBoost dominates at t+1 with test RMSE of 1.68m and MAPE of only 2.43%. LSTM is competitive at 2.73m. This is the floor to beat.
+
+### 7.2 Multi-Horizon Forecasting (t+7, t+14, t+30)
+
+Run notebooks `05_arima_multihorizon.ipynb`, `06_xgboost_multihorizon.ipynb`, `07_lstm_multihorizon.ipynb`, `08_evaluate_multihorizon.ipynb`.
+
+Method: **direct h-step forecasting** — a separate model trained per horizon, target = `gwl_mean` shifted -h days per district. No recursive error compounding.
+
+#### Test Set RMSE by Model and Horizon
+
+| Model | t+7 RMSE | t+14 RMSE | t+30 RMSE |
+|-------|----------|-----------|-----------|
+| ARIMA(7,1,1) | 4.9449m | 5.1334m | 5.0997m |
+| XGBoost | 3.9210m | 4.5080m | 5.2570m |
+| **LSTM** | **3.2685m** | **4.1763m** | **3.5448m** |
+
+#### Test Set MAE by Model and Horizon
+
+| Model | t+7 MAE | t+14 MAE | t+30 MAE |
+|-------|---------|----------|----------|
+| ARIMA | 2.0134m | 2.2075m | 2.4836m |
+| XGBoost | 1.5551m | 1.8697m | 2.2199m |
+| **LSTM** | 1.6505m | **1.9935m** | **1.8007m** |
+
+#### Key Findings
+
+1. **LSTM beats XGBoost at all 3 horizons** on RMSE. The gap widens dramatically at t+30: LSTM 3.54m vs XGBoost 5.26m (33% better). This confirms that sequential memory is essential for medium-range forecasting and justifies the move to TFT.
+
+2. **XGBoost degrades badly at long horizons** (RMSE: 3.92 → 4.51 → 5.26) because it cannot leverage temporal ordering — at t+30 the autoregressive lag features become stale and it has no mechanism to learn how environmental signals compound over time.
+
+3. **ARIMA is surprisingly robust** (RMSE barely changes 4.94 → 5.10 → 5.10) but consistently worse than ML models. It captures the mean-reversion trend but misses non-linear seasonality.
+
+4. **LSTM t+30 RMSE (3.54m) is better than LSTM t+14 (4.18m)** — non-monotonic. Likely explanation: at 30 days the model learns monsoon onset as a strong periodic signal whereas the 14-day window sits in an intermediate regime with less clear structure.
+
+#### SHAP Feature Importance Evolution (XGBoost)
+
+SHAP values reveal HOW models use features as horizon grows — the scientific justification for TFT's Variable Selection Networks.
+
+| Feature Group | t+7 contribution | t+14 contribution | t+30 contribution |
+|--------------|-----------------|------------------|------------------|
+| gwl_lag_7 | 6.59 (dominant) | 6.64 (dominant) | 6.10 (dominant but decreasing) |
+| gwl_lag_14 | 2.25 | 2.04 | 1.78 |
+| gwl_lag_30 | 0.46 | 0.55 | 0.78 ↑ |
+| soil_moisture | 0.14 | 0.20 ↑ | 0.26 ↑ |
+| is_monsoon | ~0.03 | 0.19 ↑ | 0.46 ↑↑ |
+| day_of_year | 0.08 | 0.18 ↑ | 0.50 ↑↑ |
+| rainfall_30d | 0.14 | 0.06 | 0.20 ↑ |
+
+**Pattern:** At t+7, autoregressive lags (gwl_lag_7) account for ~90% of predictive signal. By t+30, seasonal context features (`day_of_year`, `is_monsoon`) and slow-moving environmental variables (`soil_moisture`, `gwl_lag_30`) gain material importance. This means the model needs a mechanism to selectively weight features per horizon — exactly what TFT's Variable Selection Networks provide.
+
+#### Per-District Test RMSE at t+7
+
+| District | ARIMA | LSTM | XGBoost |
+|----------|-------|------|---------|
+| Dhule | 15.47m | 10.72m | 11.51m |
+| Jalgaon | 14.99m | 9.07m | 11.20m |
+| Nashik | 5.88m | 3.37m | 3.86m |
+| Nandurbar | 5.10m | 2.52m | 2.68m |
+| Aurangabad | 3.26m | 1.93m | 2.25m |
+| Raigad | 0.19m | 0.71m | — |
+| Wardha | 0.27m | 1.03m | 0.16m |
+| Pune | 0.32m | 1.23m | 0.34m |
+
+Dhule and Jalgaon have extremely high errors (RMSE >10m) across all models — these districts have deep aquifer systems with high GWL variability. A spatial graph (GAT) that can propagate information from neighbouring stable districts is expected to improve these the most.
+
+### 7.3 Model Output Files
+
+| File | Contents |
+|------|----------|
+| `outputs/arima_predictions.csv` | t+1 ARIMA predictions (all districts) |
+| `outputs/xgboost_predictions.csv` | t+1 XGBoost predictions |
+| `outputs/lstm_predictions.csv` | t+1 LSTM predictions |
+| `outputs/comparison_summary.csv` | t+1 aggregate metrics (all models) |
+| `outputs/comparison_per_district.csv` | t+1 per-district metrics |
+| `outputs/arima_multihorizon_t{7,14,30}.csv` | Multi-horizon ARIMA predictions |
+| `outputs/xgboost_multihorizon_t{7,14,30}.csv` | Multi-horizon XGBoost predictions |
+| `outputs/lstm_multihorizon_t{7,14,30}.csv` | Multi-horizon LSTM predictions |
+| `outputs/xgboost_shap_t{7,14,30}.csv` | Per-feature SHAP values for each horizon |
+| `outputs/multihorizon_summary.csv` | Aggregate RMSE/MAE/MAPE all models × all horizons |
+| `outputs/multihorizon_per_district.csv` | Per-district RMSE at t+7 (all models) |
+| `outputs/lstm_multihorizon_t{7,14,30}.pt` | Saved LSTM weights |
+
+---
+
+## 8. Feature Engineering Assessment
+
+### Current Feature Set (master_dataset.csv — 36 columns)
+
+| Category | Features | Count |
+|----------|----------|-------|
+| Identity | district, district_id, date | 3 |
+| Groundwater (target+context) | gwl_mean, gwl_min, gwl_max, station_count | 4 |
+| GWL lags | gwl_lag_7, gwl_lag_14, gwl_lag_30 | 3 |
+| GWL trend | gwl_7d_change, gwl_30d_change | 2 |
+| Rainfall | rainfall_mm, rainfall_7d, rainfall_30d | 3 |
+| Environmental | et_mm, soil_moisture, net_water_balance | 3 |
+| Temperature/Humidity | temp_max, temp_min, temp_mean, humidity_mean, vpd_approx | 5 |
+| Calendar | month, season, is_monsoon, day_of_year | 4 |
+| Soil texture (static) | sand/clay/silt at 0cm, 10cm, 30cm | 9 |
+
+**Total: 36 columns — sufficient for TFT Phase 2.**
+
+### Missing Features (Deferred to TFT Phase 2)
+
+| Feature | Source | Why Deferred |
+|---------|--------|--------------|
+| NDVI, NDWI, NDMI | Sentinel-2 (GEE) | Files not yet collected |
+| VV, VH backscatter | Sentinel-1 (GEE) | Files not yet collected |
+
+**Status:** `Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv` and `sentinel1_backscatter_maharashtra_23_25.csv` do **not** exist. GEE batch export or Microsoft Planetary Computer required.
+
+### Is Current Feature Engineering Good Enough for TFT?
+
+**Yes.** The SHAP analysis confirms all engineered features are being used:
+- Static soil texture (sand/clay/silt at 3 depths) appears in SHAP for all horizons — TFT's static context encoder will use these.
+- `vpd_approx`, `net_water_balance`, `is_monsoon` all have non-zero SHAP — no dead features.
+- `gwl_lag_14` (engineered, not in original schema) is the 2nd most important feature at every horizon.
+- `gwl_7d_change` and `gwl_30d_change` (engineered trend features) are consistently top-7.
+
+The only features with near-zero SHAP at t+7 are deep soil texture (sand_30cm, clay_30cm) — these may gain importance in TFT which can model longer-range soil water routing, or they may be genuinely uninformative and get gated out by Variable Selection Networks.
+
+---
+
+## 9. Phase Roadmap
+
+| Phase | Status | Key Deliverable |
+|-------|--------|----------------|
+| **Phase 0 — Data Collection** | ✅ Complete (except Sentinel) | All WRIS + ERA5 + Soil Texture datasets |
+| **Phase 1 — Baselines** | ✅ Complete | ARIMA, XGBoost, LSTM for t+1 and t+{7,14,30} |
+| **Phase 2 — TFT** | 🔜 Next | Temporal Fusion Transformer, Variable Selection Networks, quantile output |
+| **Phase 2b — Sentinel Enhancement** | ⏳ Blocked | Add NDVI/NDWI/NDMI/VV/VH to TFT after collecting Sentinel data |
+| **Phase 3 — TFT + GAT** | ⏳ After Phase 2 | Spatial graph (district adjacency + basin) wrapping TFT encoder |
+
+### TFT Architecture Plan (Phase 2)
+
+**Input:** Current 36-column master_dataset.csv (no Sentinel needed to start)
+- Known future inputs: `day_of_year`, `month`, `is_monsoon`, `season`
+- Observed past inputs: all remaining time-varying features
+- Static covariates: `district_id` (for entity embedding) + all 9 soil texture columns
+
+**Architecture:**
+- Variable Selection Networks (VSN) — learn per-feature weights per timestep, per horizon
+- LSTM encoder (past 30 days) + LSTM decoder (future horizons)
+- Temporal Self-Attention over encoder outputs
+- Quantile output head: predict 10th, 50th, 90th percentiles for uncertainty estimation
+- Target: predict all 3 horizons (t+7, t+14, t+30) simultaneously from a single model
+
+**Baseline to beat:** LSTM t+30 RMSE = 3.54m (current best)
+
+### GAT Architecture Plan (Phase 3)
+
+Build district adjacency graph from:
+1. Geographic proximity (Euclidean distance between district centroids, threshold ~100km)
+2. River basin / aquifer membership (from station GeoJSON `majorBasin` field)
+
+Wrap TFT encoder output with 2-layer Graph Attention Network (GAT) before temporal attention — allows recharge propagation from water-rich to water-deficit districts. Expected to most improve Dhule, Jalgaon, and other high-error districts.
