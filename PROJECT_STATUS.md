@@ -376,16 +376,54 @@ Dhule and Jalgaon have extremely high errors (RMSE >10m) across all models — t
 | Calendar | month, season, is_monsoon, day_of_year | 4 |
 | Soil texture (static) | sand/clay/silt at 0cm, 10cm, 30cm | 9 |
 
-**Total: 36 columns — sufficient for TFT Phase 2.**
+### Sentinel Features (6 columns added)
 
-### Missing Features (Deferred to TFT Phase 2)
+| Feature | Description |
+|---------|-------------|
+| `ndvi_mean` | Normalised Difference Vegetation Index — vegetation health proxy |
+| `ndwi_mean` | Normalised Difference Water Index — surface water proxy |
+| `ndmi_mean` | Normalised Difference Moisture Index — vegetation moisture proxy |
+| `vv_db` | Sentinel-1 VV backscatter (dB) — soil roughness / moisture proxy |
+| `vh_db` | Sentinel-1 VH backscatter (dB) — vegetation volume scattering |
+| `vh_vv_ratio` | VH−VV ratio — soil moisture proxy valid through monsoon cloud cover |
 
-| Feature | Source | Why Deferred |
-|---------|--------|--------------|
-| NDVI, NDWI, NDMI | Sentinel-2 (GEE) | Files not yet collected |
-| VV, VH backscatter | Sentinel-1 (GEE) | Files not yet collected |
+Monthly district-level values interpolated to daily via linear interpolation + edge ffill/bfill (see `merge_master.py`).
 
-**Status:** `Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv` and `sentinel1_backscatter_maharashtra_23_25.csv` do **not** exist. GEE batch export or Microsoft Planetary Computer required.
+**Total in master_dataset.csv: 42 columns**
+
+### TFT Notebook — Additional Engineered Features (+14 columns, 56 total at training time)
+
+These columns are created inside `09_tft_colab.ipynb` at training time and are NOT written back to `master_dataset.csv`:
+
+| Feature | Formula | Count |
+|---------|---------|-------|
+| `month_sin`, `month_cos` | sin/cos(2π × month / 12) | 2 |
+| `doy_sin`, `doy_cos` | sin/cos(2π × day_of_year / 365.25) | 2 |
+| `rainfall_mm_log`, `rainfall_7d_log`, `rainfall_30d_log` | log1p(rainfall_*) | 3 |
+| `gwl_roll_mean_{30,60,90}` | Per-district rolling mean of gwl_mean (shift 1) | 3 |
+| `gwl_roll_std_{30,60,90}` | Per-district rolling std of gwl_mean (shift 1) | 3 |
+| `season_id` | winter=0, summer=1, monsoon=2, post_monsoon=3 | 1 |
+
+**Total at TFT training time: 56 columns**
+
+### TFT Model Input Split (from 56 columns)
+
+| Input stream | Features | Count |
+|-------------|----------|-------|
+| Past (observed time-series) | gwl_mean/min/max, station_count, rainfall_*_log, et_mm, soil_moisture, net_water_balance, temp_*, humidity_mean, vpd_approx, gwl_lag_*, gwl_*_change, gwl_roll_*, ndvi/ndwi/ndmi, vv/vh/vh_vv_ratio | 32 |
+| Future (known calendar) | month_sin/cos, doy_sin/cos, is_monsoon, season_id | 6 |
+| Static continuous | sand/clay/silt at 0cm, 10cm, 30cm | 9 |
+| Static categorical | district_id | 1 |
+| **Total model inputs** | | **48** |
+
+### Sentinel Features (Collected and Merged ✅)
+
+| Feature | Source | Status |
+|---------|--------|--------|
+| NDVI, NDWI, NDMI | Sentinel-2 (GEE) — `sentinel2_indices_maharashtra_23_25.csv` | ✅ In master_dataset.csv |
+| VV, VH, VH/VV backscatter | Sentinel-1 (GEE) — `sentinel1_backscatter_maharashtra_23_25.csv` | ✅ In master_dataset.csv |
+
+All 6 Sentinel columns are present in `master_dataset.csv`. 2,676 rows are null for 4 districts (Beed, Gadchiroli, Gondia, Raigad) which have no GEE coverage — these are imputed with dataset-wide medians at training time.
 
 ### Is Current Feature Engineering Good Enough for TFT?
 
@@ -565,7 +603,7 @@ All four are geographically clustered in the Tapi–Godavari interior. GAT spati
 | **Phase 0 — Data Collection** | ✅ Complete (except Sentinel) | All WRIS + ERA5 + Soil Texture datasets |
 | **Phase 1 — Baselines** | ✅ Complete | ARIMA, XGBoost, LSTM for t+1 and t+{7,14,30} |
 | **Phase 2 — TFT** | ✅ Complete | TFT v1 + v2 trained on Colab T4 GPU, per-district quantile forecasts |
-| **Phase 2b — Sentinel Enhancement** | ⏳ Blocked | Add NDVI/NDWI/NDMI/VV/VH to TFT after collecting Sentinel data |
+| **Phase 2b — Sentinel Enhancement** | ✅ Complete | Sentinel data collected, merged into master_dataset.csv, used in TFT v2 training |
 | **Phase 3 — TFT + GAT** | 🔜 Next | Spatial graph (district adjacency + basin) wrapping TFT encoder |
 
 ### GAT Architecture Plan (Phase 3)
