@@ -10,6 +10,10 @@ Inputs  (from clean datasets/):
 Static input:
     ../Data Collection/datasets/soil_texture_maharashtra.csv
 
+Sentinel inputs (monthly, interpolated to daily):
+    ../Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv
+    ../Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv
+
 Output:
     clean datasets/master_dataset.csv
 
@@ -24,7 +28,9 @@ Schema:
     gwl_7d_change, gwl_30d_change,
     sand_0cm, clay_0cm, silt_0cm,
     sand_10cm, clay_10cm, silt_10cm,
-    sand_30cm, clay_30cm, silt_30cm
+    sand_30cm, clay_30cm, silt_30cm,
+    ndvi_mean, ndwi_mean, ndmi_mean,
+    vv_db, vh_db, vh_vv_ratio
 """
 
 import sys
@@ -37,6 +43,8 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 CLEAN        = Path("clean datasets")
 SOIL_TEXTURE = Path("../Data Collection/datasets/soil_texture_maharashtra.csv")
+SENTINEL2    = Path("../Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv")
+SENTINEL1    = Path("../Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv")
 
 # ─── LOAD CLEAN FILES ─────────────────────────────────────────────────────────
 print("Loading clean datasets ...")
@@ -44,11 +52,15 @@ gw   = pd.read_csv(CLEAN / "groundwater_clean.csv",  parse_dates=["date"])
 rf   = pd.read_csv(CLEAN / "rainfall_clean.csv",     parse_dates=["date"])
 ev   = pd.read_csv(CLEAN / "env_features_clean.csv", parse_dates=["date"])
 soil = pd.read_csv(SOIL_TEXTURE)
+s2   = pd.read_csv(SENTINEL2)
+s1   = pd.read_csv(SENTINEL1)
 
 print(f"  Groundwater  : {len(gw):,} rows, {gw['district'].nunique()} districts")
 print(f"  Rainfall     : {len(rf):,} rows, {rf['district'].nunique()} districts")
 print(f"  Env features : {len(ev):,} rows, {ev['district'].nunique()} districts")
 print(f"  Soil texture : {len(soil):,} rows (static, one per district)")
+print(f"  Sentinel-2   : {len(s2):,} rows, {s2['district'].nunique()} districts")
+print(f"  Sentinel-1   : {len(s1):,} rows, {s1['district'].nunique()} districts")
 
 # ─── MERGE ────────────────────────────────────────────────────────────────────
 print("\nMerging ...")
@@ -104,6 +116,49 @@ master = master.merge(soil_clean, on="district", how="left")
 soil_missing = master[[c for c in soil_cols if c in master.columns]].isnull().any(axis=1).sum()
 print(f"  Soil texture : {soil_missing:,} rows with missing soil data (districts not in soil file)")
 
+# ─── SENTINEL MERGE (monthly → daily via linear interpolation) ───────────────
+def expand_sentinel_to_daily(sent_df, value_cols, master_dates):
+    """
+    Sentinel data is monthly (year, month). Expand to daily by:
+      1. Convert (year, month) to the 1st of each month as a date
+      2. Reindex to every day in master_dates per district
+      3. Linear interpolate interior gaps, then ffill/bfill edges
+    """
+    sent_df = sent_df.copy()
+    sent_df["date"] = pd.to_datetime(
+        sent_df["year"].astype(str) + "-" + sent_df["month"].astype(str).str.zfill(2) + "-01"
+    )
+    sent_df = sent_df[["district", "date"] + value_cols]
+
+    daily_parts = []
+    for dist, grp in sent_df.groupby("district"):
+        grp = grp.set_index("date").sort_index()
+        # Reindex to full daily range
+        full_idx = pd.date_range(master_dates.min(), master_dates.max(), freq="D")
+        grp = grp.reindex(full_idx)
+        # Linear interpolation for interior NaNs, ffill/bfill for edges
+        for col in value_cols:
+            grp[col] = grp[col].interpolate("linear").ffill().bfill()
+        grp["district"] = dist
+        grp.index.name = "date"
+        daily_parts.append(grp.reset_index())
+
+    return pd.concat(daily_parts, ignore_index=True)
+
+s2_cols = ["ndvi_mean", "ndwi_mean", "ndmi_mean"]
+s1_cols = ["vv_db", "vh_db", "vh_vv_ratio"]
+
+s2_daily = expand_sentinel_to_daily(s2, s2_cols, master["date"])
+s1_daily = expand_sentinel_to_daily(s1, s1_cols, master["date"])
+
+master = master.merge(s2_daily[["district", "date"] + s2_cols], on=["district", "date"], how="left")
+master = master.merge(s1_daily[["district", "date"] + s1_cols], on=["district", "date"], how="left")
+
+s2_missing = master["ndvi_mean"].isnull().sum()
+s1_missing = master["vv_db"].isnull().sum()
+print(f"  Sentinel-2   : {s2_missing:,} rows with no ndvi (districts not in Sentinel coverage)")
+print(f"  Sentinel-1   : {s1_missing:,} rows with no vv_db (districts not in Sentinel coverage)")
+
 # ─── DROP ROWS WITH NO TARGET ─────────────────────────────────────────────────
 before = len(master)
 master = master.dropna(subset=["gwl_mean"])
@@ -122,6 +177,8 @@ ordered_cols = [
     "sand_0cm", "clay_0cm", "silt_0cm",
     "sand_10cm", "clay_10cm", "silt_10cm",
     "sand_30cm", "clay_30cm", "silt_30cm",
+    "ndvi_mean", "ndwi_mean", "ndmi_mean",
+    "vv_db", "vh_db", "vh_vv_ratio",
 ]
 # Only keep columns that actually ended up in master (soil cols may vary)
 final_cols = [c for c in ordered_cols if c in master.columns]

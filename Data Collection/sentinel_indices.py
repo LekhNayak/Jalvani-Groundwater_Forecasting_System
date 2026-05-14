@@ -19,10 +19,11 @@ your groundwater/rainfall data on (district, date) after resampling to monthly.
 """
 
 import ee
-import geemap
 import pandas as pd
+import time
 from pathlib import Path
 from datetime import date
+from tqdm import tqdm
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 START_YEAR  = 2023
@@ -44,7 +45,8 @@ DISTRICTS = [
 Path("datasets").mkdir(exist_ok=True)
 
 # ─── GEE INIT ─────────────────────────────────────────────────────────────────
-ee.Initialize()
+ee.Initialize(project="major-project-495508")
+ee.data.setDeadline(60000)   # 60-second timeout per GEE call — prevents silent hangs
 
 # ─── MAHARASHTRA DISTRICT BOUNDARIES (from GEE public asset) ──────────────────
 # FAO GAUL level-2 boundaries — contains all Indian districts with NAME_2 field
@@ -65,6 +67,19 @@ def add_indices(image):
     return image.addBands([ndvi, ndwi, ndmi])
 
 
+def _retry_getinfo(ee_obj, retries: int = 4, backoff: float = 5.0):
+    """Call .getInfo() with exponential backoff on transient GEE errors."""
+    for attempt in range(retries):
+        try:
+            return ee_obj.getInfo()
+        except Exception as e:
+            if attempt == retries - 1:
+                raise
+            wait = backoff * (2 ** attempt)
+            tqdm.write(f"    GEE error (attempt {attempt+1}/{retries}): {e} — retrying in {wait:.0f}s")
+            time.sleep(wait)
+
+
 def get_s2_monthly_mean(district_name: str, year: int, month: int):
     """
     Returns mean NDVI, NDWI, NDMI for one district in one month.
@@ -82,27 +97,26 @@ def get_s2_monthly_mean(district_name: str, year: int, month: int):
         .map(add_indices)
     )
 
-    # If no usable images this month, return None
-    count = collection.size().getInfo()
+    count = _retry_getinfo(collection.size())
     if count == 0:
         return None
 
     composite = collection.select(["NDVI", "NDWI", "NDMI"]).mean()
 
-    stats = composite.reduceRegion(
+    stats = _retry_getinfo(composite.reduceRegion(
         reducer  = ee.Reducer.mean(),
         geometry = geometry,
         scale    = SCALE,
         maxPixels= 1e9,
-    ).getInfo()
+    ))
 
     return {
         "district":  district_name,
         "year":      year,
         "month":     month,
-        "ndvi_mean": round(stats.get("NDVI", None) or float("nan"), 4),
-        "ndwi_mean": round(stats.get("NDWI", None) or float("nan"), 4),
-        "ndmi_mean": round(stats.get("NDMI", None) or float("nan"), 4),
+        "ndvi_mean": round(stats.get("NDVI") or float("nan"), 4),
+        "ndwi_mean": round(stats.get("NDWI") or float("nan"), 4),
+        "ndmi_mean": round(stats.get("NDMI") or float("nan"), 4),
         "s2_scene_count": count,
     }
 
@@ -127,21 +141,23 @@ def get_s1_monthly_mean(district_name: str, year: int, month: int):
         .select(["VV", "VH"])
     )
 
-    count = collection.size().getInfo()
+    count = _retry_getinfo(collection.size())
     if count == 0:
         return None
 
     composite = collection.mean()
 
-    stats = composite.reduceRegion(
+    stats = _retry_getinfo(composite.reduceRegion(
         reducer  = ee.Reducer.mean(),
         geometry = geometry,
         scale    = SCALE,
         maxPixels= 1e9,
-    ).getInfo()
+    ))
 
     vv = stats.get("VV")
     vh = stats.get("VH")
+    if vv is None and vh is None:
+        return None
 
     return {
         "district":  district_name,
@@ -149,7 +165,6 @@ def get_s1_monthly_mean(district_name: str, year: int, month: int):
         "month":     month,
         "vv_db":     round(vv, 4) if vv is not None else float("nan"),
         "vh_db":     round(vh, 4) if vh is not None else float("nan"),
-        # VH/VV ratio is a useful soil moisture indicator
         "vh_vv_ratio": round(vh - vv, 4) if (vv is not None and vh is not None) else float("nan"),
         "s1_scene_count": count,
     }
@@ -200,9 +215,11 @@ def main():
     print(f"S2 already done : {len(done_s2)}")
     print(f"S1 already done : {len(done_s1)}\n")
 
-    for i, (district, year, month) in enumerate(jobs, 1):
-        key = progress_key(district, year, month)
-        label = f"[{i}/{total}] {district} {year}-{month:02d}"
+    pbar = tqdm(jobs, desc="Sentinel collection", unit="job")
+    for district, year, month in pbar:
+        key   = progress_key(district, year, month)
+        label = f"{district} {year}-{month:02d}"
+        pbar.set_postfix_str(label)
 
         # ── Sentinel-2 ──────────────────────────────────────────────────────
         if key not in done_s2:
@@ -211,15 +228,12 @@ def main():
                 if row:
                     df = pd.DataFrame([row])
                     df.to_csv(s2_out, mode="a", header=not s2_out.exists(), index=False)
-                    print(f"  S2 {label} | NDVI={row['ndvi_mean']:.3f} NDWI={row['ndwi_mean']:.3f} ({row['s2_scene_count']} scenes)")
+                    tqdm.write(f"  S2 {label} | NDVI={row['ndvi_mean']:.3f} NDWI={row['ndwi_mean']:.3f} ({row['s2_scene_count']} scenes)")
                 else:
-                    print(f"  S2 {label} | no cloud-free scenes (skipped)")
+                    tqdm.write(f"  S2 {label} | no cloud-free scenes (skipped)")
                 mark_done_s2(key)
             except Exception as e:
-                print(f"  S2 {label} | ERROR: {e}")
-        else:
-            print(f"  S2 {label} | already done")
-
+                tqdm.write(f"  S2 {label} | ERROR: {e}")
         # ── Sentinel-1 ──────────────────────────────────────────────────────
         if key not in done_s1:
             try:
@@ -227,14 +241,12 @@ def main():
                 if row:
                     df = pd.DataFrame([row])
                     df.to_csv(s1_out, mode="a", header=not s1_out.exists(), index=False)
-                    print(f"  S1 {label} | VV={row['vv_db']:.2f} dB  VH={row['vh_db']:.2f} dB ({row['s1_scene_count']} scenes)")
+                    tqdm.write(f"  S1 {label} | VV={row['vv_db']:.2f} dB  VH={row['vh_db']:.2f} dB ({row['s1_scene_count']} scenes)")
                 else:
-                    print(f"  S1 {label} | no scenes (skipped)")
+                    tqdm.write(f"  S1 {label} | no scenes (skipped)")
                 mark_done_s1(key)
             except Exception as e:
-                print(f"  S1 {label} | ERROR: {e}")
-        else:
-            print(f"  S1 {label} | already done")
+                tqdm.write(f"  S1 {label} | ERROR: {e}")
 
     print("\nDone.")
     if s2_out.exists():
