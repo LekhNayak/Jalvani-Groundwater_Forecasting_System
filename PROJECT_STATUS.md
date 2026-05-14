@@ -504,6 +504,18 @@ Median is the right summary because 4 districts (Satara, Jalgaon, Aurangabad, Na
 | Aurangabad | 3.1197 | 2.2940 | 35.08 |
 | Jalgaon | 15.2673 | 9.4745 | 53.93 |
 
+#### TFT v1 vs v2 — Direct Comparison
+
+> **Note on MAPE reporting:** v1 used a pooled (sample-weighted) MAPE across all districts. v2 introduced per-district reporting, so two numbers exist: unweighted mean (inflated by Satara at 123%) and median (robust to outliers). The median is the apples-to-apples comparison against v1's pooled figure.
+
+| Horizon | v1 RMSE | v1 MAPE (pooled) | v2 RMSE (median) | v2 MAPE (median) | Improvement |
+|---------|---------|-----------------|------------------|------------------|-------------|
+| t+7  | 3.0261m | 10.20% | 0.706m | 5.43% | **−4.77 pp MAPE, −57% RMSE** |
+| t+14 | 3.4855m | 10.70% | 0.862m | 6.25% | **−4.45 pp MAPE, −75% RMSE** |
+| t+30 | 4.0578m | 11.80% | 1.002m | 8.01% | **−3.79 pp MAPE, −75% RMSE** |
+
+The single biggest driver was **per-district target normalisation** — v1 trained a global z-score that forced the model to explain the large baseline differences between districts (e.g. Raigad at −1m vs Jalgaon at −30m). v2 z-scores each district against its own mean/std, so the model only needs to predict within-district deviations. Cyclic time encoding, log rainfall, rolling GWL stats, and the larger architecture each contributed additional gains.
+
 #### v2 vs Baselines — Head-to-Head (MAPE %)
 
 | Model | t+7 | t+14 | t+30 |
