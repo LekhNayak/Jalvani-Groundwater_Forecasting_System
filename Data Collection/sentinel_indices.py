@@ -27,7 +27,9 @@ from tqdm import tqdm
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 START_YEAR  = 2023
-END_YEAR    = 2025
+END_YEAR    = 2026
+END_DATE    = date(2026, 6, 30)   # explicit cutoff — do not rely on date.today(),
+                                   # which would include a partial/incomplete current month
 CLOUD_COVER = 20          # skip Sentinel-2 scenes with >20% cloud cover
 SCALE       = 500         # spatial resolution for aggregation in metres
                           # 500m is fine for district-level means (much faster than 10m)
@@ -49,13 +51,46 @@ ee.Initialize(project="major-project-495508")
 ee.data.setDeadline(60000)   # 60-second timeout per GEE call — prevents silent hangs
 
 # ─── MAHARASHTRA DISTRICT BOUNDARIES (from GEE public asset) ──────────────────
-# FAO GAUL level-2 boundaries — contains all Indian districts with NAME_2 field
+# FAO GAUL level-2 boundaries — contains all Indian districts with ADM2_NAME field.
+# GAUL uses older / alternative spellings for several Maharashtra districts.
+# This map converts our canonical project names → actual GAUL ADM2_NAME strings.
+GAUL_NAME_MAP = {
+    "Beed":            "Bid",         # GAUL uses pre-2006 spelling
+    "Buldhana":        "Buldana",     # GAUL alternate spelling
+    "Gadchiroli":      "Garhchiroli", # GAUL spelling (verified via ADM2_NAME listing)
+    "Gondia":          "Gondiya",     # GAUL uses 'iya' suffix
+    "Raigad":          "Raigarh",     # GAUL uses old name
+    "Palghar":         "Palghar",     # new district (carved from Thane 2014); may be absent
+    "Mumbai City":     None,          # intentionally skipped — no significant aquifer
+    "Mumbai Suburban": "Mumbai Suburban",
+}
+
 india_districts = ee.FeatureCollection("FAO/GAUL/2015/level2")
 maharashtra     = india_districts.filter(ee.Filter.eq("ADM1_NAME", "Maharashtra"))
 
+
+def list_gaul_names():
+    """Print all ADM2_NAME values GEE has for Maharashtra — useful for debugging."""
+    names = maharashtra.aggregate_array("ADM2_NAME").getInfo()
+    print("GAUL ADM2_NAME values for Maharashtra:")
+    for n in sorted(names):
+        print(f"  {n}")
+
+
 def get_district_geometry(district_name: str):
-    """Returns the GEE geometry for a single Maharashtra district."""
-    return maharashtra.filter(ee.Filter.eq("ADM2_NAME", district_name)).geometry()
+    """Returns the GEE geometry for a single Maharashtra district.
+    Applies GAUL_NAME_MAP translation; returns None for intentionally skipped districts.
+    """
+    gaul_name = GAUL_NAME_MAP.get(district_name, district_name)
+    if gaul_name is None:
+        return None  # intentionally skipped (e.g. Mumbai City — no aquifer)
+    geom = maharashtra.filter(ee.Filter.eq("ADM2_NAME", gaul_name)).geometry()
+    # Verify geometry is non-empty; if empty, the GAUL name is wrong — log it
+    size = geom.coordinates().length().getInfo()
+    if size == 0:
+        tqdm.write(f"  WARNING: GAUL name '{gaul_name}' returned empty geometry for '{district_name}' — update GAUL_NAME_MAP")
+        return None
+    return geom
 
 
 # ─── SENTINEL-2: NDVI, NDWI, NDMI ─────────────────────────────────────────────
@@ -83,9 +118,11 @@ def _retry_getinfo(ee_obj, retries: int = 4, backoff: float = 5.0):
 def get_s2_monthly_mean(district_name: str, year: int, month: int):
     """
     Returns mean NDVI, NDWI, NDMI for one district in one month.
-    Returns None if no cloud-free images are available (e.g. heavy monsoon months).
+    Returns None if the district is skipped or no cloud-free images are available.
     """
-    geometry   = get_district_geometry(district_name)
+    geometry = get_district_geometry(district_name)
+    if geometry is None:
+        return None  # intentionally skipped district
     start_date = ee.Date.fromYMD(year, month, 1)
     end_date   = start_date.advance(1, "month")
 
@@ -126,8 +163,11 @@ def get_s1_monthly_mean(district_name: str, year: int, month: int):
     """
     Returns mean VV and VH backscatter (dB) for one district in one month.
     Sentinel-1 works through clouds — important for monsoon months.
+    Returns None if the district is skipped.
     """
-    geometry   = get_district_geometry(district_name)
+    geometry = get_district_geometry(district_name)
+    if geometry is None:
+        return None  # intentionally skipped district
     start_date = ee.Date.fromYMD(year, month, 1)
     end_date   = start_date.advance(1, "month")
 
@@ -198,6 +238,9 @@ def main():
     s2_out = Path("datasets/sentinel2_indices_maharashtra_23_25.csv")
     s1_out = Path("datasets/sentinel1_backscatter_maharashtra_23_25.csv")
 
+    # Uncomment to debug GAUL district names available for Maharashtra:
+    # list_gaul_names()
+
     done_s2 = load_done_s2()
     done_s1 = load_done_s1()
 
@@ -207,7 +250,7 @@ def main():
         for d in DISTRICTS
         for y in range(START_YEAR, END_YEAR + 1)
         for m in range(1, 13)
-        if date(y, m, 1) <= date.today()   # skip future months
+        if date(y, m, 1) <= END_DATE   # skip months beyond the target cutoff
     ]
 
     total = len(jobs)

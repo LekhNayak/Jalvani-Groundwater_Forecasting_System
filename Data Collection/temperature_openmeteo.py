@@ -22,7 +22,7 @@ from pathlib import Path
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 START_DATE = "2023-01-01"
-END_DATE   = "2025-04-22"
+END_DATE   = "2026-06-30"
 OUTPUT_CSV = "datasets/temperature_humidity_maharashtra_23_25.csv"
 PROGRESS_F = "txt files/temperature_openmeteo_progress.txt"
 

@@ -86,3 +86,6 @@ temp_data/
 *.db
 *.sqlite3
 *.pt
+
+
+.ipynb_checkpoints/

@@ -34,7 +34,7 @@ from pathlib import Path
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 START_DATE = "2023-01-01"
-END_DATE   = "2025-12-31"
+END_DATE   = "2026-06-30"
 PROJECT    = "major-project-495508"
 
 # All 36 Maharashtra districts (same list as sentinel_indices.py)
@@ -50,13 +50,14 @@ DISTRICTS = [
 
 # FAO GAUL uses slightly different spellings for some districts
 GAUL_NAME_MAP = {
-    "Mumbai City":     ["Mumbai", "Mumbai City"],
+    "Mumbai City":     ["Mumbai city", "Mumbai", "Mumbai City"],
     "Mumbai Suburban": ["Mumbai Suburban", "Mumbai (Suburban)"],
     "Osmanabad":       ["Osmanabad", "Usmanabad"],
     "Buldhana":        ["Buldhana", "Buldana"],
     "Ahmednagar":      ["Ahmednagar", "Ahmadnagar"],
     "Beed":            ["Beed", "Bid"],
     "Gondia":          ["Gondia", "Gondiya"],
+    "Gadchiroli":      ["Gadchiroli", "Garhchiroli"],  # GAUL spelling (verified via ADM2_NAME listing)
     "Raigad":          ["Raigad", "Raigarh"],
     "Palghar":         ["Palghar", "Thane"],   # Palghar split from Thane in 2014, may not exist in GAUL 2015
 }
@@ -155,7 +156,7 @@ for district in DISTRICTS:
     print(f"  {district:<20}{note}")
 
     t0 = time.time()
-    for year in [2023, 2024, 2025]:
+    for year in [2023, 2024, 2025, 2026]:
         key = f"{district}|{year}"
         if key in done:
             print(f"    {year}: cached, skipping")

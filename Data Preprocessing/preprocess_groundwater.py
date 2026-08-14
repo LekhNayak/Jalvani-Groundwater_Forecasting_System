@@ -4,9 +4,10 @@ Preprocesses raw groundwater data:
   - Drops mixed-sign stations (data-quality issue)
   - Drops sensor-fault outliers (|value| > 100 m)
   - Applies per-station Hampel filter to remove spikes (pump cycling, sensor glitches)
-  - Caps daily district-level changes at 3 m/day (physically realistic)
-  - Aggregates to daily district mean
+  - Caps daily district-level changes at 5 m/day (physically realistic)
+  - Aggregates to daily district median (robust to outlier stations)
   - Forward + backward fills gaps <= 7 days
+  - Passes through static per-district metadata: aquifer_type, well_depth_m, n_stations
   - Reports missing % per district clearly
 
 Input  : unclean datasets/groundwater_maharashtra_23_25_uncleaned.csv
@@ -106,6 +107,26 @@ df = df[keep_mask]
 print(f"  Spike readings dropped: {spikes_dropped:,}")
 print(f"  Rows after Hampel    : {len(df):,}")
 
+# ─── STATIC PER-DISTRICT METADATA ────────────────────────────────────────────
+# Derive once from the full (post-sign-normalisation) DataFrame before aggregation.
+# wellAquiferType: most common value per district (mode)
+# well_depth_m   : mean wellDepth across all readings for that district
+# n_stations     : count of unique station codes contributing data
+
+district_meta = (
+    df.groupby("district")
+    .agg(
+        aquifer_type = ("wellAquiferType", lambda s: s.mode().iloc[0] if s.notna().any() else "Unknown"),
+        well_depth_m = ("wellDepth",       "mean"),
+        n_stations   = ("stationCode",     "nunique"),
+    )
+    .reset_index()
+)
+district_meta["well_depth_m"] = district_meta["well_depth_m"].round(1)
+
+print("\nStatic district metadata (sample):")
+print(district_meta.sort_values("district").to_string(index=False))
+
 # ─── DAILY AGGREGATION (per station, then per district) ───────────────────────
 df["date"] = df["dataTime"].dt.normalize()
 
@@ -119,7 +140,7 @@ station_daily = (
 district_daily = (
     station_daily.groupby(["district", "date"])
     .agg(
-        gwl_mean      = ("gwl_station_daily_mean", "mean"),
+        gwl_mean      = ("gwl_station_daily_mean", "median"),  # median — robust to outlier stations
         gwl_min       = ("gwl_station_daily_mean", "min"),
         gwl_max       = ("gwl_station_daily_mean", "max"),
         station_count = ("stationCode", "count"),
@@ -162,10 +183,25 @@ for district, grp in district_daily.groupby("district"):
     grp = grp.set_index("date").reindex(full_idx)
     grp["district"] = district
 
+    # 1 = a real (post-cleaning) reading exists for this day; 0 = gap-filled or missing.
+    # Downstream models use this to mask the loss / know which inputs are real.
+    grp["gwl_observed"] = grp["gwl_mean"].notna().astype(int)
+
     grp["gwl_mean"]      = grp["gwl_mean"].ffill(limit=7).bfill(limit=7)
     grp["gwl_min"]       = grp["gwl_min"].ffill(limit=7).bfill(limit=7)
     grp["gwl_max"]       = grp["gwl_max"].ffill(limit=7).bfill(limit=7)
     grp["station_count"] = grp["station_count"].ffill(limit=7).bfill(limit=7)
+
+    # Attach static metadata — constant across all rows for this district
+    meta_row = district_meta.loc[district_meta["district"] == district]
+    if not meta_row.empty:
+        grp["aquifer_type"] = meta_row["aquifer_type"].iloc[0]
+        grp["well_depth_m"] = meta_row["well_depth_m"].iloc[0]
+        grp["n_stations"]   = meta_row["n_stations"].iloc[0]
+    else:
+        grp["aquifer_type"] = "Unknown"
+        grp["well_depth_m"] = np.nan
+        grp["n_stations"]   = 0
 
     missing_pct = grp["gwl_mean"].isna().mean() * 100
     first_valid = grp["gwl_mean"].first_valid_index()
@@ -185,6 +221,12 @@ print(f"Total rows               : {len(district_daily):,}")
 print(f"Districts                : {district_daily['district'].nunique()}")
 
 # ─── SAVE ─────────────────────────────────────────────────────────────────────
-out_cols = ["district", "date", "gwl_mean", "gwl_min", "gwl_max", "station_count"]
+out_cols = [
+    "district", "date",
+    "gwl_mean", "gwl_min", "gwl_max", "station_count", "gwl_observed",
+    "aquifer_type", "well_depth_m", "n_stations",
+]
 district_daily[out_cols].to_csv(OUTPUT, index=False)
 print(f"\nSaved -> {OUTPUT}")
+print(f"Columns: {out_cols}")
+print(f"Aquifer type distribution:\n{district_daily.drop_duplicates('district')['aquifer_type'].value_counts().to_string()}")

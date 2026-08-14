@@ -51,8 +51,20 @@ DISTRICTS = [
 india_districts = ee.FeatureCollection("FAO/GAUL/2015/level2")
 maharashtra     = india_districts.filter(ee.Filter.eq("ADM1_NAME", "Maharashtra"))
 
+# GAUL 2015 uses older/alternate spellings for several Maharashtra districts.
+# Verified directly against maharashtra.aggregate_array("ADM2_NAME") on 2026-07-04.
+GAUL_NAME_MAP = {
+    "Beed":            "Bid",
+    "Buldhana":        "Buldana",
+    "Gadchiroli":      "Garhchiroli",
+    "Gondia":          "Gondiya",
+    "Raigad":          "Raigarh",
+    "Mumbai City":     "Mumbai city",
+}
+
 def get_geometry(district_name: str):
-    return maharashtra.filter(ee.Filter.eq("ADM2_NAME", district_name)).geometry()
+    gaul_name = GAUL_NAME_MAP.get(district_name, district_name)
+    return maharashtra.filter(ee.Filter.eq("ADM2_NAME", gaul_name)).geometry()
 
 
 # ─── OPENLANDMAP SOIL DATASETS ────────────────────────────────────────────────

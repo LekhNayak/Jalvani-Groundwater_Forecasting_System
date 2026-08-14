@@ -1,9 +1,22 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-05-14
+**Last updated:** 2026-05-14 (see 2026-07-04 notice below — several sections are now superseded)
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2025-04-22
 **Geography:** All 36 districts of Maharashtra
+
+> ## ⚠️ 2026-07-04 update — master dataset rebuilt, TFT v2 numbers superseded
+> A data audit found the master dataset was stale and several sections below no longer match
+> what's on disk. Full diagnosis and fix plan: **`TFT_IMPROVEMENT_PLAN.md`** (repo root).
+>
+> **What changed:**
+> - Rainfall is now **CHIRPS satellite gridded** (`rainfall_clean.csv`), not CWC station data — all 36 districts, through 2025-12-31.
+> - Groundwater cleaning rewritten: sign normalisation, mixed-sign station drop, Hampel spike filter, district **median** (not mean), plus `gwl_observed` (0/1 real-reading mask), `aquifer_type`, `well_depth_m`, `n_stations` passed through.
+> - `merge_master.py` rewritten: full daily calendar per district (no dropped rows — this was the root cause of the per-district accuracy gap, see §9 below and `TFT_IMPROVEMENT_PLAN.md` §2), date-true lags, CGWB extraction merge folded in, explicit district exclusion gate.
+> - Fixed silent GAUL-name bugs in `soil_type_gee.py` (had no name mapping at all), `sentinel_indices.py` and `chirps_rainfall.py` (wrong Gadchiroli spelling) — Beed/Gondia/Raigad/Gadchiroli previously had null soil texture and/or no Sentinel data.
+> - **New master: 24 districts (down from the old 28, which included 6 near-empty ones), 843 days each, 20,232 rows, 52 columns.** Excluded: Bhandara, Hingoli, Mumbai City, Mumbai Suburban, Osmanabad, Sangli (all ≥95% GWL missing — see `excluded_districts.csv`). Flagged (kept, reported separately): Jalgaon (1 station), Akola (2 stations).
+> - Training data range is unchanged (2023-01-01 → 2025-04-22) — the fix was to *use* that range correctly (full calendar grid, masked loss, walk-forward eval with a monsoon test fold), not to extend it.
+> - **All Phase 2/2b TFT v1/v2 results in §9 below were trained on the old master and are not reproducible from current files** — the old master included districts (Satara, Gadchiroli) not present in the new one, and its windowing had gap-corruption bugs (see `TFT_IMPROVEMENT_PLAN.md` §2.1). A new notebook (`Models/TFT/09_tft_colab.ipynb`, v3) fixes this; retraining on Colab is the next step (v2 notebook kept as `09_tft_colab_v2_backup.ipynb`).
 
 ---
 
@@ -437,7 +450,17 @@ The only features with near-zero SHAP at t+7 are deep soil texture (sand_30cm, c
 
 ---
 
-## 9. Model Training — Phase 2 TFT (COMPLETE)
+## 9. Model Training — Phase 2 TFT (SUPERSEDED — see notice at top of document)
+
+> **⚠️ All results in this section (§9.1–§9.3) were trained on the old master dataset and are not
+> reproducible from current files.** The old master included 28 districts (some near-empty; some,
+> like Satara and Gadchiroli, absent from the new 24-district master) and its window builder had a
+> calendar-gap bug that silently corrupted training windows for the lowest-coverage districts —
+> exactly the districts these results call out as worst-performing (Dhule, Jalgaon, Aurangabad,
+> Nashik). See `TFT_IMPROVEMENT_PLAN.md` for the full diagnosis. The notebook has been rewritten
+> (`Models/TFT/09_tft_colab.ipynb`, v3 — calendar-true windows, masked loss, walk-forward evaluation
+> with a monsoon test fold); the old version is kept as `09_tft_colab_v2_backup.ipynb`. Retraining
+> on the new master is the next step — this section is left below for historical reference only.
 
 Trained and evaluated on Google Colab T4 GPU. Notebooks: `Models/TFT/09_tft_colab.ipynb`.  
 Model implementation: `Models/TFT/tft_model.py` (from-scratch PyTorch, no pytorch-forecasting dependency).

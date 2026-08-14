@@ -100,3 +100,45 @@ Washim|2025
 Yavatmal|2023
 Yavatmal|2024
 Yavatmal|2025
+Gadchiroli|2023
+Gadchiroli|2024
+Gadchiroli|2025
+Mumbai City|2023
+Mumbai City|2024
+Mumbai City|2025
+Ahmednagar|2026
+Akola|2026
+Amravati|2026
+Aurangabad|2026
+Beed|2026
+Bhandara|2026
+Buldhana|2026
+Chandrapur|2026
+Dhule|2026
+Gadchiroli|2026
+Gondia|2026
+Hingoli|2026
+Jalgaon|2026
+Jalna|2026
+Kolhapur|2026
+Latur|2026
+Mumbai City|2026
+Mumbai Suburban|2026
+Nagpur|2026
+Nanded|2026
+Nandurbar|2026
+Nashik|2026
+Osmanabad|2026
+Palghar|2026
+Parbhani|2026
+Pune|2026
+Raigad|2026
+Ratnagiri|2026
+Sangli|2026
+Satara|2026
+Sindhudurg|2026
+Solapur|2026
+Thane|2026
+Wardha|2026
+Washim|2026
+Yavatmal|2026

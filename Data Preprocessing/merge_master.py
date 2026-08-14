@@ -2,35 +2,38 @@
 Merges all clean datasets into one master training CSV.
 Run this AFTER all preprocess_*.py scripts have completed.
 
-Inputs  (from clean datasets/):
-    groundwater_clean.csv
-    rainfall_clean.csv
-    env_features_clean.csv
+v2 (2026-07) — full-calendar rebuild. Key changes vs v1:
+  - Rows with missing gwl_mean are KEPT (full daily calendar per district).
+    `gwl_observed` (from groundwater_clean) marks real readings; models must
+    mask the loss on unobserved target days instead of training on fake rows.
+  - Because every district is a complete daily calendar, shift(7) etc. are now
+    date-true lags (v1 dropped NaN rows first, corrupting lags across gaps).
+  - District gate: districts with >= 60% missing groundwater are excluded and
+    logged to excluded_districts.csv (they produce zero valid windows anyway).
+  - Districts with < 5 unique stations are kept but flagged (low_station_flag)
+    so they can be reported separately — their "district mean" is 1-4 wells.
+  - Static per-district metadata from groundwater_clean is passed through:
+    aquifer_type_id, well_depth_m, n_stations.
+  - CGWB extraction/recharge yearly features are folded in here (previously a
+    separate merge_cgwb_into_master.py step that overwrote the master).
+  - District names normalised via CANON_NAME map ("MUMBAI CITY" -> "Mumbai City").
 
-Static input:
+Inputs  (from clean datasets/):
+    groundwater_clean.csv        (full calendar, 30 districts, observed mask, statics)
+    rainfall_clean.csv           (CHIRPS gridded, full calendar)
+    env_features_clean.csv       (ET, soil moisture, temp, humidity)
+
+Static inputs:
     ../Data Collection/datasets/soil_texture_maharashtra.csv
+    ../Data Collection/datasets/cgwb_extraction_maharashtra.csv
 
 Sentinel inputs (monthly, interpolated to daily):
     ../Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv
     ../Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv
 
-Output:
+Outputs:
     clean datasets/master_dataset.csv
-
-Schema:
-    district, district_id, date, day_of_year,
-    gwl_mean, gwl_min, gwl_max, station_count,
-    rainfall_mm, rainfall_7d, rainfall_30d,
-    et_mm, soil_moisture, net_water_balance,
-    temp_max, temp_min, temp_mean, humidity_mean, vpd_approx,
-    month, season, is_monsoon,
-    gwl_lag_7, gwl_lag_14, gwl_lag_30,
-    gwl_7d_change, gwl_30d_change,
-    sand_0cm, clay_0cm, silt_0cm,
-    sand_10cm, clay_10cm, silt_10cm,
-    sand_30cm, clay_30cm, silt_30cm,
-    ndvi_mean, ndwi_mean, ndmi_mean,
-    vv_db, vh_db, vh_vv_ratio
+    clean datasets/excluded_districts.csv
 """
 
 import sys
@@ -43,8 +46,23 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 CLEAN        = Path("clean datasets")
 SOIL_TEXTURE = Path("../Data Collection/datasets/soil_texture_maharashtra.csv")
+CGWB         = Path("../Data Collection/datasets/cgwb_extraction_maharashtra.csv")
 SENTINEL2    = Path("../Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv")
 SENTINEL1    = Path("../Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv")
+
+MAX_GWL_MISSING = 0.60   # exclude districts missing >= this fraction of gwl days
+MIN_STATIONS    = 5      # below this -> low_station_flag = 1 (kept, reported separately)
+
+# Canonical district names — every input file is mapped through this before merging
+CANON_NAME = {
+    "MUMBAI CITY": "Mumbai City",
+}
+
+AQUIFER_TYPE_MAP = {"Unconfined": 0, "Semi-Confined": 1, "Confined": 2}
+
+CGWB_CATEGORY_MAP = {
+    "Safe": 0, "Semi-Critical": 1, "Critical": 2, "Over-Exploited": 3, "Saline": 4,
+}
 
 # ─── LOAD CLEAN FILES ─────────────────────────────────────────────────────────
 print("Loading clean datasets ...")
@@ -52,22 +70,58 @@ gw   = pd.read_csv(CLEAN / "groundwater_clean.csv",  parse_dates=["date"])
 rf   = pd.read_csv(CLEAN / "rainfall_clean.csv",     parse_dates=["date"])
 ev   = pd.read_csv(CLEAN / "env_features_clean.csv", parse_dates=["date"])
 soil = pd.read_csv(SOIL_TEXTURE)
+cgwb = pd.read_csv(CGWB)
 s2   = pd.read_csv(SENTINEL2)
 s1   = pd.read_csv(SENTINEL1)
+
+for frame in (gw, rf, ev, soil, cgwb, s2, s1):
+    frame["district"] = frame["district"].replace(CANON_NAME)
 
 print(f"  Groundwater  : {len(gw):,} rows, {gw['district'].nunique()} districts")
 print(f"  Rainfall     : {len(rf):,} rows, {rf['district'].nunique()} districts")
 print(f"  Env features : {len(ev):,} rows, {ev['district'].nunique()} districts")
 print(f"  Soil texture : {len(soil):,} rows (static, one per district)")
+print(f"  CGWB extract : {len(cgwb):,} rows, {cgwb['district'].nunique()} districts")
 print(f"  Sentinel-2   : {len(s2):,} rows, {s2['district'].nunique()} districts")
 print(f"  Sentinel-1   : {len(s1):,} rows, {s1['district'].nunique()} districts")
 
-# ─── MERGE ────────────────────────────────────────────────────────────────────
+# ─── DISTRICT GATE ────────────────────────────────────────────────────────────
+# groundwater_clean is a full daily calendar per district, so isna() over it is
+# the true missing fraction. Districts above the threshold cannot produce a
+# single valid training window and only pollute per-district statistics.
+print(f"\nDistrict gate (exclude if gwl missing >= {MAX_GWL_MISSING:.0%}):")
+coverage = gw.groupby("district").agg(
+    missing_frac=("gwl_mean", lambda s: s.isna().mean()),
+    n_stations  =("n_stations", "first"),
+)
+excluded = coverage[coverage["missing_frac"] >= MAX_GWL_MISSING].copy()
+excluded["reason"] = excluded["missing_frac"].map(lambda f: f"gwl missing {f:.0%}")
+kept = coverage.drop(excluded.index)
+
+for d, row in excluded.sort_index().iterrows():
+    print(f"  EXCLUDED  {d:<20} {row['reason']}")
+excluded.reset_index().to_csv(CLEAN / "excluded_districts.csv", index=False)
+
+gw = gw[~gw["district"].isin(excluded.index)]
+print(f"  Kept {gw['district'].nunique()} districts "
+      f"(low-station flagged: {sorted(kept[kept['n_stations'] < MIN_STATIONS].index)})")
+
+# ─── MERGE (left joins on the full groundwater calendar — rows are NOT dropped) ─
 print("\nMerging ...")
-master = gw.merge(rf, on=["district", "date"], how="inner", suffixes=("", "_rf"))
+master = gw.merge(rf, on=["district", "date"], how="left", suffixes=("", "_rf"))
 master = master.merge(ev, on=["district", "date"], how="left")
+if "station_count_rf" in master.columns:            # CHIRPS carries a dummy station_count
+    master = master.drop(columns=["station_count_rf"])
 
 print(f"  After merge  : {len(master):,} rows, {master['district'].nunique()} districts")
+rain_null = master.groupby("district")["rainfall_mm"].apply(lambda s: s.isna().mean())
+rain_null = rain_null[rain_null > 0]
+if len(rain_null):
+    print("  WARNING — districts with missing rainfall days:")
+    print(rain_null.map("{:.1%}".format).to_string())
+
+# Daily station_count: NaN means no station reported that day
+master["station_count"] = master["station_count"].fillna(0)
 
 # ─── TIME FEATURES ────────────────────────────────────────────────────────────
 master["month"]       = master["date"].dt.month
@@ -80,13 +134,20 @@ master["season"]      = master["month"].map({
     10: "post_monsoon", 11: "post_monsoon",
 })
 
-# ─── LAG FEATURES ─────────────────────────────────────────────────────────────
-master = master.sort_values(["district", "date"])
+# ─── LAG FEATURES (date-true: each district is a complete daily calendar) ────
+master = master.sort_values(["district", "date"]).reset_index(drop=True)
+
+# Safety: assert the calendar really is gap-free per district, otherwise the
+# shift()-based lags below silently stop being date-true again.
+step = master.groupby("district")["date"].diff().dropna()
+assert (step == pd.Timedelta(days=1)).all(), "calendar grid has holes — lags would be corrupted"
+
 master["gwl_lag_7"]  = master.groupby("district")["gwl_mean"].shift(7)
 master["gwl_lag_14"] = master.groupby("district")["gwl_mean"].shift(14)
 master["gwl_lag_30"] = master.groupby("district")["gwl_mean"].shift(30)
 
-# ─── TREND FEATURES ───────────────────────────────────────────────────────────
+# NaN wherever either side is missing — no imputation here (that is a modelling
+# decision; median-filling lags injects fake flat history into gappy districts)
 master["gwl_7d_change"]  = master["gwl_mean"] - master["gwl_lag_7"]
 master["gwl_30d_change"] = master["gwl_mean"] - master["gwl_lag_30"]
 
@@ -94,6 +155,11 @@ master["gwl_30d_change"] = master["gwl_mean"] - master["gwl_lag_30"]
 master["net_water_balance"] = master["rainfall_mm"] - master["et_mm"]
 # VPD proxy: higher temp × lower humidity → atmosphere is "thirstier" → more ET
 master["vpd_approx"] = master["temp_mean"] * (1.0 - master["humidity_mean"] / 100.0)
+
+# ─── STATIC METADATA FROM GROUNDWATER CLEANING ───────────────────────────────
+master["aquifer_type_id"]  = master["aquifer_type"].map(AQUIFER_TYPE_MAP).fillna(-1).astype(int)
+master["low_station_flag"] = (master["n_stations"] < MIN_STATIONS).astype(int)
+master = master.drop(columns=["aquifer_type"])
 
 # ─── DISTRICT ID ──────────────────────────────────────────────────────────────
 # Integer 0..N-1 sorted alphabetically — used as embedding index in LSTM/TFT
@@ -108,13 +174,42 @@ soil_cols = [
     "sand_10cm", "clay_10cm", "silt_10cm",
     "sand_30cm", "clay_30cm", "silt_30cm",
 ]
-# Keep only the district + soil columns that exist in the file
 available_soil_cols = ["district"] + [c for c in soil_cols if c in soil.columns]
 soil_clean = soil[available_soil_cols].drop_duplicates(subset=["district"])
 
 master = master.merge(soil_clean, on="district", how="left")
-soil_missing = master[[c for c in soil_cols if c in master.columns]].isnull().any(axis=1).sum()
-print(f"  Soil texture : {soil_missing:,} rows with missing soil data (districts not in soil file)")
+soil_missing_districts = sorted(
+    master.loc[master[[c for c in soil_cols if c in master.columns]].isnull().any(axis=1), "district"].unique()
+)
+if soil_missing_districts:
+    print(f"  Soil texture : missing for {soil_missing_districts}")
+
+# ─── CGWB EXTRACTION / RECHARGE (yearly static, ffill to unpublished years) ──
+cgwb["aquifer_category_id"] = cgwb["category"].map(CGWB_CATEGORY_MAP).fillna(-1).astype(int)
+cgwb_cols = ["annual_recharge_bcm", "annual_extraction_bcm",
+             "extractable_resource_bcm", "stage_of_extraction_pct",
+             "aquifer_category_id"]
+cgwb_cols = [c for c in cgwb_cols if c in cgwb.columns]
+
+years = sorted(master["date"].dt.year.unique())
+all_years = pd.DataFrame(
+    [(d, y) for d in cgwb["district"].unique() for y in years],
+    columns=["district", "year"],
+)
+cgwb_full = all_years.merge(cgwb.sort_values(["district", "year"]),
+                            on=["district", "year"], how="left")
+cgwb_full[cgwb_cols] = cgwb_full.groupby("district")[cgwb_cols].ffill().bfill()
+
+master["year"] = master["date"].dt.year
+master = master.merge(cgwb_full[["district", "year"] + cgwb_cols],
+                      on=["district", "year"], how="left").drop(columns=["year"])
+
+cgwb_unmatched = sorted(master.loc[master["annual_recharge_bcm"].isna(), "district"].unique())
+if cgwb_unmatched:
+    print(f"  CGWB extract : no data for {cgwb_unmatched} — filled with column medians")
+    for c in cgwb_cols:
+        master[c] = master[c].fillna(master[c].median())
+master["aquifer_category_id"] = master["aquifer_category_id"].astype(int)
 
 # ─── SENTINEL MERGE (monthly → daily via linear interpolation) ───────────────
 def expand_sentinel_to_daily(sent_df, value_cols, master_dates):
@@ -133,10 +228,8 @@ def expand_sentinel_to_daily(sent_df, value_cols, master_dates):
     daily_parts = []
     for dist, grp in sent_df.groupby("district"):
         grp = grp.set_index("date").sort_index()
-        # Reindex to full daily range
         full_idx = pd.date_range(master_dates.min(), master_dates.max(), freq="D")
         grp = grp.reindex(full_idx)
-        # Linear interpolation for interior NaNs, ffill/bfill for edges
         for col in value_cols:
             grp[col] = grp[col].interpolate("linear").ffill().bfill()
         grp["district"] = dist
@@ -154,41 +247,38 @@ s1_daily = expand_sentinel_to_daily(s1, s1_cols, master["date"])
 master = master.merge(s2_daily[["district", "date"] + s2_cols], on=["district", "date"], how="left")
 master = master.merge(s1_daily[["district", "date"] + s1_cols], on=["district", "date"], how="left")
 
-s2_missing = master["ndvi_mean"].isnull().sum()
-s1_missing = master["vv_db"].isnull().sum()
-print(f"  Sentinel-2   : {s2_missing:,} rows with no ndvi (districts not in Sentinel coverage)")
-print(f"  Sentinel-1   : {s1_missing:,} rows with no vv_db (districts not in Sentinel coverage)")
-
-# ─── DROP ROWS WITH NO TARGET ─────────────────────────────────────────────────
-before = len(master)
-master = master.dropna(subset=["gwl_mean"])
-print(f"  Dropped {before - len(master):,} rows with no groundwater reading")
+sent_missing_districts = sorted(master.loc[master["ndvi_mean"].isna(), "district"].unique())
+if sent_missing_districts:
+    print(f"  Sentinel     : no coverage for {sent_missing_districts} (left NaN — impute per-district at training time)")
 
 # ─── COLUMN ORDER ─────────────────────────────────────────────────────────────
 ordered_cols = [
     "district", "district_id", "date", "day_of_year",
-    "gwl_mean", "gwl_min", "gwl_max", "station_count",
+    "gwl_mean", "gwl_min", "gwl_max", "station_count", "gwl_observed",
     "rainfall_mm", "rainfall_7d", "rainfall_30d",
     "et_mm", "soil_moisture", "net_water_balance",
     "temp_max", "temp_min", "temp_mean", "humidity_mean", "vpd_approx",
     "month", "season", "is_monsoon",
     "gwl_lag_7", "gwl_lag_14", "gwl_lag_30",
     "gwl_7d_change", "gwl_30d_change",
+    "aquifer_type_id", "well_depth_m", "n_stations", "low_station_flag",
+    "annual_recharge_bcm", "annual_extraction_bcm",
+    "extractable_resource_bcm", "stage_of_extraction_pct", "aquifer_category_id",
     "sand_0cm", "clay_0cm", "silt_0cm",
     "sand_10cm", "clay_10cm", "silt_10cm",
     "sand_30cm", "clay_30cm", "silt_30cm",
     "ndvi_mean", "ndwi_mean", "ndmi_mean",
     "vv_db", "vh_db", "vh_vv_ratio",
 ]
-# Only keep columns that actually ended up in master (soil cols may vary)
 final_cols = [c for c in ordered_cols if c in master.columns]
 master = master[final_cols]
 
 # ─── SUMMARY ──────────────────────────────────────────────────────────────────
 print(f"\nFinal master dataset:")
-print(f"  Rows       : {len(master):,}")
-print(f"  Districts  : {master['district'].nunique()}")
-print(f"  Date range : {master['date'].min().date()} -> {master['date'].max().date()}")
+print(f"  Rows        : {len(master):,} (full calendar — includes unobserved-gwl days)")
+print(f"  Observed gwl: {master['gwl_observed'].sum():,} rows ({master['gwl_observed'].mean():.1%})")
+print(f"  Districts   : {master['district'].nunique()}")
+print(f"  Date range  : {master['date'].min().date()} -> {master['date'].max().date()}")
 print(f"  Columns ({len(final_cols)}) : {final_cols}")
 print(f"\nMissing values:")
 missing = master.isnull().sum()
