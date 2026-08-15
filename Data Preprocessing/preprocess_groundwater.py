@@ -30,13 +30,28 @@ OUTPUT = Path("clean datasets/groundwater_clean.csv")
 Path("clean datasets").mkdir(exist_ok=True)
 
 START = "2023-01-01"
-END   = "2025-04-22"
+END   = "2026-06-04"   # actual max CGWB coverage as of the 2026-08 re-collection
 
 # Outlier thresholds
 MAX_ABS_DEPTH      = 100.0   # |value| above this is sensor fault (raw had max +172m)
 HAMPEL_WINDOW      = 7       # days, per-station rolling window for spike detection
 HAMPEL_K           = 3.0     # MAD multiplier; values beyond this are spikes
 MAX_DAILY_CHANGE_M = 5.0     # max physically plausible 1-day change at district scale
+
+# ─── STATION PANEL FILTER ────────────────────────────────────────────────────
+# The raw CGWB feed mixes two completely different measurement programmes:
+#   1. ~125 TELEMETRIC stations  — automatic loggers, 20-90% daily coverage, run
+#      continuously across the whole period. These are the real monitoring network.
+#   2. ~1250 MANUAL-SURVEY stations — exactly 2 readings each (Jan + May 2023),
+#      mostly shallow dug wells.
+# Coverage is sharply bimodal (nothing between ~1% and ~20%), so a 10% threshold
+# cleanly separates them.
+#
+# Mixing the two was corrupting the district series: e.g. Aurangabad showed
+# -4.94 m in Jan 2023 (40 manual dug wells) then -98.9 m by Jun 2023 (1 deep
+# telemetric borewell) — a ~94 m "change" that is purely a change of *which wells
+# were measured*, not of the water table. Same in Thane (36 -> 1 station).
+MIN_STATION_COVERAGE = 0.10  # fraction of the full period a station must report on
 
 # ─── LOAD ─────────────────────────────────────────────────────────────────────
 print("Loading groundwater data ...")
@@ -62,22 +77,60 @@ print(f"  Sensor-fault rows dropped (|v| > {MAX_ABS_DEPTH}m): {before - len(df):
 # WRIS mixes conventions: some stations report depth as negative ("-5m below surface"),
 # others as positive ("5m below surface"). Determine per-station, then normalise to
 # negative convention (depth below surface = negative metres).
+#
+# A station is "mixed" if it has both positive and negative readings. Most mixed
+# stations are actually clean single-convention stations with a tiny number of
+# spurious readings (observed: exact value 1.0 scattered among thousands of
+# otherwise-consistent negative readings — a sensor/telemetry placeholder, not a
+# real measurement). Dropping the whole station over a few bad rows was throwing
+# away good data — e.g. Gadchiroli's only two working stations (CGWNAG2184/2185,
+# 99.5%+ and 99.97%+ negative respectively) were being discarded entirely this way.
+# Fix: keep a mixed station if one sign dominates (>=95% of its readings); drop
+# only the minority-sign rows as spurious. Only drop the whole station if the sign
+# is genuinely ambiguous (<95% dominance) — a real data-quality issue.
+MIXED_DOMINANCE_THRESHOLD = 0.95
+
 station_sign = df.groupby("stationCode")["dataValue"].agg(["min", "max"]).reset_index()
 station_sign["all_negative"] = station_sign["max"] <= 0
 station_sign["all_positive"] = station_sign["min"] >= 0
 station_sign["mixed"]        = ~(station_sign["all_negative"] | station_sign["all_positive"])
 
-n_neg   = station_sign["all_negative"].sum()
-n_pos   = station_sign["all_positive"].sum()
-n_mixed = station_sign["mixed"].sum()
-print(f"\nSign convention split:")
-print(f"  Negative-only : {n_neg:>5} stations (already correct sign)")
-print(f"  Positive-only : {n_pos:>5} stations (sign-flipped to negative)")
-print(f"  Mixed-sign    : {n_mixed:>5} stations (dropped — data quality issue)")
+neg_frac = df.groupby("stationCode")["dataValue"].apply(lambda s: (s < 0).mean())
+station_sign = station_sign.set_index("stationCode")
+station_sign["neg_frac"] = neg_frac
+station_sign["dominant_frac"] = station_sign["neg_frac"].clip(upper=1).combine(
+    1 - station_sign["neg_frac"], max
+)
+station_sign = station_sign.reset_index()
 
-# Drop mixed-sign stations
-mixed_codes = set(station_sign.loc[station_sign["mixed"], "stationCode"])
-df = df[~df["stationCode"].isin(mixed_codes)]
+salvageable_mask = station_sign["mixed"] & (station_sign["dominant_frac"] >= MIXED_DOMINANCE_THRESHOLD)
+ambiguous_mask   = station_sign["mixed"] & (station_sign["dominant_frac"] < MIXED_DOMINANCE_THRESHOLD)
+
+n_neg        = station_sign["all_negative"].sum()
+n_pos        = station_sign["all_positive"].sum()
+n_salvaged   = salvageable_mask.sum()
+n_ambiguous  = ambiguous_mask.sum()
+print(f"\nSign convention split:")
+print(f"  Negative-only     : {n_neg:>5} stations (already correct sign)")
+print(f"  Positive-only     : {n_pos:>5} stations (sign-flipped to negative)")
+print(f"  Mixed, salvaged   : {n_salvaged:>5} stations (>={MIXED_DOMINANCE_THRESHOLD:.0%} one-signed — kept, minority-sign rows dropped as spurious)")
+print(f"  Mixed, ambiguous  : {n_ambiguous:>5} stations (dropped — genuine data-quality issue)")
+
+# Drop only the genuinely ambiguous mixed-sign stations entirely
+ambiguous_codes = set(station_sign.loc[ambiguous_mask, "stationCode"])
+df = df[~df["stationCode"].isin(ambiguous_codes)]
+
+# For salvaged stations, drop only their minority-sign (spurious) rows
+salvaged_codes = set(station_sign.loc[salvageable_mask, "stationCode"])
+dominant_is_neg = station_sign.set_index("stationCode")["neg_frac"] >= 0.5
+is_salvaged_row = df["stationCode"].isin(salvaged_codes)
+row_dominant_neg = df["stationCode"].map(dominant_is_neg).fillna(True)
+spurious_row = is_salvaged_row & (
+    (row_dominant_neg & (df["dataValue"] >= 0)) | (~row_dominant_neg & (df["dataValue"] < 0))
+)
+n_spurious_dropped = spurious_row.sum()
+df = df[~spurious_row]
+print(f"  Spurious minority-sign rows dropped from salvaged stations: {n_spurious_dropped:,}")
 
 # Normalise: every reading becomes -|value| → uniformly negative
 df["dataValue"] = -df["dataValue"].abs()
@@ -107,6 +160,69 @@ df = df[keep_mask]
 print(f"  Spike readings dropped: {spikes_dropped:,}")
 print(f"  Rows after Hampel    : {len(df):,}")
 
+# ─── STATION PANEL FILTER ────────────────────────────────────────────────────
+# Keep only continuously-reporting (telemetric) stations. See the note at the top
+# of this file: the one-off manual-survey stations create a large artificial jump
+# at the start of each district's series when they drop out.
+df["date"] = df["dataTime"].dt.normalize()
+total_days = (pd.Timestamp(END) - pd.Timestamp(START)).days + 1
+
+station_days = df.groupby("stationCode")["date"].nunique()
+station_cov  = station_days / total_days
+panel_codes  = set(station_cov[station_cov >= MIN_STATION_COVERAGE].index)
+
+print(f"\nStation panel filter (>= {MIN_STATION_COVERAGE:.0%} daily coverage):")
+print(f"  Stations before : {df['stationCode'].nunique():,}")
+print(f"  Stations in panel: {len(panel_codes):,}  (dropped {df['stationCode'].nunique()-len(panel_codes):,} "
+      f"sparse/manual-survey stations)")
+df = df[df["stationCode"].isin(panel_codes)]
+print(f"  Rows after panel filter: {len(df):,}")
+print(f"  Districts remaining    : {df['district'].nunique()}")
+
+# ─── DRIFT-ARTIFACT STATION FILTER ───────────────────────────────────────────
+# Some panel wells are newly-drilled/re-commissioned borewells whose level is
+# still equilibrating: they drift monotonically over the whole record instead of
+# oscillating seasonally. e.g. Aurangabad's CGWBNG0515 (100 m deep) starts at
+# -98.8 m — essentially the bottom of the borehole — and climbs steadily to -5 m
+# over three years (102 m of pure trend). That is the well filling up, not the
+# district water table moving, and it dominated Aurangabad's district series.
+#
+# NOTE: large range alone is NOT a valid test — Dhule's and Nandurbar's wells
+# genuinely swing 30-50 m *seasonally* (deep hard-rock aquifers). The
+# discriminator is how much of the variance is a single monotonic trend:
+#   drift artifact  -> high trend R^2 (0.6+) AND large range
+#   real deep well  -> large range but low trend R^2 (Dhule: 0.004-0.06)
+DRIFT_R2_THRESHOLD    = 0.60
+DRIFT_RANGE_THRESHOLD = 20.0   # metres
+
+_sd = (df.groupby(["stationCode", "date"])["dataValue"].mean().reset_index())
+drift_codes = []
+for code, g in _sd.groupby("stationCode"):
+    g = g.sort_values("date")
+    v = g["dataValue"].values.astype(float)
+    if len(v) < 50:
+        continue
+    t = (g["date"] - g["date"].min()).dt.days.values.astype(float)
+    ss_tot = ((v - v.mean()) ** 2).sum()
+    if ss_tot <= 0:
+        continue
+    coef, *_ = np.linalg.lstsq(np.vstack([t, np.ones_like(t)]).T, v, rcond=None)
+    r2 = 1.0 - (((v - (coef[0] * t + coef[1])) ** 2).sum() / ss_tot)
+    if r2 >= DRIFT_R2_THRESHOLD and (v.max() - v.min()) > DRIFT_RANGE_THRESHOLD:
+        drift_codes.append((code, round(r2, 3), round(v.max() - v.min(), 1),
+                            round(abs(coef[0]) * t.max(), 1)))
+
+print(f"\nDrift-artifact filter (trend R^2 >= {DRIFT_R2_THRESHOLD}, range > {DRIFT_RANGE_THRESHOLD} m):")
+if drift_codes:
+    for code, r2, rng, drift in drift_codes:
+        dist = df.loc[df["stationCode"] == code, "district"].iloc[0]
+        print(f"  DROPPED {code} ({dist}): trend R^2={r2}, range={rng} m, total drift={drift} m")
+    df = df[~df["stationCode"].isin([c[0] for c in drift_codes])]
+else:
+    print("  (none)")
+print(f"  Rows after drift filter: {len(df):,}  |  Stations: {df['stationCode'].nunique()}  "
+      f"|  Districts: {df['district'].nunique()}")
+
 # ─── STATIC PER-DISTRICT METADATA ────────────────────────────────────────────
 # Derive once from the full (post-sign-normalisation) DataFrame before aggregation.
 # wellAquiferType: most common value per district (mode)
@@ -127,9 +243,18 @@ district_meta["well_depth_m"] = district_meta["well_depth_m"].round(1)
 print("\nStatic district metadata (sample):")
 print(district_meta.sort_values("district").to_string(index=False))
 
-# ─── DAILY AGGREGATION (per station, then per district) ───────────────────────
-df["date"] = df["dataTime"].dt.normalize()
-
+# ─── DAILY AGGREGATION VIA PER-STATION ANOMALIES ─────────────────────────────
+# Aggregating RAW depths across stations makes the district series jump whenever
+# the set of reporting stations changes, because wells sit at very different
+# depths (e.g. Aurangabad's panel: one well averaging 28.6 m, another 3.4 m — the
+# shallow one only starts reporting in Mar 2024, which alone shifted the district
+# median by tens of metres).
+#
+# Instead each station is converted to its OWN anomaly (deviation from its own
+# long-run mean), the anomalies are aggregated, and the result is re-referenced to
+# a fixed per-district baseline. A station joining or leaving now contributes
+# "how far above/below its own normal it is" rather than its absolute depth, so
+# composition changes no longer masquerade as water-table movement.
 station_daily = (
     df.groupby(["stationCode", "district", "date"])["dataValue"]
     .mean()
@@ -137,16 +262,35 @@ station_daily = (
     .rename(columns={"dataValue": "gwl_station_daily_mean"})
 )
 
+# Each station's own long-run mean level, and the district's fixed reference level
+station_mean   = station_daily.groupby("stationCode")["gwl_station_daily_mean"].mean()
+station_daily["station_mean"] = station_daily["stationCode"].map(station_mean)
+station_daily["anomaly"]      = station_daily["gwl_station_daily_mean"] - station_daily["station_mean"]
+
+# District reference = median of its panel stations' own mean levels (fixed in time)
+district_ref = (
+    station_daily.drop_duplicates("stationCode")
+    .groupby("district")["station_mean"].median()
+)
+
 district_daily = (
     station_daily.groupby(["district", "date"])
     .agg(
-        gwl_mean      = ("gwl_station_daily_mean", "median"),  # median — robust to outlier stations
-        gwl_min       = ("gwl_station_daily_mean", "min"),
-        gwl_max       = ("gwl_station_daily_mean", "max"),
+        anom_med      = ("anomaly", "median"),   # median — robust to a single bad station
+        anom_min      = ("anomaly", "min"),
+        anom_max      = ("anomaly", "max"),
         station_count = ("stationCode", "count"),
     )
     .reset_index()
 )
+ref = district_daily["district"].map(district_ref)
+district_daily["gwl_mean"] = ref + district_daily["anom_med"]
+district_daily["gwl_min"]  = ref + district_daily["anom_min"]
+district_daily["gwl_max"]  = ref + district_daily["anom_max"]
+district_daily = district_daily.drop(columns=["anom_med", "anom_min", "anom_max"])
+
+print("\nPer-district reference levels (median of panel stations' own mean depths):")
+print(district_ref.round(2).sort_values().to_string())
 
 district_daily["date"] = pd.to_datetime(district_daily["date"])
 district_daily = district_daily.sort_values(["district", "date"]).reset_index(drop=True)

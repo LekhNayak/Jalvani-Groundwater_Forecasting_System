@@ -26,3 +26,6 @@ Ratnagiri|CGWB
 Sangli|CGWB
 Solapur|CGWB
 Thane|CGWB
+Wardha|CGWB
+Washim|CGWB
+Yavatmal|CGWB

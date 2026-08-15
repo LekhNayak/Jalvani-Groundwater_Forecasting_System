@@ -1,7 +1,50 @@
 # TFT Generalization — Diagnosis & Improvement Plan
 
-**Created:** 2026-07-04 · **Phases A & B completed:** 2026-07-04
+**Created:** 2026-07-04 · **Phases A & B completed:** 2026-07-04 · **v3 post-mortem + v4 rebuild:** 2026-08-15
 **Goal:** Make TFT accuracy uniformly good across districts, not just on the easy ones.
+
+> ## 🔴 2026-08-15 — v3 POST-MORTEM: the model was losing to a naive baseline
+>
+> The first full GPU run of v3 completed (6 folds, ~3 h on a T4). Headline numbers looked
+> plausible (median RMSE ~1.8-2.2 m, MAPE ~19-23%) — but benchmarking against a
+> **persistence baseline** (`gwl(t+h) = gwl(t)`, i.e. "nothing changes") showed:
+>
+> **TFT lost to persistence in 15 of 18 fold-horizon combinations.**
+> Persistence RMSE 1.4-5.8 m vs TFT 2.9-9.1 m; at t+7 fold2, persistence MAE 0.56 m vs
+> TFT 2.91 m (5× worse). For scale, the median real GWL change is **0.29 m over 7 days**
+> and **0.90 m over 30 days** — TFT's errors were several times larger than the signal.
+>
+> **Lesson for all future work: report MASE (MAE ÷ persistence MAE) in every table.**
+> MASE < 1 is the only meaningful definition of success here. RMSE/MAPE alone hid this
+> completely for three model generations.
+>
+> ### Root causes and the v4 fixes
+> | # | Root cause | Evidence | Fix |
+> |---|---|---|---|
+> | 1 | **Predicted absolute level, not change.** GWL is near-random-walk, so predicting the level from scratch wasted capacity on the part persistence gives free, and mis-estimated it by metres. | Errors ≫ actual movement | Predict `Δ` from an anchor (last encoder day); make all encoder GWL features anchor-relative. Model output 0 ⇒ persistence, so persistence becomes the floor. |
+> | 2 | **District series weren't physically real.** Raw CGWB mixes ~125 telemetric stations (20-90% coverage) with ~1250 manual-survey wells having *exactly 2 readings each* (Jan+May 2023). When the manual wells dropped out, the district median jumped ~95 m. Plus 3 newly-commissioned wells still equilibrating. | Aurangabad: −4.9 → −98.9 → −1.3 m; std 30.5 m; 19.8 m train/test shift | 10% coverage panel filter + per-station **anomaly** aggregation + drift filter (trend R² ≥ 0.6 **and** range > 20 m). |
+> | 3 | **11.6M params vs ~156 independent windows.** stride=1 windows share 149/150 days, so "19,535 windows" was an illusion. | 3 folds hit best val at **epoch 1-2**; train loss 0.08 vs val 0.19-0.51 | d_model 192→64, layers 3→1, encoder 120→60, dropout 0.25, wd 1e-2, **stride 7** for train/val (test stays stride 1). |
+> | 4 | **Coverage ~50% vs 80% target** — a *symptom* of (3), not a separate problem: collapsed train residuals ⇒ quantiles too narrow. | — | Follows from fixing (3); conformal calibration retained as a guarantee. |
+>
+> ⚠️ **Do not use "range" alone to filter wells.** Dhule and Nandurbar legitimately swing
+> 30-50 m *seasonally* (trend R² 0.004-0.09). Only monotonic **drift** (high trend R²)
+> indicates a commissioning artifact. A naive range>30 m rule would have deleted 3 of
+> Dhule's 4 wells and an entire district.
+>
+> ### Measured effect of the data fix alone (before any model change)
+> | Metric | Before | After |
+> |---|---|---|
+> | Worst district std | 30.47 m (Aurangabad) | 10.24 m (Dhule) |
+> | Worst 1-day jump | 29.10 m | 14.75 m |
+> | Implausible jumps NaN'd | 405 | 89 |
+> | Overall gwl missing | 24.2% | 12.3% |
+> | **Persistence RMSE t+7 (mean over folds)** | **2.60 m** | **1.07 m** |
+>
+> Most of what looked like "prediction error" was station-composition noise. The bar the
+> model must now clear is persistence RMSE ≈ **1.07 m (t+7) / 1.49 m (t+14) / 2.33 m (t+30)**.
+>
+> **Implemented in:** `Models/TFT/09_tft_colab_production_v2.ipynb` (v4) and the rewritten
+> `Data Preprocessing/preprocess_groundwater.py`. v3 notebooks kept for reference.
 **TL;DR:** The per-district performance gap is primarily a **data-pipeline problem**, not an architecture problem. The master dataset is stale, half-migrated, and — critically — the TFT window builder assumes contiguous daily rows while the master has calendar holes. Fix the master (Phase A), fix windowing + evaluation (Phase B), then retrain (Phase C). Architecture changes come last.
 
 **Status: Phase A and Phase B are implemented and locally validated. Phase C (actually retraining on Colab GPU) is next — see §5.**

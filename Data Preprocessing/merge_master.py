@@ -51,7 +51,13 @@ SENTINEL2    = Path("../Data Collection/datasets/sentinel2_indices_maharashtra_2
 SENTINEL1    = Path("../Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv")
 
 MAX_GWL_MISSING = 0.60   # exclude districts missing >= this fraction of gwl days
-MIN_STATIONS    = 5      # below this -> low_station_flag = 1 (kept, reported separately)
+# Flag districts whose series comes from a single well. Since preprocess_groundwater.py
+# now restricts to the continuously-reporting telemetric panel (~109 stations state-wide
+# instead of 1379 mostly-one-off manual wells), typical per-district counts are 1-11, so
+# the old threshold of 5 would have flagged most of the state. A district with 2+ wells
+# is a small but genuine sample; a district with exactly 1 is literally one borehole and
+# is reported separately rather than being blended into the headline.
+MIN_STATIONS    = 2      # below this -> low_station_flag = 1 (kept, reported separately)
 
 # Canonical district names — every input file is mapped through this before merging
 CANON_NAME = {
@@ -106,6 +112,60 @@ gw = gw[~gw["district"].isin(excluded.index)]
 print(f"  Kept {gw['district'].nunique()} districts "
       f"(low-station flagged: {sorted(kept[kept['n_stations'] < MIN_STATIONS].index)})")
 
+# ─── DATA TIER (new, 2026-08-15) ─────────────────────────────────────────────
+# A district's forecastability is driven by how many wells it has and how much of
+# the record is genuinely observed — NOT by how much its water table moves.
+# Measured on this dataset (Spearman vs. how well any model does at t+30):
+#     2023 observed rate   -0.54
+#     overall observed rate -0.54
+#     n_stations            -0.51
+#     median 30-day movement -0.10   (i.e. nothing)
+# 2023 is the discriminating year: it is only 57% observed state-wide, and the
+# districts missing most of it (Aurangabad 25%, Beed 25%, Kolhapur 26%, Dhule
+# 27%, Gadchiroli 27%, Bhandara 29%) are the ones no model can forecast.
+#
+# The tier is a statement about DATA ONLY. It is deliberately not fitted to model
+# results, so it can be quoted as an independent explanation of them.
+#   A  dense panel + full history   -> headline results
+#   B  usable
+#   C  thin panel AND missing most of 2023 -> report as a data finding, not a model failure
+#   D  unusable                     -> excluded from training
+TIER_A_STATIONS, TIER_A_COV23 = 6, 0.65
+TIER_C_STATIONS, TIER_C_COV23 = 4, 0.55
+TIER_D_OVERALL_COV = 0.55
+
+gw_2023 = gw[gw["date"].dt.year == 2023]
+cov23 = gw_2023.groupby("district")["gwl_observed"].mean()
+cov_all = gw.groupby("district")["gwl_observed"].mean()
+n_st = gw.groupby("district")["n_stations"].first()
+
+
+def _tier(d):
+    c23, call, ns = cov23.get(d, 0.0), cov_all.get(d, 0.0), n_st.get(d, 0)
+    if call < TIER_D_OVERALL_COV:
+        return "D"
+    if ns >= TIER_A_STATIONS and c23 >= TIER_A_COV23:
+        return "A"
+    if ns <= TIER_C_STATIONS and c23 < TIER_C_COV23:
+        return "C"
+    return "B"
+
+
+tiers = pd.Series({d: _tier(d) for d in sorted(gw["district"].unique())}, name="data_tier")
+scorecard = pd.DataFrame({
+    "n_stations": n_st, "coverage_2023": cov23.round(3),
+    "coverage_all": cov_all.round(3), "data_tier": tiers,
+}).sort_values(["data_tier", "coverage_2023"], ascending=[True, False])
+scorecard.index.name = "district"
+scorecard.to_csv(CLEAN / "district_data_quality.csv")
+
+print("\nData tier (A dense+complete / B usable / C thin+gappy / D unusable):")
+print(scorecard.to_string())
+for t in ["A", "B", "C", "D"]:
+    members = sorted(scorecard.index[scorecard["data_tier"] == t])
+    print(f"  Tier {t} ({len(members)}): {members}")
+print(f"  -> clean datasets/district_data_quality.csv")
+
 # ─── MERGE (left joins on the full groundwater calendar — rows are NOT dropped) ─
 print("\nMerging ...")
 master = gw.merge(rf, on=["district", "date"], how="left", suffixes=("", "_rf"))
@@ -156,9 +216,16 @@ master["net_water_balance"] = master["rainfall_mm"] - master["et_mm"]
 # VPD proxy: higher temp × lower humidity → atmosphere is "thirstier" → more ET
 master["vpd_approx"] = master["temp_mean"] * (1.0 - master["humidity_mean"] / 100.0)
 
+# Water stress = unmet atmospheric demand. High stress drives irrigation pumping,
+# which is the dominant non-natural groundwater sink in Maharashtra. Only present
+# when ET comes from ERA5-Land (the old WRIS feed had no PET band).
+if "pet_mm" in master.columns:
+    master["water_stress"] = master["pet_mm"] - master["et_mm"]
+
 # ─── STATIC METADATA FROM GROUNDWATER CLEANING ───────────────────────────────
 master["aquifer_type_id"]  = master["aquifer_type"].map(AQUIFER_TYPE_MAP).fillna(-1).astype(int)
 master["low_station_flag"] = (master["n_stations"] < MIN_STATIONS).astype(int)
+master["data_tier"]        = master["district"].map(tiers)
 master = master.drop(columns=["aquifer_type"])
 
 # ─── DISTRICT ID ──────────────────────────────────────────────────────────────
@@ -214,24 +281,39 @@ master["aquifer_category_id"] = master["aquifer_category_id"].astype(int)
 # ─── SENTINEL MERGE (monthly → daily via linear interpolation) ───────────────
 def expand_sentinel_to_daily(sent_df, value_cols, master_dates):
     """
-    Sentinel data is monthly (year, month). Expand to daily by:
-      1. Convert (year, month) to the 1st of each month as a date
-      2. Reindex to every day in master_dates per district
-      3. Linear interpolate interior gaps, then ffill/bfill edges
+    Sentinel data is monthly (year, month). Expand to daily, CAUSALLY.
+
+    v3 fix (2026-08-15) — the previous version stamped each monthly composite at
+    the **1st** of its month and then linearly interpolated to daily. That meant
+    NDVI on 15 January was a 50/50 blend of the January and *February*
+    composites: up to half a month of future information in every daily encoder
+    value, in a model whose whole point is forecasting 7-30 days ahead.
+
+    Now: a monthly composite summarises a month that has already finished, so it
+    is stamped at month-END and held constant (step / ffill) until the next
+    composite lands. A value on any given day therefore depends only on months
+    that were already complete. The cost is a lag of up to ~30 days, which is
+    honest — that is genuinely when the information becomes available.
     """
     sent_df = sent_df.copy()
-    sent_df["date"] = pd.to_datetime(
-        sent_df["year"].astype(str) + "-" + sent_df["month"].astype(str).str.zfill(2) + "-01"
+    # month-END: the composite for YYYY-MM is only knowable once YYYY-MM is over
+    sent_df["date"] = (
+        pd.to_datetime(sent_df["year"].astype(str) + "-" + sent_df["month"].astype(str).str.zfill(2) + "-01")
+        + pd.offsets.MonthEnd(0)
     )
     sent_df = sent_df[["district", "date"] + value_cols]
 
     daily_parts = []
+    full_idx = pd.date_range(master_dates.min(), master_dates.max(), freq="D")
     for dist, grp in sent_df.groupby("district"):
         grp = grp.set_index("date").sort_index()
-        full_idx = pd.date_range(master_dates.min(), master_dates.max(), freq="D")
-        grp = grp.reindex(full_idx)
+        grp = grp[~grp.index.duplicated(keep="last")]
+        grp = grp.reindex(grp.index.union(full_idx)).sort_index()
         for col in value_cols:
-            grp[col] = grp[col].interpolate("linear").ffill().bfill()
+            # ffill only — never interpolate forwards from a future composite.
+            # bfill covers only the warm-up before the first composite exists.
+            grp[col] = grp[col].ffill().bfill()
+        grp = grp.reindex(full_idx)
         grp["district"] = dist
         grp.index.name = "date"
         daily_parts.append(grp.reset_index())
@@ -256,12 +338,15 @@ ordered_cols = [
     "district", "district_id", "date", "day_of_year",
     "gwl_mean", "gwl_min", "gwl_max", "station_count", "gwl_observed",
     "rainfall_mm", "rainfall_7d", "rainfall_30d",
-    "et_mm", "soil_moisture", "net_water_balance",
+    "et_mm", "et_mm_observed", "soil_moisture", "soil_moisture_observed", "net_water_balance",
+    # ERA5-Land extras (absent when falling back to the old WRIS feed)
+    "pet_mm", "pet_mm_observed", "water_stress",
+    "sm_l1", "sm_l2", "sm_l3", "sm_l4",
     "temp_max", "temp_min", "temp_mean", "humidity_mean", "vpd_approx",
     "month", "season", "is_monsoon",
     "gwl_lag_7", "gwl_lag_14", "gwl_lag_30",
     "gwl_7d_change", "gwl_30d_change",
-    "aquifer_type_id", "well_depth_m", "n_stations", "low_station_flag",
+    "aquifer_type_id", "well_depth_m", "n_stations", "low_station_flag", "data_tier",
     "annual_recharge_bcm", "annual_extraction_bcm",
     "extractable_resource_bcm", "stage_of_extraction_pct", "aquifer_category_id",
     "sand_0cm", "clay_0cm", "silt_0cm",

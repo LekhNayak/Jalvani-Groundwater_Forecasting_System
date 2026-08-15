@@ -1,9 +1,45 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-05-14 (see 2026-07-04 notice below — several sections are now superseded)
+**Last updated:** 2026-08-15 (see notice below — several sections are now superseded)
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
-**Time range:** 2023-01-01 to 2025-04-22
-**Geography:** All 36 districts of Maharashtra
+**Time range:** 2023-01-01 to 2026-06-04 (raw groundwater/rainfall) — see §1 for per-source ranges
+**Geography:** All 36 districts of Maharashtra (24–26 usable for training, see district gate in §4.5)
+
+> ## ⚠️ Naming — two unrelated "TFT v1/v2" version lines exist in this repo
+> **§9 below** ("TFT v1", "TFT v2") refers to the *original* pre-walk-forward prototype runs
+> (`09_tft_groundwater.ipynb`, `09_tft_colab.ipynb`) from before the July 2026 rebuild — global vs.
+> per-district normalisation, no baseline comparison, validation-only evaluation. That work is
+> superseded and kept for historical reference only.
+>
+> **The current, actively-developed line is "production v1 → v2 → v3"**, documented in
+> `Models/TFT/PROD_V1_vs_V2.md`: full walk-forward evaluation, persistence-baseline MASE, delta-target
+> framing, data tiers, and (as of v3) statistical significance testing. **If you are looking for
+> current TFT results, go to `Models/TFT/PROD_V1_vs_V2.md`, not §9 of this document.**
+
+> ## 🟢 2026-08-15 update — v3: data re-sourced, seven "unexplained" districts fixed
+> Full audit of the v2 pipeline and a real 6-fold × 3-seed GPU run. Summary (full detail and numbers
+> in `Models/TFT/PROD_V1_vs_V2.md` §7–§13):
+> - **ET and soil moisture re-sourced to ERA5-Land** (`Data Collection/era5_land.py`) — the old
+>   WRIS/NRSC feed stopped publishing 2025-06-30, so folds 4–6 of the walk-forward evaluation were
+>   training on climatology fill dressed up as a live feature (0% real data in 2 of 6 folds). ERA5-Land
+>   also adds potential evapotranspiration and 4 soil-moisture depths instead of 1.
+> - **Sentinel monthly composites were leaking up to 15 days of the future** into every daily
+>   NDVI/NDWI/NDMI/VV/VH value (stamped at month-start, then linearly interpolated). Now stamped at
+>   month-end and held constant — strictly causal.
+> - **`data_tier` column added** to the master (`merge_master.py`), computed from station count and
+>   record completeness only — never from model results — so per-district accuracy can be explained
+>   independently of the model. See §4.5 below.
+> - **v2's reported TFT parameter count was wrong by ~6×** (205,173 claimed, 1,231,159 actual — the
+>   variable-selection network's first layer alone was larger than the rest of the network). Fixed in
+>   a rewritten, vectorised model (`Models/TFT/tft_model_v3.py`) that genuinely builds ~222,000
+>   parameters and runs a full 6-fold × 3-seed training sweep in **6.5 minutes** on a T4.
+> - **All seven districts that lost to persistence at every horizon in v2 now tie or beat it in v3**
+>   (Aurangabad, Bhandara, Nashik, Jalgaon, Dhule, Kolhapur, Ratnagiri) — 6 of the 7 turned out to be a
+>   data-completeness ceiling (confirmed by an independent ridge probe finding the same 6 districts
+>   unpredictable for a linear model too), and 1 (Ratnagiri) was a genuine v2 model bug, now fixed.
+>
+> **Implemented in:** `Models/TFT/09_tft_colab_production_v3.ipynb`. Full writeup:
+> `Models/TFT/PROD_V1_vs_V2.md`, `Models/TFT/V3_PLAN.md`.
 
 > ## ⚠️ 2026-07-04 update — master dataset rebuilt, TFT v2 numbers superseded
 > A data audit found the master dataset was stale and several sections below no longer match
@@ -34,21 +70,43 @@
 
 | # | Dataset | Granularity | Date Range | Agency / Source |
 |---|---------|-------------|------------|-----------------|
-| 1 | **Groundwater Level** | Sub-daily per station | 2023–2025 | CGWB via India WRIS |
-| 2 | **Rainfall** | Twice-daily per station (08:30 & 17:30) | 2023–2025 | CWC via India WRIS |
-| 3 | **Evapotranspiration (ET)** | Daily per district | 2023–2025 | NRSC VIC MODEL via India WRIS |
-| 4 | **Soil Moisture** | Daily per district | 2023–2025 | NRSC VIC MODEL via India WRIS |
+| 1 | **Groundwater Level** | Sub-daily per station | 2023–2026-06-04 | CGWB via India WRIS |
+| 2 | **Rainfall** | Daily gridded | 2023–2025-12-31 | CHIRPS via Google Earth Engine (superseded #2, see §2) |
+| 2b | ~~Rainfall (station)~~ | Twice-daily per station | 2023–2025 | ~~CWC via India WRIS~~ — superseded by CHIRPS |
+| 3 | **ET + Potential ET + Soil Moisture (4 depths)** | Daily per district | 2023–present, ~5-day latency | **ERA5-Land via Google Earth Engine** (`era5_land.py`) — replaces #3b, see notice above |
+| 3b | ~~ET + Soil Moisture (old)~~ | Daily per district | 2023–2025-06-30 | ~~NRSC VIC MODEL via India WRIS~~ — stopped publishing, superseded |
 | 5 | **Relative Humidity** | Sub-daily per station | 2023–2025 | CWC via India WRIS (superseded by #6) |
 | 6 | **Temperature + Humidity (ERA5)** | Daily per district centroid | 2023–2025-04-22 | Open-Meteo Historical Archive |
-| 7 | **Sentinel-2 Indices** (NDVI, NDWI, NDMI) | Monthly per district | 2023–2025 | Google Earth Engine (Copernicus S2) |
-| 8 | **Sentinel-1 SAR Backscatter** (VV, VH) | Monthly per district | 2023–2025 | Google Earth Engine (Copernicus S1) |
+| 7 | **Sentinel-2 Indices** (NDVI, NDWI, NDMI) | Monthly per district, causal (month-end stamped) | 2023–2025 | Google Earth Engine (Copernicus S2) |
+| 8 | **Sentinel-1 SAR Backscatter** (VV, VH) | Monthly per district, causal (month-end stamped) | 2023–2025 | Google Earth Engine (Copernicus S1) |
 | 9 | **Soil Texture** (sand %, clay %, silt %) | Static per district (3 depths) | — | OpenLandMap/SoilGrids via GEE (primary) · ISRIC REST API (fallback) |
 
 ### Why Open-Meteo for Temperature instead of WRIS?
 WRIS temperature/humidity comes from sparse CWC gauge stations with coverage gaps. Open-Meteo provides ERA5 reanalysis data — continuous daily values at every district centroid, no missing days, no station gaps. It also returns relative humidity in the same call, so it replaces the WRIS humidity dataset as well.
 
+### Why ERA5-Land for ET/soil moisture instead of WRIS/NRSC? (2026-08-15)
+The NRSC VIC feed stopped publishing after **2025-06-30** — 14+ months before the last training fold
+ends. Every day after that in `et_mm`/`soil_moisture` was a per-district day-of-year climatology fill
+(honestly flagged via `*_observed=0`, but still fed to the model as an ordinary feature), which left
+half the walk-forward evaluation training on a feature indistinguishable from `doy_sin`/`doy_cos`.
+ERA5-Land is a reanalysis product with ~5-day latency — no publication-lag cliff — and additionally
+provides **4 soil-moisture depths** (0–7, 7–28, 28–100, 100–289 cm) instead of one surface reading.
+The two deepest layers sit on the actual percolation pathway to the water table and lag rainfall by
+roughly the same 3–21 days that recharge does, which a single surface value cannot represent.
+`preprocess_env_features.py` uses ERA5-Land automatically when `era5_land_maharashtra_23_26.csv` is
+present, and falls back to the old WRIS files otherwise (with a printed warning) so the pipeline still
+runs on a fresh checkout without Earth Engine credentials.
+
 ### Why Sentinel-1 alongside Sentinel-2?
 Sentinel-2 is optical — it fails during heavy monsoon cloud cover. Sentinel-1 is SAR (radar), which works through clouds. The VH/VV backscatter ratio from S1 serves as an independent soil moisture proxy that remains valid during monsoon months when S2 data is unavailable.
+
+### Why are Sentinel composites now stamped at month-end? (2026-08-15)
+They were previously stamped at the **1st** of their month and linearly interpolated to daily, which
+meant a value on, say, 15 January was a 50/50 blend of the January **and February** composites — up
+to 15 days of future information leaking into a model whose entire job is forecasting the future.
+Composites are now stamped at month-**end** (the point at which that month's composite is actually
+knowable) and held constant via `ffill` until the next one lands. Strictly causal; the cost is a lag
+of up to ~30 days, which is the genuinely honest availability delay.
 
 ---
 
@@ -91,6 +149,18 @@ Sentinel-2 is optical — it fails during heavy monsoon cloud cover. Sentinel-1 
   - No API key or GEE required; rate-limited with retry backoff
 - **Output:** `datasets/soil_texture_maharashtra.csv`
 - **Static dataset** — run once, reuse for all training
+
+### ERA5-Land (Google Earth Engine) — ET, PET, Soil Moisture
+- **Script:** `Data Collection/era5_land.py`
+- **Asset:** `ECMWF/ERA5_LAND/DAILY_AGGR` — 0.1° (~11 km), global, 1950–present, ~5-day latency
+- **Bands used:** `total_evaporation_sum`, `potential_evaporation_sum`,
+  `volumetric_soil_water_layer_{1,2,3,4}` (0–7, 7–28, 28–100, 100–289 cm)
+- **Unit conversion:** evaporation bands are metres of water equivalent, negative-signed — converted
+  to positive mm/day; soil water fractions (m³/m³) converted to percent to match the old NRSC scale
+- **Output:** `et_mm`, `pet_mm`, `soil_moisture` (= layer 2, the closest analogue to the old NRSC
+  reading), `sm_l1`–`sm_l4`
+- District boundaries and GAUL name mapping identical to `chirps_rainfall.py`/`sentinel_indices.py`
+- Resumable via `txt files/era5_progress.txt`, same pattern as the other GEE collectors
 
 ### Google Earth Engine
 - **Sentinel-2:** `COPERNICUS/S2_SR_HARMONIZED` — harmonised surface reflectance
@@ -204,15 +274,30 @@ district, date, et_mm, soil_moisture, temp_max, temp_min, temp_mean, humidity_me
 **Script:** [Data Preprocessing/merge_master.py](Data%20Preprocessing/merge_master.py)
 
 1. **Join order:**
-   - Groundwater INNER JOIN Rainfall on `(district, date)` — keeps only districts with groundwater readings
-   - LEFT JOIN environmental features on `(district, date)`
+   - Groundwater LEFT JOIN Rainfall, Environmental features on `(district, date)` on the full
+     calendar grid (no rows dropped for missing `gwl_mean` — see the note in the 2026-07-04 notice
+     at the top of this document; this behaviour changed from the original inner-join version)
 2. **Time features engineered:**
    - `month`: integer month (1–12)
    - `season`: categorical — `winter` (Dec–Feb), `summer` (Mar–May), `monsoon` (Jun–Sep), `post_monsoon` (Oct–Nov)
 3. **Lag features engineered:**
-   - `gwl_lag_7`: groundwater level 7 days prior (captures short-term recharge lag)
-   - `gwl_lag_30`: groundwater level 30 days prior (captures monthly-scale trends)
-4. **Final filter:** rows where `gwl_mean` is `NaN` are dropped (no target = unusable for training)
+   - `gwl_lag_7` / `_14` / `_30`: date-true shifts on the gap-free calendar
+4. **District gate:** districts ≥60% missing groundwater excluded, logged to `excluded_districts.csv`
+5. **Data tier (added 2026-08-15):** every kept district is assigned a `data_tier` (A/B/C) from
+   station count and 2023 record completeness **only — never from model results** — so per-district
+   model accuracy can be explained independently rather than post-hoc rationalised:
+   ```
+   D  overall observed < 55%                          -> labelled tier D (still written to master; the training
+                                                           notebook excludes tier-D districts at runtime)
+   A  >= 6 stations AND >= 65% of 2023 observed        -> dense, complete — headline results
+   C  <= 4 stations AND <  55% of 2023 observed        -> thin panel + gappy 2023 — data-collection finding, not a model failure
+   B  everything else                                  -> usable, reported with caveat
+   ```
+   All 26 gated districts (including tier D) are written to `master_dataset.csv` with their
+   `data_tier` label; only the training notebook (`EXCLUDE_TIERS = ['D']`) drops tier-D districts
+   before building windows — `merge_master.py` itself does not remove them. Full scorecard in
+   `district_data_quality.csv`. Rationale, the correlation evidence behind the thresholds, and the
+   current tier assignments: `Models/TFT/PROD_V1_vs_V2.md` §8.1 and `Models/TFT/V3_PLAN.md` §2.
 
 ### 4.6 Station GeoJSON Export
 **Script:** [Data Preprocessing/extract_station_geojson.py](Data%20Preprocessing/extract_station_geojson.py)
@@ -450,7 +535,13 @@ The only features with near-zero SHAP at t+7 are deep soil texture (sand_30cm, c
 
 ---
 
-## 9. Model Training — Phase 2 TFT (SUPERSEDED — see notice at top of document)
+## 9. Model Training — Phase 2 TFT, original prototype (SUPERSEDED, historical only)
+
+> ⚠️ **"TFT v1"/"TFT v2" in this section are NOT the same as "production v1/v2/v3" elsewhere in this
+> repo.** This section documents the original pre-walk-forward prototype (single validation split,
+> no persistence baseline, no MASE). The current, actively-developed results are the
+> **production v1 → v2 → v3** line in `Models/TFT/PROD_V1_vs_V2.md` — go there for anything current.
+> This section is retained only so the numbers below aren't orphaned; do not cite them as current.
 
 > **⚠️ All results in this section (§9.1–§9.3) were trained on the old master dataset and are not
 > reproducible from current files.** The old master included 28 districts (some near-empty; some,
@@ -623,18 +714,31 @@ All four are geographically clustered in the Tapi–Godavari interior. GAT spati
 
 | Phase | Status | Key Deliverable |
 |-------|--------|----------------|
-| **Phase 0 — Data Collection** | ✅ Complete (except Sentinel) | All WRIS + ERA5 + Soil Texture datasets |
-| **Phase 1 — Baselines** | ✅ Complete | ARIMA, XGBoost, LSTM for t+1 and t+{7,14,30} |
-| **Phase 2 — TFT** | ✅ Complete | TFT v1 + v2 trained on Colab T4 GPU, per-district quantile forecasts |
-| **Phase 2b — Sentinel Enhancement** | ✅ Complete | Sentinel data collected, merged into master_dataset.csv, used in TFT v2 training |
-| **Phase 3 — TFT + GAT** | 🔜 Next | Spatial graph (district adjacency + basin) wrapping TFT encoder |
+| **Phase 0 — Data Collection** | ✅ Complete | WRIS + ERA5-Land + Open-Meteo + CHIRPS + Sentinel + Soil Texture datasets |
+| **Phase 1 — Baselines** | ✅ Complete | ARIMA, XGBoost, LSTM for t+1 and t+{7,14,30} (see §7, original prototype) |
+| **Phase 2 — TFT prototype** | ✅ Complete, superseded | Original TFT v1/v2 (§9) — no walk-forward eval, no baseline comparison |
+| **Phase 2b — Windowing/eval rewrite** | ✅ Complete | Calendar-true windows, masked loss, walk-forward evaluation — see `TFT_IMPROVEMENT_PLAN.md` |
+| **Phase 2c — Production v1 → v2 → v3** | ✅ Complete | Persistence-baseline MASE, delta-target framing, data tiers, statistical significance testing. **Current results — see `Models/TFT/PROD_V1_vs_V2.md`** |
+| **Phase 3 — TFT + GAT** | ⏸️ Held | Spatial graph (district adjacency + basin) wrapping TFT encoder — see note below |
 
-### GAT Architecture Plan (Phase 3)
+### GAT Architecture Plan (Phase 3) — on hold
 
 Build district adjacency graph from:
 1. Geographic proximity (Euclidean distance between district centroids, threshold ~100km)
 2. River basin / aquifer membership (from station GeoJSON `majorBasin` field)
 
-Wrap TFT encoder output with 2-layer Graph Attention Network (GAT) before temporal attention — allows recharge propagation from water-rich to water-deficit districts. Expected to most improve Dhule, Jalgaon, Aurangabad, and Nashik.
+Wrap TFT encoder output with 2-layer Graph Attention Network (GAT) before temporal attention — allows recharge propagation from water-rich to water-deficit districts.
 
-**Baseline to beat:** TFT v2 median MAPE — 5.43% at t+7, 6.25% at t+14, 8.01% at t+30.
+**Held deliberately (2026-08-15):** an independent 2026 study over 2,951 German groundwater
+monitoring wells found globally-trained models had **no systematic advantage** over per-well models
+(global better at 45.4% of wells, worse at 48.9%), and that dynamic similarity between wells mattered
+far more than training-set volume — filtering for correlated wells moved median NSE 0.47→0.72, while
+randomly removing 85% of wells changed almost nothing. With only 9–16 stations in the best-covered
+Maharashtra districts and several tier-C districts still thin, a spatial graph layer risks adding
+capacity the data can't support yet. Revisit after more stations are collected for tier-C districts,
+or after a cheaper first step — partitioning districts by dynamic similarity (correlation of their
+Δ-series) rather than pure geographic adjacency. Full citation: `Models/TFT/V3_PLAN.md` §1 (M13).
+
+**Current baseline to beat (production v3, real GPU run):** MASE 0.958 / 0.909 / 0.834 at
+t+7/t+14/t+30, all statistically significant vs. persistence (Diebold–Mariano p < 0.05). Full
+numbers: `Models/TFT/PROD_V1_vs_V2.md` §9.

@@ -1,8 +1,20 @@
 # Jalvani — Maharashtra Groundwater Level Prediction
 
-**Scope:** Spatiotemporal prediction of groundwater levels across all 36 districts of Maharashtra using multi-source environmental time-series data.
-**Time range:** 2023-01-01 to 2025-04-22
-**Type:** Research project — novel spatial-temporal deep learning architecture for hydrological forecasting
+**Scope:** Prediction of groundwater levels across Maharashtra districts using multi-source environmental time-series data, at t+7 / t+14 / t+30 day horizons with q10/q50/q90 quantile uncertainty.
+**Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `PROJECT_STATUS.md` §1 for per-source ranges.
+**Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
+
+> ## Current status (2026-08-15)
+> The Temporal Fusion Transformer (§4.2) is implemented, trained, and evaluated — this is no longer
+> a proposal. **For current results, go straight to `Models/TFT/PROD_V1_vs_V2.md`.** Headline: MASE
+> 0.958 / 0.909 / 0.834 at t+7/t+14/t+30 (< 1 beats a naive "nothing changes" forecast), all
+> statistically significant (Diebold–Mariano p < 0.05 at every horizon), evaluated on a 6-fold
+> walk-forward split with a persistence, climatology, ridge and LightGBM baseline ladder alongside it.
+>
+> §4.2 below describes the **actual implemented architecture** (delta-target framing, data tiers,
+> shrinkage toward persistence, vectorised variable-selection networks). §4.3 (spatial GAT layer) and
+> §4.4 (physics-informed loss) remain **future work, not yet built** — see the note at the top of each
+> for why they're deliberately on hold.
 
 ---
 
@@ -325,17 +337,33 @@ Train these first. If your advanced model does not clearly beat XGBoost, the arc
 
 ---
 
-### 4.2 Primary Research Architecture: Temporal Fusion Transformer (TFT)
+### 4.2 Primary Architecture: Temporal Fusion Transformer (TFT) — IMPLEMENTED
 
-The most appropriate architecture for this problem. Designed by Google specifically for multi-horizon time-series forecasting with mixed input types. It is publication-grade and interpretable.
+Implementation: `Models/TFT/tft_model_v3.py` (from-scratch PyTorch). Training/evaluation notebook:
+`Models/TFT/09_tft_colab_production_v3.ipynb`. Full results and design rationale:
+`Models/TFT/PROD_V1_vs_V2.md` and `Models/TFT/V3_PLAN.md`.
 
 **Why TFT fits this problem:**
-- Explicitly handles **static covariates** (district identity), **known future inputs** (month, season — known in advance), and **observed past inputs** (rainfall, NDVI, GWL, etc.)
-- **Variable Selection Networks** learn which features matter at each time step — it will automatically learn that NDVI matters more in summer, VH backscatter matters more during monsoon, and GWL lag matters year-round.
-- **Interpretable attention weights** show which past time steps the model focuses on — this is itself a publishable scientific result.
-- Predicts next 7, 14, 30 days simultaneously in a single forward pass with calibrated uncertainty.
+- Explicitly handles **static covariates** (district identity, soil texture, aquifer category), **known future inputs** (month, season, horizon index — known in advance), and **observed past inputs** (rainfall, NDVI, GWL, etc.)
+- **Variable Selection Networks** learn which features matter at each time step — a district's importance weights are printed as a bar chart in the notebook (`vsn_importance.png`) for both past and future feature groups.
+- **Interpretable attention weights** show which past time steps the model focuses on.
+- Predicts 7, 14 and 30 days simultaneously in a single forward pass with calibrated q10/q50/q90 uncertainty.
 
-**Full architecture:**
+**Two decisions turned out to matter more than the architecture itself, and are worth stating up
+front** (full evidence in `PROD_V1_vs_V2.md`):
+
+1. **Predict the change, not the level.** Groundwater is a near-random-walk — today's level tells
+   you almost everything about next week's. A model asked to predict the absolute level spends its
+   capacity re-deriving the easy part (the level itself) and loses to a naive "assume nothing
+   changes" forecast. The model instead predicts `Δ = gwl(t+h) − gwl(anchor)`, where `anchor` is the
+   last observed encoder day, and every GWL input feature is made anchor-relative. **An output of
+   exactly 0 reproduces persistence** — so persistence is the model's floor, not its competitor.
+2. **Report MASE (model error ÷ persistence error) in every table, and treat MASE ≥ 1 as
+   disqualifying, no matter how good RMSE/MAPE look.** An earlier full GPU run looked reasonable on
+   RMSE/MAPE alone and was losing to persistence in 15 of 18 fold-horizon combinations — no metric
+   without a baseline would have revealed this. See `PROD_V1_vs_V2.md` §1–§2 for the full story.
+
+**Architecture, as actually built:**
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -343,94 +371,124 @@ INPUT LAYER
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Static (fixed per district):
-    district_id → learned embedding (dim=16)
-    sand_0cm, clay_0cm, silt_0cm       (soil texture at surface)
-    sand_10cm, clay_10cm, silt_10cm    (soil texture at root zone)
-    sand_30cm, clay_30cm, silt_30cm    (soil texture at deeper zone)
+    district_id, aquifer_category_id → learned embeddings
+    sand/clay/silt % at 0cm, 10cm, 30cm (soil texture)
+    annual_recharge_bcm, annual_extraction_bcm, extractable_resource_bcm,
+    stage_of_extraction_pct (CGWB district statics)
 
   Time-varying KNOWN (future values available at inference time):
-    month, season (one-hot)
-    gwl_lag_7, gwl_lag_30
+    month_sin/cos, doy_sin/cos (cyclic calendar encoding)
+    is_monsoon, season_id
+    horizon_frac — explicit "how far into the 30-day decoder am I" index
 
-  Time-varying OBSERVED (only known up to present):
-    gwl_mean              ← target (observed in past, predicted in future)
-    rainfall_mm, rainfall_7d, rainfall_30d
-    et_mm, soil_moisture
-    temp_max, temp_min, temp_mean, humidity_mean
-    ndvi_mean, ndwi_mean, ndmi_mean   (monthly, interpolated to daily)
-    vv_db, vh_db, vh_vv_ratio         (monthly, interpolated to daily)
+  Time-varying OBSERVED (anchor-relative — see decision 1 above):
+    gwl_mean, gwl_min, gwl_max, gwl_lag_{7,14,30}, gwl_roll_mean_{30,60,90}
+      → (value − anchor) / delta_sd[district][horizon]
+    gwl_7d_change, gwl_30d_change, gwl_roll_std_{30,60,90} → value / delta_sd
+    gwl_observed, et_mm_observed, soil_moisture_observed (0/1 real-reading flags, untouched)
+    rainfall_mm/_7d/_30d/_60d/_90d (log1p), API (exponential antecedent precip, 3 decay rates),
+    cumulative rainfall departure, days-since-rain
+    et_mm, pet_mm, soil_moisture (4 ERA5-Land depths), water_stress, net_water_balance
+    temp_max/min/mean, humidity_mean, vpd_approx
+    ndvi_mean, ndwi_mean, ndmi_mean, vv_db, vh_db, vh_vv_ratio (monthly, causal month-end fill)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-VARIABLE SELECTION NETWORKS (VSN)
+VARIABLE SELECTION NETWORKS (VSN) — vectorised
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   Separate VSNs for: static inputs, past time-varying, future time-varying.
   Each VSN learns soft gating weights over all features at every time step.
-  Output: "in this month, rainfall_30d and soil_moisture are most
-           important; NDVI is secondary; humidity is low priority."
-  These weights are interpretable and publishable as a seasonal
-  feature importance table.
+  Implemented as batched matrix ops (BatchedGRN/BatchedFeatureProjection) rather
+  than a per-feature Python loop — same math, ~2-3x faster, which is what makes
+  a 3-seed x 6-fold ensemble (18 trainings) finish in ~6 minutes on a T4.
+  A d_select compression step (64->8 by default) keeps the selector's own
+  parameter count from dwarfing the rest of the network — see the note below.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SEQUENCE ENCODER — LSTM
+SEQUENCE ENCODER / DECODER — LSTM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Input sequence: past 60 days of VSN-selected features
-  Hidden dim: 128
-  Output: encoder hidden state + full sequence of hidden states
+  Encoder input: past 60 days of VSN-selected features
+  Decoder input: next 30 days of known-future features
+  d_model = 32 by default (down from an earlier 192 — see capacity note)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-MULTI-HEAD SELF-ATTENTION (4 heads)
+INTERPRETABLE MULTI-HEAD SELF-ATTENTION (4 heads)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Applied over the encoder sequence.
-  Learns which past days matter most for predicting future GWL.
-  Attention weights per time step = interpretable result.
-  Expected finding: model will attend to rainfall 14–21 days ago
-  (recharge lag) and to NDMI drops 7–14 days ago (irrigation signal).
+  Causal mask: decoder positions attend to all encoder positions
+  and to prior decoder positions only.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-GATED RESIDUAL NETWORKS (GRN)
+GATED RESIDUAL NETWORKS (GRN) — throughout, not just as a final layer
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Non-linear interaction layer.
-  Learns cross-feature interactions (e.g. rainfall × soil_moisture).
-  ELU activation + Layer Norm + Dropout (0.1).
+  ELU activation + GLU gate + LayerNorm + residual skip, per Lim et al. (2021).
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-QUANTILE REGRESSION OUTPUT HEAD
+MONOTONE QUANTILE OUTPUT HEAD
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  Predicts three quantiles: q10, q50, q90
-    q50 = point forecast
-    [q10, q90] = 80% prediction interval
-  Loss: Pinball (quantile) loss summed over all three quantiles.
-  
-  This is critical for water resource management:
-  officials need worst-case scenarios (q10), not just averages.
-  Reporting confidence intervals is also a research requirement.
+  q50 = raw median output
+  q10 = q50 - softplus(a)      q90 = q50 + softplus(b)
+  Quantile crossing (q10 > q90) is impossible by construction.
+  Loss: masked pinball loss, zero gradient on unobserved target days.
 
-  Output shape: [batch, forecast_horizon=30, 3_quantiles]
+  Output shape: [batch, forecast_horizon=30, 3_quantiles], reconstructed
+  as  level = anchor + output * delta_sd[district][horizon]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+POST-PROCESSING (fitted on a held-out calibration block, never on test)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Shrinkage:  level_hat = anchor + lambda(district, horizon) * delta_hat
+              lambda in [0,1], fitted per district/horizon-band; puts a floor
+              under any district the model hasn't learned to forecast well.
+  Conformal:  q10/q90 widened by a margin fit on the calibration block,
+              so reported interval coverage is a genuine out-of-sample number.
 ```
 
-**Training setup:**
+**A capacity lesson worth stating explicitly:** an earlier configuration reported "205,173
+parameters" but, once rebuilt and counted directly, actually instantiated **1,231,159** — the
+variable-selection network's first layer alone (`Linear(n_features × d_model, d_model)`) was larger
+than the rest of the network combined, on a problem with only ~300 genuinely independent training
+windows per fold. The current model genuinely builds **~222,000 parameters** via the `d_select`
+compression step above, and the notebook prints a params-per-independent-window ratio every fold so
+this can't silently drift again.
+
+**Training setup (as actually run):**
 
 | Parameter | Value |
 |-----------|-------|
-| Lookback window | 60 days |
-| Forecast horizon | 30 days |
-| Train / Val / Test split | 2023–2024 train · Jan–Sep 2025 val · Oct 2025+ test |
-| Optimizer | Adam, lr=1e-3 → decay to 1e-5 |
-| Batch size | 64 |
-| Early stopping | Patience = 20 epochs on validation quantile loss |
+| Encoder / decoder length | 60 days / 30 days |
+| Evaluation horizons | t+7, t+14, t+30 (both a daily target and a 7-day-mean target are reported) |
+| Split | **6-fold walk-forward** (rolling-origin), each fold: train → early-stopping block → separate calibration block → test — never randomly split |
+| Folds | monsoon 2024, post-monsoon 2024, dry 2025, monsoon 2025, post-monsoon 2025, dry 2026 — one full seasonal cycle per test window |
+| Districts | 24–26 of 36, gated by a `data_tier` computed from station count + record completeness (see `PROJECT_STATUS.md` §4.5); 1 excluded from training entirely, 4 reported separately as low-station |
+| Ensemble | 3 seeds, averaged in prediction space |
+| Optimizer | AdamW, lr=1e-3 with 5-epoch warmup, `ReduceLROnPlateau` |
+| Batch size | 128 |
+| Early stopping | Patience 10 epochs on the early-stopping validation block only |
+| Baseline ladder | persistence, seasonal climatology-of-change, ridge, LightGBM — all on identical windows/targets |
+| Significance testing | Diebold–Mariano vs. persistence (HAC-corrected) + bootstrap CI on median MASE |
 
-> **Important:** Split by time only. Never split randomly — random splits cause data leakage because consecutive days are highly correlated.
+> **Split is always by time, walk-forward, never random** — random splits leak because consecutive
+> days are highly correlated, and a single train/val/test split (the original plan above) hides
+> seasonal generalisation failures that walk-forward evaluation catches.
 
 ---
 
-### 4.3 Advanced Architecture: Spatial-Temporal Graph Attention + TFT
+### 4.3 Advanced Architecture: Spatial-Temporal Graph Attention + TFT — FUTURE WORK, HELD
 
-This is the most novel contribution and the strongest research result.
+> **Status: not implemented, and deliberately held rather than started.** An independent 2026 study
+> over 2,951 German groundwater wells found globally-trained models had no systematic advantage over
+> per-well models, and that dynamic similarity between wells mattered far more than training-set
+> volume than raw station count. With several Maharashtra districts still thin (2–4 stations, tier C
+> — see `PROJECT_STATUS.md` §4.5), a spatial graph risks adding capacity the data can't yet support.
+> Revisit once tier-C districts have more stations, or start with the cheaper alternative noted below.
+> Full citation and reasoning: `Models/TFT/PROD_V1_vs_V2.md` §15, `Models/TFT/V3_PLAN.md` §1 (M13).
+
+This remains the most novel planned contribution and, if the data catches up, the strongest research result.
 
 **The insight:** Districts are not independent. Nashik's GWL affects Ahmednagar's because they share the Godavari basin. A model that treats each district independently misses these spatial dependencies — and they matter, especially for downstream recharge propagation.
 
@@ -496,7 +554,7 @@ LOSS
 
 ---
 
-### 4.4 Physics-Informed Loss (Optional Variant)
+### 4.4 Physics-Informed Loss (Optional Variant) — FUTURE WORK, NOT IMPLEMENTED
 
 Add a regularisation term that encodes the water balance equation. This prevents physically impossible predictions and is itself a publishable contribution.
 
@@ -526,15 +584,18 @@ The model learns `alpha` implicitly. The physics term acts as a constraint that 
 
 Train in this order. Each phase adds one capability and should show a measurable improvement.
 
-| Phase | Model | New Capability Added | Key Metric |
-|-------|-------|---------------------|------------|
-| 1 | SARIMA (per district) | Temporal seasonality only | RMSE, MAPE |
-| 2 | XGBoost (all districts) | Non-linear feature interactions | RMSE + SHAP |
-| 3 | Vanilla LSTM | Deep temporal memory | RMSE, MAE |
-| 4 | TFT (single-step) | Feature selection + attention | Pinball Loss |
-| 5 | TFT (multi-step, 30d) | Multi-horizon calibrated forecasts | Pinball Loss |
-| 6 | GAT + TFT (spatial-temporal) | Inter-district recharge propagation | RMSE all districts |
-| 7 | TFT + physics loss | Physical plausibility constraints | RMSE + violation rate |
+| Phase | Model | New Capability Added | Key Metric | Status |
+|-------|-------|---------------------|------------|--------|
+| 1 | SARIMA (per district) | Temporal seasonality only | RMSE, MAPE | ✅ done |
+| 2 | XGBoost (all districts) | Non-linear feature interactions | RMSE + SHAP | ✅ done |
+| 3 | Vanilla LSTM | Deep temporal memory | RMSE, MAE | ✅ done |
+| 4 | TFT (single-step) | Feature selection + attention | Pinball Loss | ✅ done (superseded by 5) |
+| 5 | TFT (multi-step, 7/14/30d, delta-target, walk-forward) | Multi-horizon calibrated forecasts vs. persistence | MASE, Pinball Loss | ✅ **done — current results** |
+| 6 | GAT + TFT (spatial-temporal) | Inter-district recharge propagation | RMSE all districts | ⏸️ held, see §4.3 |
+| 7 | TFT + physics loss | Physical plausibility constraints | RMSE + violation rate | ⏸️ not started |
+
+The baseline ladder in phase 5's actual implementation additionally includes ridge regression and
+LightGBM, both fitted on the identical windows/target as the TFT — see `PROD_V1_vs_V2.md` §9.
 
 ### Curriculum Learning
 
@@ -585,31 +646,43 @@ MajorProject-Jalvani/
 │
 ├── Data Collection/
 │   ├── groundwater_data.py          # CGWB groundwater from India WRIS
-│   ├── CWC_Rainfall.py              # CWC rainfall from India WRIS
-│   ├── ET_data.py                   # NRSC ET from India WRIS
-│   ├── soil_moisture_data.py        # NRSC soil moisture from India WRIS
+│   ├── chirps_rainfall.py           # CHIRPS gridded rainfall from GEE (primary)
+│   ├── CWC_Rainfall.py              # CWC rainfall from India WRIS (superseded by CHIRPS)
+│   ├── era5_land.py                 # ET, PET, 4-depth soil moisture from ERA5-Land/GEE (primary)
+│   ├── ET_data.py                   # NRSC ET from India WRIS (superseded — stopped publishing 2025-06-30)
+│   ├── soil_moisture_data.py        # NRSC soil moisture from India WRIS (superseded, same reason)
 │   ├── temperature_openmeteo.py     # ERA5 temp + humidity from Open-Meteo (primary)
 │   ├── temperature_data.py          # CWC temperature from India WRIS (superseded by Open-Meteo)
 │   ├── humidity_data.py             # CWC humidity from India WRIS (superseded by Open-Meteo)
 │   ├── sentinel_indices.py          # Sentinel-1 and Sentinel-2 from GEE
 │   ├── soil_type_gee.py             # Soil texture (sand/clay/silt) via OpenLandMap in GEE (primary)
 │   ├── soil_type_api.py             # Soil texture via ISRIC SoilGrids REST API (fallback, no GEE needed)
+│   ├── cgwb_extraction.py           # CGWB annual recharge/extraction/category per district
+│   ├── cwc_reservoir.py             # Reservoir storage (needs data.gov.in key) — not yet run
 │   └── txt files/                   # Per-dataset progress tracking files
 │
 ├── Data Preprocessing/
-│   ├── preprocess_groundwater.py    # Clean + aggregate + gap-fill groundwater
-│   ├── preprocess_rainfall.py       # Clean + aggregate + rolling features rainfall
-│   ├── preprocess_env_features.py   # Clean + merge ET, soil moisture, temp, humidity
-│   ├── merge_master.py              # Final merge + feature engineering → master CSV
+│   ├── preprocess_groundwater.py    # Sign fix, Hampel filter, station panel + drift filters, per-station anomaly aggregation
+│   ├── preprocess_env_features.py   # ERA5-Land (primary) or WRIS (fallback) ET/soil moisture + temp/humidity merge
+│   ├── merge_master.py              # Full-calendar merge + feature engineering + district gate + data_tier → master CSV
 │   ├── extract_station_geojson.py   # Export station locations to GeoJSON
 │   └── clean datasets/
 │       ├── groundwater_clean.csv
 │       ├── rainfall_clean.csv
 │       ├── env_features_clean.csv
-│       ├── master_dataset.csv       # Final training dataset
+│       ├── master_dataset.csv       # Final training dataset (55 columns, includes data_tier)
+│       ├── district_data_quality.csv  # Per-district station count / coverage / tier scorecard
+│       ├── excluded_districts.csv
 │       └── groundwater_stations.geojson
 │
+├── Models/TFT/
+│   ├── tft_model_v3.py              # Current TFT implementation (vectorised VSN, monotone quantiles)
+│   ├── 09_tft_colab_production_v3.ipynb  # Current training/eval notebook — walk-forward, 3-seed, baseline ladder
+│   ├── PROD_V1_vs_V2.md             # Full v1 -> v2 -> v3 results, diagnosis, and design rationale
+│   └── V3_PLAN.md                   # v2 -> v3 audit findings and the fix for each
+│
 ├── PROJECT_STATUS.md                # Data collection and preprocessing log
+├── TFT_IMPROVEMENT_PLAN.md          # Windowing/evaluation rewrite diagnosis (repo root)
 └── README.md                        # This file
 ```
 
@@ -622,21 +695,28 @@ Run in this exact order to reproduce all datasets from scratch:
 ```bash
 # ── Step 1: Data Collection (run from Data Collection/) ────────────────
 python groundwater_data.py
-python CWC_Rainfall.py
-python ET_data.py
-python soil_moisture_data.py
+python chirps_rainfall.py           # requires: earthengine authenticate
+# then: copy datasets/rainfall_chirps_maharashtra_23_25.csv -> ../Data Preprocessing/clean datasets/rainfall_clean.csv
+python era5_land.py                 # requires: earthengine authenticate — ET/PET/soil moisture, replaces ET_data.py + soil_moisture_data.py (reads directly, no copy step)
 python temperature_openmeteo.py
 python sentinel_indices.py          # requires: earthengine authenticate
 python soil_type_gee.py             # requires: earthengine authenticate + registered GCP project
+python cgwb_extraction.py           # CGWB annual recharge/extraction/category (static, per district)
 # fallback if GEE unavailable:
 # python soil_type_api.py           # uses ISRIC REST API, no GEE needed
 
 # ── Step 2: Data Preprocessing (run from Data Preprocessing/) ──────────
 python extract_station_geojson.py   # optional — exports station map
 python preprocess_groundwater.py
-python preprocess_rainfall.py
-python preprocess_env_features.py
-python merge_master.py              # must run last — depends on all above
+python preprocess_env_features.py   # prints an observed-rate-by-year table — check it before trusting the output
+python merge_master.py              # must run last — writes master_dataset.csv + district_data_quality.csv
+# preprocess_rainfall.py is no longer part of this pipeline — CHIRPS (above) replaced the
+# WRIS/CWC station rainfall it used to clean.
+
+# ── Step 3: Train + evaluate the TFT (Colab, T4 GPU) ────────────────────
+# Upload Models/TFT/tft_model_v3.py and the rebuilt master_dataset.csv, then run
+# Models/TFT/09_tft_colab_production_v3.ipynb end to end. Results + design log:
+# Models/TFT/PROD_V1_vs_V2.md and Models/TFT/V3_PLAN.md.
 ```
 
 All collection scripts are **resumable** — they track completed districts in `txt files/*.txt` and skip already-fetched districts on re-run. If a script is interrupted, simply re-run it and it continues from where it stopped.
