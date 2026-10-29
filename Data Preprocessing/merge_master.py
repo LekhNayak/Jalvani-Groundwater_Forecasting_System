@@ -96,7 +96,13 @@ print(f"  Sentinel-1   : {len(s1):,} rows, {s1['district'].nunique()} districts"
 # the true missing fraction. Districts above the threshold cannot produce a
 # single valid training window and only pollute per-district statistics.
 print(f"\nDistrict gate (exclude if gwl missing >= {MAX_GWL_MISSING:.0%}):")
-coverage = gw.groupby("district").agg(
+# Only judge coverage over the span CGWB actually published. The calendar extends past the last
+# real reading (covariates are newer than the target), and that empty tail must not count as
+# "missing" or it would push borderline districts over the exclusion threshold.
+GW_LAST_OBS = gw.loc[gw["gwl_observed"] == 1, "date"].max()
+print(f"  Last real groundwater reading: {GW_LAST_OBS.date()} (calendar ends {gw['date'].max().date()})")
+gw_span = gw[gw["date"] <= GW_LAST_OBS]
+coverage = gw_span.groupby("district").agg(
     missing_frac=("gwl_mean", lambda s: s.isna().mean()),
     n_stations  =("n_stations", "first"),
 )
@@ -136,7 +142,7 @@ TIER_D_OVERALL_COV = 0.55
 
 gw_2023 = gw[gw["date"].dt.year == 2023]
 cov23 = gw_2023.groupby("district")["gwl_observed"].mean()
-cov_all = gw.groupby("district")["gwl_observed"].mean()
+cov_all = gw[gw["date"] <= GW_LAST_OBS].groupby("district")["gwl_observed"].mean()
 n_st = gw.groupby("district")["n_stations"].first()
 
 
@@ -152,9 +158,15 @@ def _tier(d):
 
 
 tiers = pd.Series({d: _tier(d) for d in sorted(gw["district"].unique())}, name="data_tier")
+# Tiers as they were before the v4 target rebuild (recovered wells change n_stations).
+# Kept alongside so results can be compared on the frozen v3 grouping.
+_V3_SCORECARD = CLEAN / "v3_target_backup" / "district_data_quality.csv"
+tiers_v3 = (pd.read_csv(_V3_SCORECARD).set_index("district")["data_tier"]
+            if _V3_SCORECARD.exists() else pd.Series(dtype=object))
 scorecard = pd.DataFrame({
     "n_stations": n_st, "coverage_2023": cov23.round(3),
     "coverage_all": cov_all.round(3), "data_tier": tiers,
+    "data_tier_v3": tiers_v3.reindex(tiers.index),
 }).sort_values(["data_tier", "coverage_2023"], ascending=[True, False])
 scorecard.index.name = "district"
 scorecard.to_csv(CLEAN / "district_data_quality.csv")
@@ -226,7 +238,13 @@ if "pet_mm" in master.columns:
 master["aquifer_type_id"]  = master["aquifer_type"].map(AQUIFER_TYPE_MAP).fillna(-1).astype(int)
 master["low_station_flag"] = (master["n_stations"] < MIN_STATIONS).astype(int)
 master["data_tier"]        = master["district"].map(tiers)
+if len(tiers_v3):
+    master["data_tier_v3"] = master["district"].map(tiers_v3)
 master = master.drop(columns=["aquifer_type"])
+
+# ERA5-Land's `soil_moisture` is the same field as sm_l2 (r = 1.000) — keep one copy.
+if "sm_l2" in master.columns and "soil_moisture" in master.columns:
+    master = master.drop(columns=["soil_moisture", "soil_moisture_observed"], errors="ignore")
 
 # ─── DISTRICT ID ──────────────────────────────────────────────────────────────
 # Integer 0..N-1 sorted alphabetically — used as embedding index in LSTM/TFT
@@ -337,7 +355,8 @@ if sent_missing_districts:
 ordered_cols = [
     "district", "district_id", "date", "day_of_year",
     "gwl_mean", "gwl_min", "gwl_max", "station_count", "gwl_observed",
-    "rainfall_mm", "rainfall_7d", "rainfall_30d",
+    "n_active", "gwl_frac_real",          # v4 target: panel wells active / share really reporting
+    "rainfall_mm", "rainfall_7d", "rainfall_30d", "rainfall_observed",
     "et_mm", "et_mm_observed", "soil_moisture", "soil_moisture_observed", "net_water_balance",
     # ERA5-Land extras (absent when falling back to the old WRIS feed)
     "pet_mm", "pet_mm_observed", "water_stress",
@@ -346,7 +365,7 @@ ordered_cols = [
     "month", "season", "is_monsoon",
     "gwl_lag_7", "gwl_lag_14", "gwl_lag_30",
     "gwl_7d_change", "gwl_30d_change",
-    "aquifer_type_id", "well_depth_m", "n_stations", "low_station_flag", "data_tier",
+    "aquifer_type_id", "well_depth_m", "n_stations", "low_station_flag", "data_tier", "data_tier_v3",
     "annual_recharge_bcm", "annual_extraction_bcm",
     "extractable_resource_bcm", "stage_of_extraction_pct", "aquifer_category_id",
     "sand_0cm", "clay_0cm", "silt_0cm",

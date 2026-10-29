@@ -57,7 +57,7 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 Path("clean datasets").mkdir(exist_ok=True)
 
-FULL_IDX = pd.date_range("2023-01-01", "2026-06-04", freq="D")  # matches groundwater's max coverage
+FULL_IDX = pd.date_range("2023-01-01", "2026-10-01", freq="D")  # matches the groundwater calendar
 ERA5 = Path("../Data Collection/datasets/era5_land_maharashtra_23_26.csv")
 
 ERA5_VALUE_COLS = ["et_mm", "pet_mm", "soil_moisture", "sm_l1", "sm_l2", "sm_l3", "sm_l4"]
