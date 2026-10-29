@@ -91,6 +91,7 @@ temp_data/
 .ipynb_checkpoints/
 
 # -----------------------------
-# Results archives (too big for GitHub; the extracted copy lives in result zips/v4_1/)
+# Results archives (too big for GitHub; the extracted copy lives in 04_results/tft_v4_1/)
 # -----------------------------
-result zips/*.zip
+04_results/zips/*.zip
+*.zip

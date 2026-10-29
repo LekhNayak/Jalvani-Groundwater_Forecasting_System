@@ -1,0 +1,737 @@
+487e4fce9204c0494132c23020f8b1f7 *./.claude/settings.local.json
+6c8c325c5370dc23b1a437108e355bc2 *./.gitignore
+0e38603e85a2c3ff6e7c4513f9034c4f *./Data Collection/.claude/settings.local.json
+03c3b77026d7e2911d8ee5bb5e43c88b *./Data Collection/backup_pre_2026_10_extend/env_features_clean.csv
+7e379d4ea68c412f9bcf4e1d4a3fee06 *./Data Collection/backup_pre_2026_10_extend/groundwater_clean.csv
+2f6ebb42d1bb3c2e8c7a1547e90499bb *./Data Collection/backup_pre_2026_10_extend/groundwater_maharashtra_23_25_uncleaned.csv
+f537edca5654e6d17b898b12daba888d *./Data Collection/backup_pre_2026_10_extend/master_dataset.csv
+da0725fb67f321ded6b80b87d6f787c6 *./Data Collection/backup_pre_2026_10_extend/rainfall_chirps_maharashtra_23_25.csv
+da0725fb67f321ded6b80b87d6f787c6 *./Data Collection/backup_pre_2026_10_extend/rainfall_clean.csv
+9115132129115df17a1fc38bfa36ef34 *./Data Collection/backup_pre_2026_10_extend/sentinel1_backscatter_maharashtra_23_25.csv
+9783ca85caf427a7cd20ab1e0ae39d40 *./Data Collection/backup_pre_2026_10_extend/sentinel2_indices_maharashtra_23_25.csv
+e3ddd51062d1bae891ee79e70376d800 *./Data Collection/backup_pre_2026_10_extend/temperature_humidity_maharashtra_23_25.csv
+ee46f2279ceea77ef49135e469c851d0 *./Data Collection/backup_pre_2026_10_extend/txt_files/chirps_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_10_extend/txt_files/et_progress.txt
+55a36102b6bad50d0c03067a4acf13a1 *./Data Collection/backup_pre_2026_10_extend/txt_files/humidity_progress.txt
+379e8e75b73666b42a4468f99ece883c *./Data Collection/backup_pre_2026_10_extend/txt_files/progress.txt
+e7be1a2facbc844d3ac4ac1686540da2 *./Data Collection/backup_pre_2026_10_extend/txt_files/rainfall_progress.txt
+6a473db5eb9fcf73cb3b1b13a1bf6917 *./Data Collection/backup_pre_2026_10_extend/txt_files/sentinel1_progress.txt
+6a473db5eb9fcf73cb3b1b13a1bf6917 *./Data Collection/backup_pre_2026_10_extend/txt_files/sentinel2_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_10_extend/txt_files/soil_moisture_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_10_extend/txt_files/temperature_openmeteo_progress.txt
+d9b545bebde27f13690ad01ce6eb041e *./Data Collection/backup_pre_2026_extend/et_maharashtra_23_25_uncleaned.csv.bak
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_extend/et_progress.txt.bak
+38ddf747694ac13bab93c0a7dd11ff6c *./Data Collection/backup_pre_2026_extend/groundwater_maharashtra_23_25_uncleaned.csv.bak
+0a7815e58c158f21a6082c535d538cca *./Data Collection/backup_pre_2026_extend/progress.txt.bak
+4ae8077e5fe2b6351864d53f958acc10 *./Data Collection/backup_pre_2026_extend/soil_moisture_maharashtra_23_25_uncleaned.csv.bak
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_extend/soil_moisture_progress.txt.bak
+50b8298e9eccdb6eae0b7fc856ee7ac8 *./Data Collection/backup_pre_2026_extend/temperature_humidity_maharashtra_23_25.csv.bak
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/backup_pre_2026_extend/temperature_openmeteo_progress.txt.bak
+aa42325ff3fb6fd4d4674a4341ade225 *./Data Collection/cgwb_extraction.py
+4fb8fdd88e12f72282c6f0053dcff167 *./Data Collection/chirps_extend_assemble.py
+ece967b6624e7888cab09913d7a3f0df *./Data Collection/chirps_prelim_fill.py
+10c0e79562b5d43de8a37896d6173027 *./Data Collection/chirps_rainfall.py
+89e2680e9ea79cc68fa0c7b557b5e79b *./Data Collection/collect_dataset.py
+2aeddf6114ffe44ac2d9977835b955ea *./Data Collection/consolidate_cgwb.py
+e64ea988700c51055e8b26d0b5ef5f6b *./Data Collection/CWC_Rainfall.py
+52ea9ece1d33a9de8b2eccd340319cc1 *./Data Collection/cwc_reservoir.py
+f6ac5842ad00f7d8712df24a5510b0f7 *./Data Collection/datasets/cgwb_extraction_maharashtra.csv
+71f5625757f703b06f5f5aca1e0429fc *./Data Collection/datasets/cgwb_extraction_TEMPLATE.csv
+0a01686f0b8a8e6664a53dd7e82abe45 *./Data Collection/datasets/chirps_gee_increment_2026.csv
+4d0ea00fd98ccc47b9305ce4dccf1aea *./Data Collection/datasets/chirps_prelim_2026.csv
+ea44d59fd510a2a6d7cc57073f6cea50 *./Data Collection/datasets/era5_land_maharashtra_23_26.csv
+d9b545bebde27f13690ad01ce6eb041e *./Data Collection/datasets/et_maharashtra_23_25_uncleaned.csv
+8a4efea50c1cb6fbe823694e0c88dd0f *./Data Collection/datasets/groundwater_maharashtra_23_25_uncleaned.csv
+d569b432d35df34c2b854007f5dcd5ab *./Data Collection/datasets/humidity_maharashtra_23_25_uncleaned.csv
+816373802f43a450f88fdcbcc2c8b248 *./Data Collection/datasets/maharashtra_district_geoms.geojson
+d7a5dae6a997c3ead2f64ac7c1b84be7 *./Data Collection/datasets/mh_gw_2023.csv
+d9330b49f1c3dfb9b19963d9ebaa1a25 *./Data Collection/datasets/mh_gw_2024.csv
+a998c285eff06853ab1856e5d097419c *./Data Collection/datasets/mh_gw_2025.csv
+73a8331caf7f9a4f1fbd6517326fda2c *./Data Collection/datasets/openmeteo_precip_2026.csv
+642ae777fcbd4464a7c9d41e92f1c151 *./Data Collection/datasets/rainfall_chirps_maharashtra_23_25.csv
+42cf472399b08252c2d18a41376c40bf *./Data Collection/datasets/rainfall_chirps_missing_districts.csv
+020202e0d82a39e1303798fddb0202bc *./Data Collection/datasets/rainfall_maharashtra_23_25_uncleaned.csv
+313fad61300dcddb17e3e9c6c1fad84d *./Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv
+e82e96a01de08e92c4ea2b0b3242185a *./Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv
+4ae8077e5fe2b6351864d53f958acc10 *./Data Collection/datasets/soil_moisture_maharashtra_23_25_uncleaned.csv
+4fb5e8e546d16497c6f41739f423ab81 *./Data Collection/datasets/soil_texture_maharashtra.csv
+ebd2e72e31ea8e6125136ce1def0b989 *./Data Collection/datasets/temperature_humidity_maharashtra_23_25.csv
+2542926524a508f1f7ec091593cee5f4 *./Data Collection/era5_land.py
+e94384154cb4f4f9d2b1ffb7053ab2e1 *./Data Collection/ET_data.py
+6873d72e0f110e05139808d8ab821354 *./Data Collection/groundwater_data.py
+1800d231dd6659e65389b3fd34ca5d63 *./Data Collection/humidity_data.py
+726e8d060404d867aab188328e10c152 *./Data Collection/log/chirps_incremental.out
+8c36001b0aa74ccff08377d11d33d0fe *./Data Collection/log/chirps_prelim.out
+7d16aaba1e36565373deda3af728d4e5 *./Data Collection/log/chirps_prelim2.out
+1cc486c8bb1679a50d1c623e24a21db6 *./Data Collection/log/era5_land.out
+064e57277c26b9cfe7b50cffdb5d6299 *./Data Collection/log/et_fetch.log
+b12d04640dd4a7c736ec960fe9354ff6 *./Data Collection/log/et_validation_issues.log
+42e349441092a00935009e65d238c6c6 *./Data Collection/log/fetch.log
+4864aaccd708556c92b0e4ccdf50da59 *./Data Collection/log/gw_incremental.out
+ca7cb44d76766dee6f646d77b25d1e89 *./Data Collection/log/humidity_fetch.log
+c41e293d088a644cb624329245b27795 *./Data Collection/log/humidity_validation_issues.log
+13c8bbf72bc5aaeb47b8ba26cfd3c6fd *./Data Collection/log/pp_env.out
+6064fc42c43c97c5064f7f13d23f864c *./Data Collection/log/pp_gw.out
+adedc4675eff6d5e987a2c7186c4bfd4 *./Data Collection/log/pp_master.out
+6482c1c587e417c699784f0db6c1c9b6 *./Data Collection/log/rainfall_fetch.log
+57b5a7bfbfa8db66d80b34333a537907 *./Data Collection/log/rainfall_validation_issues.log
+74037c73aad341f3502e49e0d4c23419 *./Data Collection/log/sentinel_incremental.out
+df145a7e17de369ed85d6fd283e365a2 *./Data Collection/log/soil_moisture_fetch.log
+b12d04640dd4a7c736ec960fe9354ff6 *./Data Collection/log/soil_moisture_validation_issues.log
+f9b23440cb917a0111c491cef52754f9 *./Data Collection/log/temperature_fetch.log
+33d97bef962d9a6fe08818aeec118b3d *./Data Collection/log/temperature_openmeteo_fetch.log
+759d3bbfc7c2abee3bca497d34e14236 *./Data Collection/log/temp_incremental.out
+3ea90a6e420b0bf693c27ea796344619 *./Data Collection/log/validation_issues.log
+14fe55e542591b03b51447b26bfe3aef *./Data Collection/run_chirps_incremental.py
+269798de14da4fa555c89fe934ced5de *./Data Collection/run_gw_incremental.py
+0fe520f69cfad2fc174a5ad9b5afa31d *./Data Collection/run_om_precip.py
+297270496e2a6e16b0cf5b69e00d4e69 *./Data Collection/run_sentinel_incremental.py
+e3c0541a4ed87313696f0c120e7b50c6 *./Data Collection/run_temp_incremental.py
+214f7ae7a748e821bbf65a65dbd13742 *./Data Collection/sentinel_indices.py
+72fed8a6eaf2174a79623d35860e7d2b *./Data Collection/soil_moisture_data.py
+6da48d701e503f3a3cc7aa5a211e6c23 *./Data Collection/soil_type_api.py
+c8c3096ef765f376037dc2ed1e3eeaa9 *./Data Collection/soil_type_gee.py
+b1c228ada99daeeec0357240b5840cfa *./Data Collection/temperature_data.py
+1c5286fb820fcb8e57106dc4c4ddb69d *./Data Collection/temperature_openmeteo.py
+a8730ba6fa4e6e48cd246283cd2a414e *./Data Collection/test.py
+ee46f2279ceea77ef49135e469c851d0 *./Data Collection/txt files/chirps_progress.txt
+a64752eb1a7508b554fe1e3c7ca42af0 *./Data Collection/txt files/era5_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/txt files/et_progress.txt
+55a36102b6bad50d0c03067a4acf13a1 *./Data Collection/txt files/humidity_progress.txt
+379e8e75b73666b42a4468f99ece883c *./Data Collection/txt files/progress.txt
+8d9ad20a3333e7ade5145981ef3adc81 *./Data Collection/txt files/progress_2026_10_extend.txt
+e7be1a2facbc844d3ac4ac1686540da2 *./Data Collection/txt files/rainfall_progress.txt
+cd0e6f675a0deda260ec056316a07ae5 *./Data Collection/txt files/sentinel1_progress.txt
+cd0e6f675a0deda260ec056316a07ae5 *./Data Collection/txt files/sentinel2_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/txt files/soil_moisture_progress.txt
+4dcd503c419bdfb8ed78c1b99007ff53 *./Data Collection/txt files/temperature_openmeteo_progress.txt
+1aceb47bceb26015d05da41b95fe9886 *./Data Preprocessing/audit/single_well_qc.png
+4b882a868ad4a6cfeb489bbbe9a0839c *./Data Preprocessing/audit/target_akola.png
+df2ada78e33295bdc430f6ee45514cb3 *./Data Preprocessing/audit/target_audit_loso.csv
+ba60fe909eee7d14baca4cf2b1fbd413 *./Data Preprocessing/audit/target_audit_per_district.csv
+7f0d12c44dfdafee13526f262dd05a85 *./Data Preprocessing/audit/target_audit_summary.csv
+807420f6f6851c92ff30e4ff7b50880a *./Data Preprocessing/audit/target_aurangabad.png
+c25e53305446a086249b0321631777a1 *./Data Preprocessing/audit/target_dhule.png
+88819f54cc5e4e76642aa6ce408679b0 *./Data Preprocessing/audit/target_jalgaon.png
+0a2784193c49333ab66b9e1333bbc3e1 *./Data Preprocessing/audit/target_nagpur.png
+998c0bb4cb86da9230cc054a1091ea12 *./Data Preprocessing/audit/target_nashik.png
+c7fde1ca402854a2a990026ba652a3b5 *./Data Preprocessing/audit_groundwater_target.py
+efbb422c14205f4fdad0cf659fe218c2 *./Data Preprocessing/clean datasets/district_data_quality.csv
+f7e0e54eca2515de63ca3f4e3be52ff7 *./Data Preprocessing/clean datasets/env_features_clean.csv
+618afbce4d6ec3fe75c530579b6e2721 *./Data Preprocessing/clean datasets/excluded_districts.csv
+446da9fe6411cecf74725714e31c3c85 *./Data Preprocessing/clean datasets/groundwater_clean.csv
+aa14be53c3d74f73207b0078fded070c *./Data Preprocessing/clean datasets/groundwater_stations.geojson
+f6a3c40aca63fb50418a2d6cf280c122 *./Data Preprocessing/clean datasets/groundwater_station_daily.csv
+e035dc2613f830a59365f1f695f1296d *./Data Preprocessing/clean datasets/master_dataset.csv
+642ae777fcbd4464a7c9d41e92f1c151 *./Data Preprocessing/clean datasets/rainfall_clean.csv
+fbd90e28e6100820d5cde245d117fc19 *./Data Preprocessing/clean datasets/station_qc_log.csv
+0eeea11405e3c8fed88aefcff44a6fae *./Data Preprocessing/clean datasets/v3_target_backup/district_data_quality.csv
+b5ac8191a77e0564b8161c50d589e4c2 *./Data Preprocessing/clean datasets/v3_target_backup/groundwater_clean.csv
+c3325794f550f8105e70802361775856 *./Data Preprocessing/clean datasets/v3_target_backup/master_dataset.csv
+2e9cca5143e6f73903d215a8365ac85d *./Data Preprocessing/extract_station_geojson.py
+1d8da87a193d320f2db63bf8fed7737b *./Data Preprocessing/merge_cgwb_into_master.py
+575207d331016fa3a26580d2345fd14b *./Data Preprocessing/merge_master.py
+d76d1a9edd53156b22508c303c7af3e5 *./Data Preprocessing/preprocess_env_features.py
+1bfca78af3e69df18119ad1fdf5deedc *./Data Preprocessing/preprocess_groundwater.py
+bc285c49051c6bc2a6e43c71a851d29f *./Data Preprocessing/preprocess_rainfall.py
+d9b545bebde27f13690ad01ce6eb041e *./Data Preprocessing/unclean datasets/et_maharashtra_23_25_uncleaned.csv
+8a4efea50c1cb6fbe823694e0c88dd0f *./Data Preprocessing/unclean datasets/groundwater_maharashtra_23_25_uncleaned.csv
+d569b432d35df34c2b854007f5dcd5ab *./Data Preprocessing/unclean datasets/humidity_maharashtra_23_25_uncleaned.csv
+020202e0d82a39e1303798fddb0202bc *./Data Preprocessing/unclean datasets/rainfall_maharashtra_23_25_uncleaned.csv
+4ae8077e5fe2b6351864d53f958acc10 *./Data Preprocessing/unclean datasets/soil_moisture_maharashtra_23_25_uncleaned.csv
+ebd2e72e31ea8e6125136ce1def0b989 *./Data Preprocessing/unclean datasets/temperature_humidity_maharashtra_23_25.csv
+0f35c08ca7d1e472b0c8a6e4857f0f89 *./Latest results/per_district_mape_t14.png
+e24d4b4503327663eb86684adf3b4a2d *./Latest results/per_district_mape_t30.png
+4f1b22da92b9bda93c0f616c8850fce7 *./Latest results/per_district_mape_t7.png
+1ce48d5e20bd6725a0c0f4e21fa8f1be *./Latest results/quantile_akola.png
+1a52c6ac6494e7775c3674a0b3d1d2e8 *./Latest results/quantile_nagpur.png
+ed6d3002dcafd2e9d0a0f25a6ba8bcd2 *./Latest results/quantile_wardha.png
+5c7bf9d0df8c6645b67f104ac8760c03 *./Latest results/quantile_washim.png
+2c6cb982b0ed19c68f9bc652f5db5814 *./Latest results/README.md
+6883fe2375315e0bfc92aa251f49a948 *./Latest results/tft_checkpoint_fold1_monsoon2024.pt
+7538621187d196843cd33187c16f83aa *./Latest results/tft_checkpoint_fold2_postmonsoon2024.pt
+590c3ff3b76d2c9fa7e60ae131a0223f *./Latest results/tft_checkpoint_fold3_dry2025.pt
+fcc6888de7e95faadf2613c7fea02cc6 *./Latest results/tft_checkpoint_fold4_monsoon2025.pt
+a9872f482b804cbca3a773040013c932 *./Latest results/tft_checkpoint_fold5_postmonsoon2025.pt
+4c0a9aea006a99fd833ec381ef5e5507 *./Latest results/tft_checkpoint_fold6_dry2026.pt
+bb03a2052f9f9337fb523f615ed6af7a *./Latest results/tft_coverage_by_district.csv
+9f130a9758a9285f320942a447be06f8 *./Latest results/tft_coverage_heatmap.png
+37f114eb6e1dbb29759e0f8c3ef94ebe *./Latest results/tft_metrics_headline.csv
+687178bf8471815d391ed420ef61c721 *./Latest results/tft_metrics_per_district.csv
+f37fb735589ab096d83ba04416eb2221 *./Latest results/tft_metrics_per_season.csv
+b2b90cbf6f0befafcb7c1187cfd33204 *./Latest results/tft_predictions_all_folds.csv
+0de867a321338caceacf5e850fdeb28d *./Latest results/tft_predictions_calibrated.csv
+4c26c218be0d60b5e0c67a1a2f4cca8a *./Latest results/tft_training_curves.png
+3afbeecd5cced56ebe197bc3f0920225 *./Latest results/tft_vsn_importance.png
+bf82bd9ba744aa331463dd1d70450da8 *./Models/baselines/.ipynb_checkpoints/01_arima_sarima-checkpoint.ipynb
+6a366e0442e98403ab68cb0b672d35c9 *./Models/baselines/.ipynb_checkpoints/02_xgboost-checkpoint.ipynb
+225a0570afa78b99caf9762f35ab364c *./Models/baselines/.ipynb_checkpoints/03_lstm-checkpoint.ipynb
+22d02a90054f09ce317fe94b5631d985 *./Models/baselines/.ipynb_checkpoints/04_evaluate-checkpoint.ipynb
+ca6e8c4f1bfdaa14f56cce3c2362c9dc *./Models/baselines/.ipynb_checkpoints/05_arima_multihorizon-checkpoint.ipynb
+6bbf47382c74d01bfc689d9755ad6d82 *./Models/baselines/.ipynb_checkpoints/06_xgboost_multihorizon-checkpoint.ipynb
+22195d1cfaf9731d123853ed6c8bcdd2 *./Models/baselines/.ipynb_checkpoints/07_lstm_multihorizon-checkpoint.ipynb
+753d4cf950a1e4bd16f30ca3d091ca3e *./Models/baselines/.ipynb_checkpoints/08_evaluate_multihorizon-checkpoint.ipynb
+ef56e1ce63572802234123dddfafc6a4 *./Models/baselines/01_arima_sarima.ipynb
+4c95a2efdf0dd77964b257abbd8e6906 *./Models/baselines/02_xgboost.ipynb
+bd540ff41dc12cf786c8827486a6cbf9 *./Models/baselines/03_lstm.ipynb
+e56d10a59e3654de2ef07b50c9ef823a *./Models/baselines/04_evaluate.ipynb
+5ad2d4780f57ecb4ebfaaf69a2d03da5 *./Models/baselines/05_arima_multihorizon.ipynb
+3f7c559a63f806f43759045fb29d9364 *./Models/baselines/06_xgboost_multihorizon.ipynb
+e2271c8fc50ae5f2d35b2888dc1410b5 *./Models/baselines/07_lstm_multihorizon.ipynb
+27ac2923bb529f9db78c6f2a756cbdeb *./Models/baselines/08_evaluate_multihorizon.ipynb
+5c46a4e1c912eb8b924d5b3ac35e10ed *./Models/baselines/outputs/arima_metrics.csv
+b84a22c0fc692b0f5ae0858367629f2c *./Models/baselines/outputs/arima_multihorizon_metrics.csv
+1615e7c0dec6a67fbe9d0f0d49a31880 *./Models/baselines/outputs/arima_multihorizon_t14.csv
+dc6fb00e622096d9061fae0cd21c9956 *./Models/baselines/outputs/arima_multihorizon_t30.csv
+791112d02fcc648e88fe3308c3ddb7f4 *./Models/baselines/outputs/arima_multihorizon_t7.csv
+52a42224f112e2e055f30b0b46652940 *./Models/baselines/outputs/arima_predictions.csv
+e77c9465b0ba09185241b6f32da2fe8a *./Models/baselines/outputs/comparison_per_district.csv
+e0af4027e011b755f95fa4f10656e2b4 *./Models/baselines/outputs/comparison_summary.csv
+5ae3c9f4235bb4a2a9153aec797014f6 *./Models/baselines/outputs/lstm_checkpoint.pt
+ac7effc948841fb8d331cdccd6abe7c9 *./Models/baselines/outputs/lstm_metrics.csv
+bffcf5083535609e0e9c2185dfdbe4cf *./Models/baselines/outputs/lstm_multihorizon_summary.csv
+5641af2b2cf53f4178dc3de272adc478 *./Models/baselines/outputs/lstm_multihorizon_t14.csv
+bc10bbeae3b52c1cb36e003756e4177d *./Models/baselines/outputs/lstm_multihorizon_t14.pt
+e3a6067f5c736f18259fc9e0fb0d0476 *./Models/baselines/outputs/lstm_multihorizon_t30.csv
+e8192f3eb3cbff6024f5bcef09046fcd *./Models/baselines/outputs/lstm_multihorizon_t30.pt
+80723c822e05efd0b0c23d2e37f00856 *./Models/baselines/outputs/lstm_multihorizon_t7.csv
+5c18e42ebf9838cf5e9bc832f244bffc *./Models/baselines/outputs/lstm_multihorizon_t7.pt
+5070ebee10a171c10407e0d3fe3caef4 *./Models/baselines/outputs/lstm_predictions.csv
+5658e0bcc2db6fd8ff6528b0e585a7e1 *./Models/baselines/outputs/multihorizon_per_district.csv
+0bab6376d15a78e6fee57764f977a00d *./Models/baselines/outputs/multihorizon_summary.csv
+43726008a5325f0abbca0e8e6ccd6289 *./Models/baselines/outputs/plots/arima_multihorizon_degradation.png
+2740624a3558e28656a2d7003acbdcd2 *./Models/baselines/outputs/plots/arima_multihorizon_overlay.png
+ed08e7d1e65c9b9486e1bf2bd2ef0675 *./Models/baselines/outputs/plots/comparison_bar.png
+a9f50615d6b2d429527b85c88548ddf9 *./Models/baselines/outputs/plots/comparison_heatmap.png
+ce3e9115d7553590b6fcc31577b3be2c *./Models/baselines/outputs/plots/comparison_overlay.png
+458a9eee380ba57b5f484548af4e79f0 *./Models/baselines/outputs/plots/lstm_actual_vs_pred.png
+54ee19f4b7d137bb2551bf46425a6428 *./Models/baselines/outputs/plots/lstm_multihorizon_curves.png
+d4f13eab34ef525cceeedfa606d110e7 *./Models/baselines/outputs/plots/lstm_multihorizon_overlay.png
+b2f68005099d5cc07c6dc390519e2838 *./Models/baselines/outputs/plots/lstm_scatter.png
+91715180eb29179c55463b96c872420d *./Models/baselines/outputs/plots/lstm_training_curve.png
+577a93f3919f719a3e44356bd524e345 *./Models/baselines/outputs/plots/multihorizon_crossover.png
+99ff0f2f205786c24b95133693e5d593 *./Models/baselines/outputs/plots/multihorizon_district_heatmap_t7.png
+d29dfad7a4266a857d8332e58f68875f *./Models/baselines/outputs/plots/multihorizon_rmse_comparison.png
+30a07ffbc177a25f2a021ad79d023cd8 *./Models/baselines/outputs/plots/sarima_actual_vs_pred.png
+2e748a00a156348802db274992f2187f *./Models/baselines/outputs/plots/sarima_rmse_per_district.png
+b1956bd0cdf8f99562b0a99ff2f61706 *./Models/baselines/outputs/plots/shap_evolution_by_horizon.png
+5bbf806914a4386aedaa4730ccf5abd1 *./Models/baselines/outputs/plots/xgboost_feature_importance.png
+cd87d72e7174a5f9e04e3ba2f207ace6 *./Models/baselines/outputs/plots/xgboost_multihorizon_curves.png
+ba30ca925d195124c7f2d1dfcc250b5f *./Models/baselines/outputs/plots/xgboost_scatter.png
+950d730cedf6f7c24fd3a23bd095afe7 *./Models/baselines/outputs/plots/xgboost_shap_lag_vs_env.png
+079779b3ee291e084fd90ae549426151 *./Models/baselines/outputs/plots/xgboost_shap_multihorizon.png
+85643e6ba4375c145f271a92c6c5ad28 *./Models/baselines/outputs/plots/xgboost_training_curve.png
+dd3da4f5b91c4abbf059c7917055645e *./Models/baselines/outputs/xgboost_feature_importance.csv
+9d690d3dae330e90d17ad492e19d44bd *./Models/baselines/outputs/xgboost_metrics.csv
+cc7f76f5de9f7dbb526d55c9786b5341 *./Models/baselines/outputs/xgboost_multihorizon_summary.csv
+248b3348340de11fae7cf858504ea70c *./Models/baselines/outputs/xgboost_multihorizon_t14.csv
+405d62272dda1b46c9a6bdc61e7944a2 *./Models/baselines/outputs/xgboost_multihorizon_t30.csv
+11afbcd7fe1a1a0938cf6077531dd110 *./Models/baselines/outputs/xgboost_multihorizon_t7.csv
+50883ad1a41b72bf203164421eae518e *./Models/baselines/outputs/xgboost_predictions.csv
+212551c9471d305b7096e833eb6c789d *./Models/baselines/outputs/xgboost_shap_t14.csv
+249319078e96596a807a9e976e7481fe *./Models/baselines/outputs/xgboost_shap_t30.csv
+e6d93d0feb5524f97103286824b285be *./Models/baselines/outputs/xgboost_shap_t7.csv
+c61873641c7b15931fe718bb9c562d9c *./Models/baselines/outputs/xgboost_shap_values.csv
+987b0923a921d3758e3ed3bfc7f156b9 *./Models/baselines/scripts/arima_multihorizon.py
+ddb165b2b458514a505d1476e9971397 *./Models/baselines/scripts/arima_sarima_baseline.py
+a3513e7071ae1c9117fd4a998feb68a7 *./Models/baselines/scripts/evaluate_baselines.py
+96dd9a4ca7f67349be0802a3d23b6198 *./Models/baselines/scripts/evaluate_multihorizon.py
+d75118bfd4bc2dde70d4d60f7150e7c3 *./Models/baselines/scripts/lstm_baseline.py
+85d0232b910b867fac16a32194fe6c86 *./Models/baselines/scripts/lstm_multihorizon.py
+2a62eaed79aced3229b8bca33faf776e *./Models/baselines/scripts/xgboost_baseline.py
+9a51d942e77190d3f2f552ff58b58233 *./Models/baselines/scripts/xgboost_multihorizon.py
+834e928daeea725ac4a59c80cf357993 *./Models/TFT/.ipynb_checkpoints/09_tft_colab-checkpoint.ipynb
+1637d1f964addd3b1a9c9d05f39b8c6e *./Models/TFT/.ipynb_checkpoints/09_tft_colab_v2_backup-checkpoint.ipynb
+93ed864b1f10288d0b74d96fb24efea4 *./Models/TFT/.ipynb_checkpoints/09_tft_groundwater-checkpoint.ipynb
+88670284ffc83f995bc148ee32282fb5 *./Models/TFT/09_tft_colab.ipynb
+88670284ffc83f995bc148ee32282fb5 *./Models/TFT/09_tft_colab_production.ipynb
+a3a1893d00a053603fff52c767944780 *./Models/TFT/09_tft_colab_production_v2.ipynb
+04d1b233aa33816f9c142a94876e2089 *./Models/TFT/09_tft_colab_production_v3.ipynb
+bebd8c5b89347893a9ae29643f60eede *./Models/TFT/09_tft_colab_production_v4.ipynb
+a1956966de033ef534491e8d6ee09b1f *./Models/TFT/09_tft_colab_production_v4_1.ipynb
+5e97a073e1666471c7fa4add38746abe *./Models/TFT/09_tft_colab_v2_backup.ipynb
+ac0e337248f2fdec52af865a95f65f78 *./Models/TFT/09_tft_groundwater.ipynb
+0eeea11405e3c8fed88aefcff44a6fae *./Models/TFT/district_data_quality.csv
+c3325794f550f8105e70802361775856 *./Models/TFT/master_dataset.csv
+c3325794f550f8105e70802361775856 *./Models/TFT/master_dataset_v3target.csv
+e035dc2613f830a59365f1f695f1296d *./Models/TFT/master_dataset_v4target.csv
+2d28dbecf5ea35d629e9e6fc310fc7d8 *./Models/TFT/outputs/v4/ablations.csv
+c8d220b7580ab1e2bd189e7b4f832d33 *./Models/TFT/outputs/v4/log_v3fixed_dev.txt
+eff4a69986c8cf43260508a18bd1e43c *./Models/TFT/outputs/v4/snaive_tuning.csv
+05441afe29c646a7a3018d70f0dd7bc5 *./Models/TFT/outputs/v4/v3fixed_dev/baseline_ladder.csv
+5fa6eb776fcd3bed4ee16d560f9e2957 *./Models/TFT/outputs/v4/v3fixed_dev/config.json
+742dfba5d119c0b9ac5be491fe3c3465 *./Models/TFT/outputs/v4/v3fixed_dev/coverage_calibrated.csv
+37753cdd63d0dd620791295f247a48e2 *./Models/TFT/outputs/v4/v3fixed_dev/coverage_calibrated_by_district.csv
+4e3190d313c40d52ac3e1ab7402dfbed *./Models/TFT/outputs/v4/v3fixed_dev/district_gap.csv
+42bd15de42ad32dc918a699e82f169f4 *./Models/TFT/outputs/v4/v3fixed_dev/metrics_headline.csv
+4a567d76c79730de020fd47fce601218 *./Models/TFT/outputs/v4/v3fixed_dev/metrics_per_district.csv
+700c7d5123fe55fc728da84722a806d2 *./Models/TFT/outputs/v4/v3fixed_dev/metrics_per_fold.csv
+f5d7cf662159a56ee6437d0c368952e6 *./Models/TFT/outputs/v4/v3fixed_dev/model_fold1_monsoon2024_lastseed.pt
+c5115a96a42d72bd0a2dec04501bad24 *./Models/TFT/outputs/v4/v3fixed_dev/model_fold2_postmonsoon2024_lastseed.pt
+893616d0f1f45405278617534c5fa85d *./Models/TFT/outputs/v4/v3fixed_dev/model_fold3_dry2025_lastseed.pt
+74f8b4863376dce330f550b83d188923 *./Models/TFT/outputs/v4/v3fixed_dev/model_fold4_monsoon2025_lastseed.pt
+1544c632fa27c7102dd00c4ba7a54a91 *./Models/TFT/outputs/v4/v3fixed_dev/predictions_base.csv
+a21a7ddaccb488ef3064889145768d18 *./Models/TFT/outputs/v4/v3fixed_dev/predictions_daily.csv
+ed3314b031920ad498245cb28eda42ca *./Models/TFT/outputs/v4/v3fixed_dev/predictions_keys.csv
+c2e4bba468f065180f378029e81c6568 *./Models/TFT/outputs/v4/v3fixed_dev/predictions_weekly.csv
+499564dae35a8dd93f4d06f28ec00f8a *./Models/TFT/outputs/v4/v3fixed_dev/significance.csv
+1a90b9f14f12efa6bdc07c606d089835 *./Models/TFT/outputs/v4/v3fixed_dev/windows.csv
+40012735d65b3e2c9e24fd7cb81ea655 *./Models/TFT/outputs/v4/_cache/04789861eb_fold1_monsoon2024.pkl
+c1e7c03c56a9d18bd68125c659beffce *./Models/TFT/outputs/v4/_cache/2d9d7d2758_fold1_monsoon2024.pkl
+a7446e48429fb80fd08d21b64724e79d *./Models/TFT/outputs/v4/_cache/2d9d7d2758_fold2_postmonsoon2024.pkl
+1c37d47b7a1a2786144af124a46761a6 *./Models/TFT/outputs/v4/_cache/2d9d7d2758_fold3_dry2025.pkl
+a4dfcf803d09b1951170257152ecd8b7 *./Models/TFT/outputs/v4/_cache/2d9d7d2758_fold4_monsoon2025.pkl
+67bcdfb94a3de0ef426af95689c58fa9 *./Models/TFT/PROD_V1_vs_V2.md
+8dee2262e7b16942864311a6a5208878 *./Models/TFT/RESULTS_GUIDE.md
+30ca102d4affa84e61b03cd0a22058cc *./Models/TFT/run_v4.py
+8310c1e296ad650f5a6e930b21174da6 *./Models/TFT/tft_model.py
+1ee8a92df73e3387852070560f1571e8 *./Models/TFT/tft_model_v3.py
+3279f2222ce9d61128994df71e0b8236 *./Models/TFT/tft_v4.py
+0b793f78e25fb98f92dd4e704fbd4dc2 *./Models/TFT/tune_snaive.py
+eaa9c268ef295cb0ee27a233ab666b11 *./Models/TFT/V3_PLAN.md
+a7d0876b6c7b30f6f2b637d30f1b2530 *./PROJECT_STATUS.md
+4366ab5758041815192e49fe8947610e *./README.md
+e827c5085850687b0e988dc467aed569 *./REPORT.md
+692a8d815d8c8130d74445c5c25aa718 *./result zips/tft_v4_1_outputs.zip
+eb03376c30370c89b7c8c498db73332c *./result zips/v4_1/ablations.csv
+528b1554fe75aadb6457587fa1e59fef *./result zips/v4_1/dev_d48_tab2_refit/baseline_ladder.csv
+c673641b211b47ffc5d18beb80bf6fd2 *./result zips/v4_1/dev_d48_tab2_refit/best_epochs.csv
+6e25e5e955c3b5e543715d2246728521 *./result zips/v4_1/dev_d48_tab2_refit/config.json
+88b9da98013cc1488423e031a336ad6f *./result zips/v4_1/dev_d48_tab2_refit/coverage_calibrated.csv
+5f818e1436c741971edf0d3a5a064193 *./result zips/v4_1/dev_d48_tab2_refit/coverage_calibrated_by_district.csv
+660a21ee643cb8df0d0efeb0c6083dac *./result zips/v4_1/dev_d48_tab2_refit/district_gap.csv
+50c0bc5bb6cd2cde0df1be41b31a14b7 *./result zips/v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated.csv
+0cc2cd33db3c18160f614c7a6fdaeb66 *./result zips/v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated_by_district.csv
+1180d3c005efba518cbb585cf8d2621a *./result zips/v4_1/dev_d48_tab2_refit/ensemble_district_gap.csv
+55c090e5afc7f66aa7ee617565d59da6 *./result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_headline.csv
+4eb8cb17205614fa3a59629c34b46687 *./result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_per_district.csv
+bd2d5035f33006f21331f4d8edd8c254 *./result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_per_fold.csv
+5c21f68c62f6fd3f1555d531f6bfd52e *./result zips/v4_1/dev_d48_tab2_refit/ensemble_significance.csv
+6642edfa154666aaf585e35fcf3575e7 *./result zips/v4_1/dev_d48_tab2_refit/metrics_headline.csv
+c9f3b368dfc9e00b6e38eaaa73f90f33 *./result zips/v4_1/dev_d48_tab2_refit/metrics_per_district.csv
+eaa9101db9d87cce7b149565bd4aa8f9 *./result zips/v4_1/dev_d48_tab2_refit/metrics_per_fold.csv
+386493df9b2503887a2e637ad01558f8 *./result zips/v4_1/dev_d48_tab2_refit/model_fold1_monsoon2024_lastseed.pt
+337eed6a74c8a6a6e1b88bb5ce6626ea *./result zips/v4_1/dev_d48_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt
+0729aa792e8fc21f3d36591ae5e41bfe *./result zips/v4_1/dev_d48_tab2_refit/model_fold3_dry2025_lastseed.pt
+1a0fbeba22ecd4b9729d445c945ce7ad *./result zips/v4_1/dev_d48_tab2_refit/model_fold4_monsoon2025_lastseed.pt
+9a2f7ac78dae1c292e6132090856c48e *./result zips/v4_1/dev_d48_tab2_refit/significance.csv
+ed0dadcb5547aa7df2d0b2b698347651 *./result zips/v4_1/dev_d48_tab2_refit/stack_weights.csv
+e291e498e490e0eb3ccd7287b5a8e7ae *./result zips/v4_1/dev_d48_tab2_refit/windows.csv
+0595336ca713501f1c06bb46283c5b3a *./result zips/v4_1/dev_ref/baseline_ladder.csv
+00ef5b9c9a845a9704b7b1687d338a2f *./result zips/v4_1/dev_ref/best_epochs.csv
+8539410452df94c7b79b0dfcf6b9401d *./result zips/v4_1/dev_ref/config.json
+46b0637401f89bfe3acdff6dfac838f4 *./result zips/v4_1/dev_ref/coverage_calibrated.csv
+02157129df5a5b16f2cb9771c3acc847 *./result zips/v4_1/dev_ref/coverage_calibrated_by_district.csv
+997c24e7867bd692bf18df18e7106797 *./result zips/v4_1/dev_ref/district_gap.csv
+24209851a415928f14a371fc815ba79f *./result zips/v4_1/dev_ref/ensemble_coverage_calibrated.csv
+2c1fc035d4e8a0605d7f129dd3403925 *./result zips/v4_1/dev_ref/ensemble_coverage_calibrated_by_district.csv
+00cd17465ff3b0113c39a7f7536d1e83 *./result zips/v4_1/dev_ref/ensemble_district_gap.csv
+d6c9a13d8acd4d00812bbf3f87b9cd32 *./result zips/v4_1/dev_ref/ensemble_metrics_headline.csv
+5e85c298aa051cf150b4f389588ef364 *./result zips/v4_1/dev_ref/ensemble_metrics_per_district.csv
+709d77857c81797cbe8ad46cc1d533a4 *./result zips/v4_1/dev_ref/ensemble_metrics_per_fold.csv
+f742c6bcdbad5c4f5b0e2119ee4c2225 *./result zips/v4_1/dev_ref/ensemble_significance.csv
+e36871359f7f2be0ab23669d3cd46279 *./result zips/v4_1/dev_ref/metrics_headline.csv
+40258b09cd12a508b42015db79dfaf5a *./result zips/v4_1/dev_ref/metrics_per_district.csv
+d13446ad25c9261be2b4745446bfae62 *./result zips/v4_1/dev_ref/metrics_per_fold.csv
+f992b7d92b7a9d4495d447281198efe6 *./result zips/v4_1/dev_ref/model_fold1_monsoon2024_lastseed.pt
+13a47336404039dfb18ccca73564efaf *./result zips/v4_1/dev_ref/model_fold2_postmonsoon2024_lastseed.pt
+58415949d9d47bcf4ed27e6d25ff4cc1 *./result zips/v4_1/dev_ref/model_fold3_dry2025_lastseed.pt
+e600ac49459311a918496d1659ae3f27 *./result zips/v4_1/dev_ref/model_fold4_monsoon2025_lastseed.pt
+c683484856c78cd50b479d6bef6c1232 *./result zips/v4_1/dev_ref/significance.csv
+672007570526453e8c6291b7c9c1135e *./result zips/v4_1/dev_ref/stack_weights.csv
+e291e498e490e0eb3ccd7287b5a8e7ae *./result zips/v4_1/dev_ref/windows.csv
+e36721848bf5be96a20bef653b571157 *./result zips/v4_1/dev_refit/baseline_ladder.csv
+d48653b65df623b805f803aff6d1cd7c *./result zips/v4_1/dev_refit/best_epochs.csv
+a1cbc3be554da12011f08b787831318d *./result zips/v4_1/dev_refit/config.json
+57b35c215206e8d5db212740a79f8024 *./result zips/v4_1/dev_refit/coverage_calibrated.csv
+5748591cccbb46d1d5155ef8c1508419 *./result zips/v4_1/dev_refit/coverage_calibrated_by_district.csv
+59c301eebe8f4133c9bb36adf84b2221 *./result zips/v4_1/dev_refit/district_gap.csv
+1c884e20341f910d28b7d556c355c286 *./result zips/v4_1/dev_refit/ensemble_coverage_calibrated.csv
+9dde952cf4591ac5f2026a8f9efae8d8 *./result zips/v4_1/dev_refit/ensemble_coverage_calibrated_by_district.csv
+90c1a64a90984118cc08a8d8714d399d *./result zips/v4_1/dev_refit/ensemble_district_gap.csv
+3854c8d53a2ca078cf3c9e9b5b1ba2be *./result zips/v4_1/dev_refit/ensemble_metrics_headline.csv
+3f57dbd95cdd8c8e8891db319f69eb44 *./result zips/v4_1/dev_refit/ensemble_metrics_per_district.csv
+3ea49d8b40c72f75d4b6a445ff71c85b *./result zips/v4_1/dev_refit/ensemble_metrics_per_fold.csv
+b6b7b28f53e726b69aef64220614f5de *./result zips/v4_1/dev_refit/ensemble_significance.csv
+141ac9e621b595bf911bbbd6b7938ab8 *./result zips/v4_1/dev_refit/metrics_headline.csv
+b701f4155136f20b771f7f6b34f3ed14 *./result zips/v4_1/dev_refit/metrics_per_district.csv
+f2f210ea9ce9e503278456d0093e3500 *./result zips/v4_1/dev_refit/metrics_per_fold.csv
+7be6111a23ef0101c90ec1a6c09984bd *./result zips/v4_1/dev_refit/model_fold1_monsoon2024_lastseed.pt
+323a867abbbd0f4d43ca7078840b31c1 *./result zips/v4_1/dev_refit/model_fold2_postmonsoon2024_lastseed.pt
+ed22bb3f754669e35350b47289a99ed5 *./result zips/v4_1/dev_refit/model_fold3_dry2025_lastseed.pt
+2d0fc06cf8799d2e0765d8bf143e0823 *./result zips/v4_1/dev_refit/model_fold4_monsoon2025_lastseed.pt
+1bae25aed64f9e008092e259dce75a7a *./result zips/v4_1/dev_refit/significance.csv
+0ba51c0e5b7091a1382669016f0b637c *./result zips/v4_1/dev_refit/stack_weights.csv
+e291e498e490e0eb3ccd7287b5a8e7ae *./result zips/v4_1/dev_refit/windows.csv
+197bfd13bb807f967afa9864ae1d85b5 *./result zips/v4_1/dev_s1_tab2/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/dev_s1_tab2/best_epochs.csv
+5aa7d9987fd73edac7e0e8ade5aeea2a *./result zips/v4_1/dev_s1_tab2/config.json
+3271b14f0077dc676b0b9495d611e3bb *./result zips/v4_1/dev_s1_tab2/coverage_calibrated.csv
+5625bbcefc1f0afb85f71466ccdaf182 *./result zips/v4_1/dev_s1_tab2/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/dev_s1_tab2/district_gap.csv
+e6a0d0bf0dc8b1eeee933e2ce0b9dcc3 *./result zips/v4_1/dev_s1_tab2/ensemble_coverage_calibrated.csv
+36aa0af971588fbb09799961db945167 *./result zips/v4_1/dev_s1_tab2/ensemble_coverage_calibrated_by_district.csv
+32bd15875d3decae5100236584d04642 *./result zips/v4_1/dev_s1_tab2/ensemble_district_gap.csv
+051bffb7306762849d3c096cdaaa62fc *./result zips/v4_1/dev_s1_tab2/ensemble_metrics_headline.csv
+3033dbe5568c46f8a496643940e959b8 *./result zips/v4_1/dev_s1_tab2/ensemble_metrics_per_district.csv
+9325fd668aa27042f4ff549bb318e1da *./result zips/v4_1/dev_s1_tab2/ensemble_metrics_per_fold.csv
+7f9de7c211de2b6e026fb71ea4b15253 *./result zips/v4_1/dev_s1_tab2/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/dev_s1_tab2/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/dev_s1_tab2/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/dev_s1_tab2/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/dev_s1_tab2/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/dev_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/dev_s1_tab2/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/dev_s1_tab2/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/dev_s1_tab2/significance.csv
+9f88f6e3f43c70e578e8d11790a7f2f9 *./result zips/v4_1/dev_s1_tab2/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/dev_s1_tab2/windows.csv
+f80061eb30bfb07ede7b62f67c5d57dc *./result zips/v4_1/dev_s1_tab2_refit/baseline_ladder.csv
+81fec030231f42a75d91e04ce9fc55c1 *./result zips/v4_1/dev_s1_tab2_refit/best_epochs.csv
+50c186e315701ae8c3de7e4e14e048a2 *./result zips/v4_1/dev_s1_tab2_refit/config.json
+5f1afd13bf4470fde36ea2cb1fcaabb1 *./result zips/v4_1/dev_s1_tab2_refit/coverage_calibrated.csv
+810175cd5b4aaa80f6e792680eb7bfc5 *./result zips/v4_1/dev_s1_tab2_refit/coverage_calibrated_by_district.csv
+80484ee11c310dd4f12b85efa56ee406 *./result zips/v4_1/dev_s1_tab2_refit/district_gap.csv
+7cd123c5cb5e3fe1855aa818a23bd9eb *./result zips/v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated.csv
+761844945f3af9e7f8eb402a22cbcff8 *./result zips/v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated_by_district.csv
+ee7976b73dd4969808af2684505733e9 *./result zips/v4_1/dev_s1_tab2_refit/ensemble_district_gap.csv
+3b532ae5ad4999d5c8a0bb0d5a9219c7 *./result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_headline.csv
+499c479e4f070b257f8aec28626e68b5 *./result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_per_district.csv
+177782b6c6f52bc6437a55cec4e2cc9b *./result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_per_fold.csv
+2f91c61c36e180003f22cee93c0f0861 *./result zips/v4_1/dev_s1_tab2_refit/ensemble_significance.csv
+0f1c369cf9167c21217d8c9dd9c8824e *./result zips/v4_1/dev_s1_tab2_refit/metrics_headline.csv
+34d5308090899e04bcd0f529818b92dd *./result zips/v4_1/dev_s1_tab2_refit/metrics_per_district.csv
+5ce5308eb5af59de72f2df2ae6ed0ccd *./result zips/v4_1/dev_s1_tab2_refit/metrics_per_fold.csv
+25818595bfb7de80addabf5d05f77105 *./result zips/v4_1/dev_s1_tab2_refit/model_fold1_monsoon2024_lastseed.pt
+412574c4a43614290a914cbf91fb7033 *./result zips/v4_1/dev_s1_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt
+a56eaca5e32ca1737f1b9286a0bb51f5 *./result zips/v4_1/dev_s1_tab2_refit/model_fold3_dry2025_lastseed.pt
+a7e2de033be29387b591d270dbd88dc9 *./result zips/v4_1/dev_s1_tab2_refit/model_fold4_monsoon2025_lastseed.pt
+f200c5a49d206b1f219061b025b5d3c9 *./result zips/v4_1/dev_s1_tab2_refit/significance.csv
+2a39e24f63ab3bd990c33ba9c3d745bf *./result zips/v4_1/dev_s1_tab2_refit/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/dev_s1_tab2_refit/windows.csv
+677759747d18bb564d1da276c68c42d8 *./result zips/v4_1/dev_screening_summary.csv
+feceff619bc2d9bb530bc69cb733d86c *./result zips/v4_1/dev_tab2/baseline_ladder.csv
+00ef5b9c9a845a9704b7b1687d338a2f *./result zips/v4_1/dev_tab2/best_epochs.csv
+0f41fb72e040ef89f8ae6dac58c27ee6 *./result zips/v4_1/dev_tab2/config.json
+46b0637401f89bfe3acdff6dfac838f4 *./result zips/v4_1/dev_tab2/coverage_calibrated.csv
+02157129df5a5b16f2cb9771c3acc847 *./result zips/v4_1/dev_tab2/coverage_calibrated_by_district.csv
+997c24e7867bd692bf18df18e7106797 *./result zips/v4_1/dev_tab2/district_gap.csv
+50013d36e17ef1a7de4173bed743b94e *./result zips/v4_1/dev_tab2/ensemble_coverage_calibrated.csv
+cba427c8b54c5353c80aee72c43eabf4 *./result zips/v4_1/dev_tab2/ensemble_coverage_calibrated_by_district.csv
+8d2531d51257acfb051a13a630f872a9 *./result zips/v4_1/dev_tab2/ensemble_district_gap.csv
+f19c96726f0d0ee93e91512bb1b2af19 *./result zips/v4_1/dev_tab2/ensemble_metrics_headline.csv
+7babeb62030d434a01ed0a298bb4d155 *./result zips/v4_1/dev_tab2/ensemble_metrics_per_district.csv
+10f8dfa4819de2a64b7d3cb9d168685d *./result zips/v4_1/dev_tab2/ensemble_metrics_per_fold.csv
+6e9c5410ab6e2f94ec9d3ef167bbb43f *./result zips/v4_1/dev_tab2/ensemble_significance.csv
+e36871359f7f2be0ab23669d3cd46279 *./result zips/v4_1/dev_tab2/metrics_headline.csv
+40258b09cd12a508b42015db79dfaf5a *./result zips/v4_1/dev_tab2/metrics_per_district.csv
+d13446ad25c9261be2b4745446bfae62 *./result zips/v4_1/dev_tab2/metrics_per_fold.csv
+f992b7d92b7a9d4495d447281198efe6 *./result zips/v4_1/dev_tab2/model_fold1_monsoon2024_lastseed.pt
+13a47336404039dfb18ccca73564efaf *./result zips/v4_1/dev_tab2/model_fold2_postmonsoon2024_lastseed.pt
+58415949d9d47bcf4ed27e6d25ff4cc1 *./result zips/v4_1/dev_tab2/model_fold3_dry2025_lastseed.pt
+e600ac49459311a918496d1659ae3f27 *./result zips/v4_1/dev_tab2/model_fold4_monsoon2025_lastseed.pt
+c683484856c78cd50b479d6bef6c1232 *./result zips/v4_1/dev_tab2/significance.csv
+7bdaccc23867addd67fd78fb579ade1a *./result zips/v4_1/dev_tab2/stack_weights.csv
+e291e498e490e0eb3ccd7287b5a8e7ae *./result zips/v4_1/dev_tab2/windows.csv
+fc2fdab43f066a93560adcf87d5d2937 *./result zips/v4_1/dev_tab2_refit/baseline_ladder.csv
+d48653b65df623b805f803aff6d1cd7c *./result zips/v4_1/dev_tab2_refit/best_epochs.csv
+8c39b3255ae77075aae10d8c6d2a74fd *./result zips/v4_1/dev_tab2_refit/config.json
+57b35c215206e8d5db212740a79f8024 *./result zips/v4_1/dev_tab2_refit/coverage_calibrated.csv
+5748591cccbb46d1d5155ef8c1508419 *./result zips/v4_1/dev_tab2_refit/coverage_calibrated_by_district.csv
+59c301eebe8f4133c9bb36adf84b2221 *./result zips/v4_1/dev_tab2_refit/district_gap.csv
+8da39ee4526eb2a8d16ada650348597c *./result zips/v4_1/dev_tab2_refit/ensemble_coverage_calibrated.csv
+e197b88fade3aa26f550a17590accea3 *./result zips/v4_1/dev_tab2_refit/ensemble_coverage_calibrated_by_district.csv
+09a96c5cd0b27dd21a427a8a8ff5468d *./result zips/v4_1/dev_tab2_refit/ensemble_district_gap.csv
+0982211b83a3377f1a71720200f4df4f *./result zips/v4_1/dev_tab2_refit/ensemble_metrics_headline.csv
+94b527d22f24dc9780b9ae1c9ab67903 *./result zips/v4_1/dev_tab2_refit/ensemble_metrics_per_district.csv
+43603abfa9a676f6be69ed767d946da9 *./result zips/v4_1/dev_tab2_refit/ensemble_metrics_per_fold.csv
+d1e59e583ee0ea9537251da69107adcd *./result zips/v4_1/dev_tab2_refit/ensemble_significance.csv
+141ac9e621b595bf911bbbd6b7938ab8 *./result zips/v4_1/dev_tab2_refit/metrics_headline.csv
+b701f4155136f20b771f7f6b34f3ed14 *./result zips/v4_1/dev_tab2_refit/metrics_per_district.csv
+f2f210ea9ce9e503278456d0093e3500 *./result zips/v4_1/dev_tab2_refit/metrics_per_fold.csv
+7be6111a23ef0101c90ec1a6c09984bd *./result zips/v4_1/dev_tab2_refit/model_fold1_monsoon2024_lastseed.pt
+323a867abbbd0f4d43ca7078840b31c1 *./result zips/v4_1/dev_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt
+ed22bb3f754669e35350b47289a99ed5 *./result zips/v4_1/dev_tab2_refit/model_fold3_dry2025_lastseed.pt
+2d0fc06cf8799d2e0765d8bf143e0823 *./result zips/v4_1/dev_tab2_refit/model_fold4_monsoon2025_lastseed.pt
+1bae25aed64f9e008092e259dce75a7a *./result zips/v4_1/dev_tab2_refit/significance.csv
+8fcdfb1c4e6f2b31e67572ac8c0c983f *./result zips/v4_1/dev_tab2_refit/stack_weights.csv
+e291e498e490e0eb3ccd7287b5a8e7ae *./result zips/v4_1/dev_tab2_refit/windows.csv
+bd83e1335920b3e6cf4207a8e4d7fc5e *./result zips/v4_1/FINAL_s1_tab2/baseline_ladder.csv
+7aea47b4c90d84216fcefe02638059ae *./result zips/v4_1/FINAL_s1_tab2/best_epochs.csv
+2696b6bbc9b75b934e8c6080d3185aec *./result zips/v4_1/FINAL_s1_tab2/config.json
+43c5bf45125557c6dcd542cc401deeb7 *./result zips/v4_1/FINAL_s1_tab2/coverage_calibrated.csv
+a089d707f6dee9dfdf968f0e0acda760 *./result zips/v4_1/FINAL_s1_tab2/coverage_calibrated_by_district.csv
+29bc7517195835fc2b4b13da4b8fc242 *./result zips/v4_1/FINAL_s1_tab2/district_gap.csv
+feebc7a51dccace820f39543779c2ea1 *./result zips/v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated.csv
+0e1d60d5921a85b99be977dcfc279601 *./result zips/v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated_by_district.csv
+f5d37ffccbb1aeece76be01d0f1f78b5 *./result zips/v4_1/FINAL_s1_tab2/ensemble_district_gap.csv
+bc883a09c69cf3c3477dbfa8c056d78b *./result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_headline.csv
+ba02468550aa5cfeccb3b25520353d18 *./result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_per_district.csv
+13a3cf9bffdbe2f7375bc6c0987680c1 *./result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_per_fold.csv
+2546bf7f18b11ae6726e8f277e11cc18 *./result zips/v4_1/FINAL_s1_tab2/ensemble_significance.csv
+b838e2a00b46407433696307cad11187 *./result zips/v4_1/FINAL_s1_tab2/metrics_headline.csv
+0fbf09b4faa32704d9d5793ec447e786 *./result zips/v4_1/FINAL_s1_tab2/metrics_per_district.csv
+0967b46f111e423d595a2247aa82abde *./result zips/v4_1/FINAL_s1_tab2/metrics_per_fold.csv
+cf3b30f38f13832267889900a4313090 *./result zips/v4_1/FINAL_s1_tab2/model_fold1_monsoon2024_lastseed.pt
+d920a220a97d686896b83b8821d854a3 *./result zips/v4_1/FINAL_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt
+aadc6a12500bc5a3ce19f2b3d2c085f1 *./result zips/v4_1/FINAL_s1_tab2/model_fold3_dry2025_lastseed.pt
+e8d6f9eb4f1dc66e754a6a72b6fd0ebc *./result zips/v4_1/FINAL_s1_tab2/model_fold4_monsoon2025_lastseed.pt
+cb6168e096d0e0620d7cccbac9f06721 *./result zips/v4_1/FINAL_s1_tab2/model_fold5_postmonsoon2025_lastseed.pt
+1f92710af48e99821584232ae1f03a46 *./result zips/v4_1/FINAL_s1_tab2/model_fold6_dry2026_lastseed.pt
+e9d5313e054e54ad3e15a2c15f6254bd *./result zips/v4_1/FINAL_s1_tab2/predictions_base.csv
+6199ea328a001dc34b0fd3a81e7e7997 *./result zips/v4_1/FINAL_s1_tab2/predictions_daily.csv
+916b3398c127f6aee8fc66e8f6b9e2ef *./result zips/v4_1/FINAL_s1_tab2/predictions_keys.csv
+c19b240ab3543e6461b847f97142ab03 *./result zips/v4_1/FINAL_s1_tab2/predictions_weekly.csv
+d8b744a0bdce7eec13cbd9b297310955 *./result zips/v4_1/FINAL_s1_tab2/significance.csv
+fe3b676f67520a583bd9a7823198e9f1 *./result zips/v4_1/FINAL_s1_tab2/stack_weights.csv
+7cf4b759195153f0f286a0c947a57a59 *./result zips/v4_1/FINAL_s1_tab2/windows.csv
+4f79e1ede26f09bfaf0539bcb0358751 *./result zips/v4_1/FINAL_s1_tab2_locked/baseline_ladder.csv
+7aea47b4c90d84216fcefe02638059ae *./result zips/v4_1/FINAL_s1_tab2_locked/best_epochs.csv
+7f0aeba3db6f21cfab418b88fb5c63a9 *./result zips/v4_1/FINAL_s1_tab2_locked/config.json
+db6cf903b6ea97fee260458ad6a49ae9 *./result zips/v4_1/FINAL_s1_tab2_locked/coverage_calibrated.csv
+9ec72213ee9f0a91a9ed3e4c096c1402 *./result zips/v4_1/FINAL_s1_tab2_locked/coverage_calibrated_by_district.csv
+27e2ce247d878c9fbc5660f4b2eacd57 *./result zips/v4_1/FINAL_s1_tab2_locked/district_gap.csv
+211e0611895b60242b227696564fb738 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated.csv
+3798328719ed7cf4cf374a2a8a608ef0 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated_by_district.csv
+deb83fb54fc180c9b40c70d1c38cb470 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_district_gap.csv
+69c69a3c3fd45499a8f4be75accf5df2 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_headline.csv
+fa5f1f99075bc33fd476a3a6a6dc6c65 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_district.csv
+7bbda4526413945855feaaf31183cc9b *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_fold.csv
+7002b09b22ed963bc602281bc658b232 *./result zips/v4_1/FINAL_s1_tab2_locked/ensemble_significance.csv
+7f3f53617a0234336c6e5a67aee60d2b *./result zips/v4_1/FINAL_s1_tab2_locked/metrics_headline.csv
+d61837c5a47d2e751d1f58fd844554ee *./result zips/v4_1/FINAL_s1_tab2_locked/metrics_per_district.csv
+483120baf3100826bcff95fc10b193ce *./result zips/v4_1/FINAL_s1_tab2_locked/metrics_per_fold.csv
+9bad50646e2cc3cf4558a0d2d3ad1a8b *./result zips/v4_1/FINAL_s1_tab2_locked/significance.csv
+fe3b676f67520a583bd9a7823198e9f1 *./result zips/v4_1/FINAL_s1_tab2_locked/stack_weights.csv
+5841419a6125ad817b76dcd498139949 *./result zips/v4_1/FINAL_s1_tab2_locked/windows.csv
+cdd4ccce91a509ed33948f5e28eb6404 *./result zips/v4_1/post_sweep_summary.csv
+3b19ea921e008f0f626c53b7e7a0a4b3 *./result zips/v4_1/RESULTS_TO_QUOTE.csv
+2eb43ac9b9dda805c882e9ea528c1244 *./result zips/v4_1/RUN_SUMMARY.md
+6b2014932610202fa714d5dad53571d3 *./result zips/v4_1/simple/ensemble/ensemble_coverage_by_district.csv
+03ed482ff9bd1829d57a8899886996d2 *./result zips/v4_1/simple/ensemble/ensemble_coverage_heatmap.png
+aaf558064445f2ed1afafeb504e48e00 *./result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t14.png
+f2103d54dbaaec2597de494c51febf27 *./result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t30.png
+4ee0bd014b434c1b93e344fcdfdf1942 *./result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t7.png
+e8b5cb75bbb2a570ff23a789382875ed *./result zips/v4_1/simple/ensemble/ensemble_mape_by_district.csv
+29956b7a1450b30b50fd0451a65d9a89 *./result zips/v4_1/simple/ensemble/ensemble_mase_by_district.csv
+56db3fd0920717b77b57e7e1f6288fb0 *./result zips/v4_1/simple/ensemble/ensemble_metrics_headline.csv
+16c386d551143fb4e33c0e06b332fed3 *./result zips/v4_1/simple/ensemble/ensemble_metrics_headline_locked.csv
+baf088fce7bc4bcc31a4aee85afadaf3 *./result zips/v4_1/simple/ensemble/ensemble_metrics_per_district.csv
+a6a8751a85b8bd51b4b0e445e1ab48d3 *./result zips/v4_1/simple/ensemble/ensemble_metrics_per_season.csv
+33a5cd1e7cdaa0a83f84329cc9773505 *./result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t14.png
+0ee90d3a12b33139c544d0d6107e2351 *./result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t30.png
+eb241df33e1eca89b6f2b4767b9beb2b *./result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t7.png
+6590df1c2f5ea1fb7e0fc221b672ad98 *./result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t14.png
+e60a27d8f5afa9878a8c3a1eefefe485 *./result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t30.png
+6bf8338fa28c9f8c3daf1cbfdf40147e *./result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t7.png
+0aedffc9fb9386b31cc6134bc780732b *./result zips/v4_1/simple/ensemble/ensemble_predictions_all_folds.csv
+9bdf7dabb93de308a46bd9c923488bc0 *./result zips/v4_1/simple/ensemble/quantile/quantile_akola.png
+8dc40dd6e43aafebdf46a8c14d8a8ecc *./result zips/v4_1/simple/ensemble/quantile/quantile_amravati.png
+6cca253f38f7439618857cc971ea36a0 *./result zips/v4_1/simple/ensemble/quantile/quantile_aurangabad.png
+b6d2616d33f40b29629926784f8b6e42 *./result zips/v4_1/simple/ensemble/quantile/quantile_bhandara.png
+1665d0ddbde4338164e38517cd366e7d *./result zips/v4_1/simple/ensemble/quantile/quantile_chandrapur.png
+ae9a5b1e359ab7afc8be9f0101af44e8 *./result zips/v4_1/simple/ensemble/quantile/quantile_dhule.png
+c7bbc23f27c0f17917ba7f4503c14f1e *./result zips/v4_1/simple/ensemble/quantile/quantile_gadchiroli.png
+9433145322175e0b6fddb67ad28a547d *./result zips/v4_1/simple/ensemble/quantile/quantile_gondia.png
+cf945718a6a74f088f908c392e250551 *./result zips/v4_1/simple/ensemble/quantile/quantile_jalgaon.png
+4d824edbccde94425fa09acd1d095f1a *./result zips/v4_1/simple/ensemble/quantile/quantile_jalna.png
+fea6574e94ac3fe6bf969467f3463882 *./result zips/v4_1/simple/ensemble/quantile/quantile_kolhapur.png
+5063dc398cf6cf6b2668c88c6d161e21 *./result zips/v4_1/simple/ensemble/quantile/quantile_nagpur.png
+9c2e8fdcd1bc4afb6501bf15a0900318 *./result zips/v4_1/simple/ensemble/quantile/quantile_nanded.png
+13a67a9985c52d81447072cf7fe45c13 *./result zips/v4_1/simple/ensemble/quantile/quantile_nandurbar.png
+431fb78602b69019996b517f74d5b6f2 *./result zips/v4_1/simple/ensemble/quantile/quantile_nashik.png
+e689f1bf76cf4e13502554984f46cc5c *./result zips/v4_1/simple/ensemble/quantile/quantile_parbhani.png
+08a3678ee3a5ee82e06eebe2f2621931 *./result zips/v4_1/simple/ensemble/quantile/quantile_pune.png
+946a7abb8340e3d6c5f7dffd4f1762e9 *./result zips/v4_1/simple/ensemble/quantile/quantile_raigad.png
+0a8f452a9e578567781f11f2bee96231 *./result zips/v4_1/simple/ensemble/quantile/quantile_ratnagiri.png
+9d1ea9ad1ad552ef54fb47eb01e4a656 *./result zips/v4_1/simple/ensemble/quantile/quantile_solapur.png
+1059a6f10f6fa1d6aacc29b6471db0bc *./result zips/v4_1/simple/ensemble/quantile/quantile_thane.png
+86d8b338220941fdcf890e9a91384a12 *./result zips/v4_1/simple/ensemble/quantile/quantile_wardha.png
+2f840db9a5ad49aefc27b228ad3b74da *./result zips/v4_1/simple/ensemble/quantile/quantile_washim.png
+1439a042f102004ccc973c268f32525b *./result zips/v4_1/simple/ensemble/quantile/quantile_yavatmal.png
+b794c60e185a46e178a5ee02caeee6ad *./result zips/v4_1/simple/summary_tft_vs_ensemble.csv
+bedf9fcfce6b83937227c546352fc67c *./result zips/v4_1/simple/tft/quantile/quantile_akola.png
+2baf9815f9f3e9cf65a9334d03e0cbd3 *./result zips/v4_1/simple/tft/quantile/quantile_amravati.png
+7173918d29ae9e9228bb7625f6746af9 *./result zips/v4_1/simple/tft/quantile/quantile_aurangabad.png
+39b67458cbff3baa8bc104196376e55d *./result zips/v4_1/simple/tft/quantile/quantile_bhandara.png
+b7c29af76767cf8fa5aa228ba104df2b *./result zips/v4_1/simple/tft/quantile/quantile_chandrapur.png
+6e94442e7d3064a606a65002de3ffda0 *./result zips/v4_1/simple/tft/quantile/quantile_dhule.png
+50ccacad30b1bb45f22cc86ddd3042bc *./result zips/v4_1/simple/tft/quantile/quantile_gadchiroli.png
+06fd80c09e32d5df745aa221b0c883c1 *./result zips/v4_1/simple/tft/quantile/quantile_gondia.png
+c21ef2bf9b1039943842dba1c8c9fc2c *./result zips/v4_1/simple/tft/quantile/quantile_jalgaon.png
+52d262f4ceb3ba1ab7ed3c0ec6e9d658 *./result zips/v4_1/simple/tft/quantile/quantile_jalna.png
+6121fec13f82c3931f20ab1bd3fb5ba4 *./result zips/v4_1/simple/tft/quantile/quantile_kolhapur.png
+4ad8edefbf0bac2ce95c3b4567627810 *./result zips/v4_1/simple/tft/quantile/quantile_nagpur.png
+6b8e304c1e33e9caf0024aa985682da4 *./result zips/v4_1/simple/tft/quantile/quantile_nanded.png
+d66fdf7c50b8253482e22a1725513852 *./result zips/v4_1/simple/tft/quantile/quantile_nandurbar.png
+1c420f6066ed0696dfa48b70a647f841 *./result zips/v4_1/simple/tft/quantile/quantile_nashik.png
+0f7d212436e7adf76c4bb6c2529cdbd2 *./result zips/v4_1/simple/tft/quantile/quantile_parbhani.png
+075958aacce7e9f4ba9adb370771ab50 *./result zips/v4_1/simple/tft/quantile/quantile_pune.png
+8f9f1551b114d0ee4d743b7d6ee5df29 *./result zips/v4_1/simple/tft/quantile/quantile_raigad.png
+c210bc7b2e9a68e0e982c6a89dad9e2a *./result zips/v4_1/simple/tft/quantile/quantile_ratnagiri.png
+3503ee8b265843c61db49b806ceaf134 *./result zips/v4_1/simple/tft/quantile/quantile_solapur.png
+3f72d26ac57d0d1f4553997e68a69730 *./result zips/v4_1/simple/tft/quantile/quantile_thane.png
+db241e893e7ef34812c16d541c12d0a7 *./result zips/v4_1/simple/tft/quantile/quantile_wardha.png
+6d3b0bfc5a709c823c7fa8da4e064169 *./result zips/v4_1/simple/tft/quantile/quantile_washim.png
+6300c930e7b53703bf5bd77f2dde3e84 *./result zips/v4_1/simple/tft/quantile/quantile_yavatmal.png
+3b983a706e61eb3be29a6f7b9371ca2e *./result zips/v4_1/simple/tft/tft_coverage_by_district.csv
+f6cd6c1cd2ed079785e70b7b06b05e12 *./result zips/v4_1/simple/tft/tft_coverage_heatmap.png
+42f6a0278d91cccc2641e25913bfc867 *./result zips/v4_1/simple/tft/tft_forecast_grid_t14.png
+f7f820f8dcd215c788e75dfcbee4a63e *./result zips/v4_1/simple/tft/tft_forecast_grid_t30.png
+c7b751a54871605869cdf887ebb7fc2d *./result zips/v4_1/simple/tft/tft_forecast_grid_t7.png
+da08b20633e39543ff1778f7f4d96f33 *./result zips/v4_1/simple/tft/tft_mape_by_district.csv
+ae36ac59491c206e1954094a09531282 *./result zips/v4_1/simple/tft/tft_mase_by_district.csv
+de1750c91a9ef978f6006ff364b91d20 *./result zips/v4_1/simple/tft/tft_metrics_headline.csv
+02e3a0acb27be4a8bd197bc9742b775c *./result zips/v4_1/simple/tft/tft_metrics_headline_locked.csv
+a011f6840766471bc9a19c903d6e241d *./result zips/v4_1/simple/tft/tft_metrics_per_district.csv
+08712bbff55df95dcc32adaa3c5ff102 *./result zips/v4_1/simple/tft/tft_metrics_per_season.csv
+2e225e01003f74a4a6e576deeb49fe86 *./result zips/v4_1/simple/tft/tft_per_district_mape_t14.png
+ad644bf096c918b5158ea46fc04e6ce0 *./result zips/v4_1/simple/tft/tft_per_district_mape_t30.png
+38eff13ed92d7809e5838c243460db6c *./result zips/v4_1/simple/tft/tft_per_district_mape_t7.png
+e0e5c43b9063a99ed994999fc9318fce *./result zips/v4_1/simple/tft/tft_per_district_mase_t14.png
+7dd27a29ab18ba4ea87350f7520990c3 *./result zips/v4_1/simple/tft/tft_per_district_mase_t30.png
+4756e23dbc542e8f29477762d24b5aef *./result zips/v4_1/simple/tft/tft_per_district_mase_t7.png
+e973b513f1f1ea5bd594cc8876b99678 *./result zips/v4_1/simple/tft/tft_predictions_all_folds.csv
+5a4de507f8add2fefce57f27cb1f6898 *./result zips/v4_1/simple/tft_training_curves.png
+8a3c9730eb13be9262c5a823744eaa5e *./result zips/v4_1/simple/tft_vsn_importance.csv
+8df1e2457334ef2f5bd346ea84d9d821 *./result zips/v4_1/simple/tft_vsn_importance.png
+04c3b84bc8fa5bdc0c4ee07578b90b91 *./result zips/v4_1/sweep_aci0.005/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_aci0.005/best_epochs.csv
+75f83a89c2533470ef7b2041dfc850cb *./result zips/v4_1/sweep_aci0.005/config.json
+4eda4d7cd2296340f0d2e932a1160f90 *./result zips/v4_1/sweep_aci0.005/coverage_calibrated.csv
+f16b6bfeb1761ecb958d37161993ec8c *./result zips/v4_1/sweep_aci0.005/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_aci0.005/district_gap.csv
+2ddc6d33cf2188d53ec5207dff05d304 *./result zips/v4_1/sweep_aci0.005/ensemble_coverage_calibrated.csv
+72fc558bfe204bb24d76deaea31e8007 *./result zips/v4_1/sweep_aci0.005/ensemble_coverage_calibrated_by_district.csv
+32bd15875d3decae5100236584d04642 *./result zips/v4_1/sweep_aci0.005/ensemble_district_gap.csv
+051bffb7306762849d3c096cdaaa62fc *./result zips/v4_1/sweep_aci0.005/ensemble_metrics_headline.csv
+3033dbe5568c46f8a496643940e959b8 *./result zips/v4_1/sweep_aci0.005/ensemble_metrics_per_district.csv
+9325fd668aa27042f4ff549bb318e1da *./result zips/v4_1/sweep_aci0.005/ensemble_metrics_per_fold.csv
+7f9de7c211de2b6e026fb71ea4b15253 *./result zips/v4_1/sweep_aci0.005/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_aci0.005/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_aci0.005/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_aci0.005/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_aci0.005/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_aci0.005/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_aci0.005/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_aci0.005/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_aci0.005/significance.csv
+9f88f6e3f43c70e578e8d11790a7f2f9 *./result zips/v4_1/sweep_aci0.005/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_aci0.005/windows.csv
+3b2ea786749d7888f4a0ab5e53faf492 *./result zips/v4_1/sweep_aci0.02/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_aci0.02/best_epochs.csv
+eccb20258e201388adc095f4b3440f01 *./result zips/v4_1/sweep_aci0.02/config.json
+be49cdd22d9a336e8727b84d40886d54 *./result zips/v4_1/sweep_aci0.02/coverage_calibrated.csv
+2c21f132120c0ac2b3003e459b896696 *./result zips/v4_1/sweep_aci0.02/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_aci0.02/district_gap.csv
+14b2d52996690ad9449d2196a77a1257 *./result zips/v4_1/sweep_aci0.02/ensemble_coverage_calibrated.csv
+cf4b2f7a190b2b0f85f0df521c46e98d *./result zips/v4_1/sweep_aci0.02/ensemble_coverage_calibrated_by_district.csv
+32bd15875d3decae5100236584d04642 *./result zips/v4_1/sweep_aci0.02/ensemble_district_gap.csv
+051bffb7306762849d3c096cdaaa62fc *./result zips/v4_1/sweep_aci0.02/ensemble_metrics_headline.csv
+3033dbe5568c46f8a496643940e959b8 *./result zips/v4_1/sweep_aci0.02/ensemble_metrics_per_district.csv
+9325fd668aa27042f4ff549bb318e1da *./result zips/v4_1/sweep_aci0.02/ensemble_metrics_per_fold.csv
+7f9de7c211de2b6e026fb71ea4b15253 *./result zips/v4_1/sweep_aci0.02/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_aci0.02/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_aci0.02/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_aci0.02/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_aci0.02/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_aci0.02/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_aci0.02/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_aci0.02/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_aci0.02/significance.csv
+9f88f6e3f43c70e578e8d11790a7f2f9 *./result zips/v4_1/sweep_aci0.02/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_aci0.02/windows.csv
+a65e5b55d8e49358e86b9a6f3e91c116 *./result zips/v4_1/sweep_aci0.05/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_aci0.05/best_epochs.csv
+d917463558aa8a739e3b7a770144992b *./result zips/v4_1/sweep_aci0.05/config.json
+aef84a12b3aa7deeceeb27d57b0422e1 *./result zips/v4_1/sweep_aci0.05/coverage_calibrated.csv
+fc2677798504e05ccd36826d647d561d *./result zips/v4_1/sweep_aci0.05/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_aci0.05/district_gap.csv
+fe626d3b78cd26dfba5875f936b82587 *./result zips/v4_1/sweep_aci0.05/ensemble_coverage_calibrated.csv
+4e6c112efa13c91828fee586c164bc1d *./result zips/v4_1/sweep_aci0.05/ensemble_coverage_calibrated_by_district.csv
+32bd15875d3decae5100236584d04642 *./result zips/v4_1/sweep_aci0.05/ensemble_district_gap.csv
+051bffb7306762849d3c096cdaaa62fc *./result zips/v4_1/sweep_aci0.05/ensemble_metrics_headline.csv
+3033dbe5568c46f8a496643940e959b8 *./result zips/v4_1/sweep_aci0.05/ensemble_metrics_per_district.csv
+9325fd668aa27042f4ff549bb318e1da *./result zips/v4_1/sweep_aci0.05/ensemble_metrics_per_fold.csv
+7f9de7c211de2b6e026fb71ea4b15253 *./result zips/v4_1/sweep_aci0.05/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_aci0.05/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_aci0.05/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_aci0.05/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_aci0.05/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_aci0.05/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_aci0.05/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_aci0.05/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_aci0.05/significance.csv
+9f88f6e3f43c70e578e8d11790a7f2f9 *./result zips/v4_1/sweep_aci0.05/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_aci0.05/windows.csv
+3e97f0ce448bfc06d54e7ac22a877cc8 *./result zips/v4_1/sweep_spn100/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_spn100/best_epochs.csv
+21179eb247cf69d00cef449cf413d176 *./result zips/v4_1/sweep_spn100/config.json
+3271b14f0077dc676b0b9495d611e3bb *./result zips/v4_1/sweep_spn100/coverage_calibrated.csv
+5625bbcefc1f0afb85f71466ccdaf182 *./result zips/v4_1/sweep_spn100/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_spn100/district_gap.csv
+af489832fa8a66bd43365ef0d1aa146e *./result zips/v4_1/sweep_spn100/ensemble_coverage_calibrated.csv
+ed256f5f15d381cba66bc2f9d5ca909d *./result zips/v4_1/sweep_spn100/ensemble_coverage_calibrated_by_district.csv
+a5ff8904a2fa0367a3e7be461232644e *./result zips/v4_1/sweep_spn100/ensemble_district_gap.csv
+226e954714543ec7bdc7f55e01eb6965 *./result zips/v4_1/sweep_spn100/ensemble_metrics_headline.csv
+60b8672f805e35858b54eb09c505395e *./result zips/v4_1/sweep_spn100/ensemble_metrics_per_district.csv
+db8f9a398effc03f6476803c2207a8ea *./result zips/v4_1/sweep_spn100/ensemble_metrics_per_fold.csv
+b759c266dbfb43f9c6ad092e7c69b1fb *./result zips/v4_1/sweep_spn100/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_spn100/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_spn100/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_spn100/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_spn100/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_spn100/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_spn100/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_spn100/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_spn100/significance.csv
+e9eb6fcd25c5e830dc59c8038adce2ea *./result zips/v4_1/sweep_spn100/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_spn100/windows.csv
+70d592472de26d9aa456b763cbb304be *./result zips/v4_1/sweep_spn1000/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_spn1000/best_epochs.csv
+498549132277d0098563accd5eff0b25 *./result zips/v4_1/sweep_spn1000/config.json
+3271b14f0077dc676b0b9495d611e3bb *./result zips/v4_1/sweep_spn1000/coverage_calibrated.csv
+5625bbcefc1f0afb85f71466ccdaf182 *./result zips/v4_1/sweep_spn1000/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_spn1000/district_gap.csv
+849b1152275ba4dc7f8c6d5488973649 *./result zips/v4_1/sweep_spn1000/ensemble_coverage_calibrated.csv
+a857235772b63f729295d9f2fff6a120 *./result zips/v4_1/sweep_spn1000/ensemble_coverage_calibrated_by_district.csv
+37204fa3ecb048aab118c58ae10b10dd *./result zips/v4_1/sweep_spn1000/ensemble_district_gap.csv
+c643382a6989c370f689a84f262d1bfc *./result zips/v4_1/sweep_spn1000/ensemble_metrics_headline.csv
+66e94f3102a8da6db113dffa96cfb20c *./result zips/v4_1/sweep_spn1000/ensemble_metrics_per_district.csv
+09c767e30526983d8c250d300e699c97 *./result zips/v4_1/sweep_spn1000/ensemble_metrics_per_fold.csv
+72f715eca25c0445bd5ca76e89063cd8 *./result zips/v4_1/sweep_spn1000/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_spn1000/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_spn1000/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_spn1000/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_spn1000/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_spn1000/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_spn1000/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_spn1000/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_spn1000/significance.csv
+1bea06dff8e01d9d2c578404eb36d347 *./result zips/v4_1/sweep_spn1000/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_spn1000/windows.csv
+a411b74df36c94d168be300c374ea280 *./result zips/v4_1/sweep_spn250/baseline_ladder.csv
+7771dc2e7983c1f050566e8252189075 *./result zips/v4_1/sweep_spn250/best_epochs.csv
+a51b9e0af6b6559b8f7306375a75df42 *./result zips/v4_1/sweep_spn250/config.json
+3271b14f0077dc676b0b9495d611e3bb *./result zips/v4_1/sweep_spn250/coverage_calibrated.csv
+5625bbcefc1f0afb85f71466ccdaf182 *./result zips/v4_1/sweep_spn250/coverage_calibrated_by_district.csv
+d5ed6374b4fb3d071f30ff39936d44b8 *./result zips/v4_1/sweep_spn250/district_gap.csv
+48431e60a36278a37a59fbd09a9ae130 *./result zips/v4_1/sweep_spn250/ensemble_coverage_calibrated.csv
+ca007ab6b1daf41d3135adb0688c8056 *./result zips/v4_1/sweep_spn250/ensemble_coverage_calibrated_by_district.csv
+ad6bf75bf1d2bb17ea6fbd243b4147ee *./result zips/v4_1/sweep_spn250/ensemble_district_gap.csv
+8b023d67c45b74cf6e384b424a2ef16d *./result zips/v4_1/sweep_spn250/ensemble_metrics_headline.csv
+c2b44db741257aee777773ce5b5a528e *./result zips/v4_1/sweep_spn250/ensemble_metrics_per_district.csv
+befc881a3be0604307b5d66fee039878 *./result zips/v4_1/sweep_spn250/ensemble_metrics_per_fold.csv
+83d521f7959993428dbb0a577573d71b *./result zips/v4_1/sweep_spn250/ensemble_significance.csv
+a92c001c2be7491145617ba0c629d4ed *./result zips/v4_1/sweep_spn250/metrics_headline.csv
+7ec2ca43f64ef051694d15365b66b0b4 *./result zips/v4_1/sweep_spn250/metrics_per_district.csv
+913835031171d9fb4c69ea45ea2830cc *./result zips/v4_1/sweep_spn250/metrics_per_fold.csv
+280df7452b17cfe9880d1cc49efe358c *./result zips/v4_1/sweep_spn250/model_fold1_monsoon2024_lastseed.pt
+b28b2cc09e3efa072020da8e257ac0a7 *./result zips/v4_1/sweep_spn250/model_fold2_postmonsoon2024_lastseed.pt
+8efd00a39db3883e2be7770a37ab8f8e *./result zips/v4_1/sweep_spn250/model_fold3_dry2025_lastseed.pt
+4a3955d24b11f2b047053c67d057ef36 *./result zips/v4_1/sweep_spn250/model_fold4_monsoon2025_lastseed.pt
+a9300d74046220f6faa259a3a05545ae *./result zips/v4_1/sweep_spn250/significance.csv
+8fea9397c36d26a00ac80c7813b9d5f5 *./result zips/v4_1/sweep_spn250/stack_weights.csv
+7e87ec29703f3bc23117a8568fe5c6fe *./result zips/v4_1/sweep_spn250/windows.csv
+a4755c58db8ad5a42919df65f5849d68 *./result zips/v4_1/v4_vs_v4_1.csv
+bdadd25675242bae51f1a34627395c95 *./TFT_IMPROVEMENT_PLAN.md

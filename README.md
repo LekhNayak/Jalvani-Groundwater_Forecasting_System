@@ -1,12 +1,12 @@
 # Jalvani — Maharashtra Groundwater Level Prediction
 
 **Scope:** Prediction of groundwater levels across Maharashtra districts using multi-source environmental time-series data, at t+7 / t+14 / t+30 day horizons with q10/q50/q90 quantile uncertainty.
-**Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `PROJECT_STATUS.md` §1 for per-source ranges.
+**Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `docs/PROJECT_STATUS.md` §1 for per-source ranges.
 **Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
 
 > ## Current status (2026-10-29) — v4.1
 > The Temporal Fusion Transformer (§4.2) is implemented, trained and evaluated, so this is no longer a
-> proposal. **For current results, go straight to `Models/TFT/PROD_V1_vs_V2.md`: §0 has the scores, and the
+> proposal. **For current results, go straight to `docs/history/TFT_VERSION_HISTORY.md`: §0 has the scores, and the
 > v4.1 section is at the end.**
 >
 > **What v4.1 is:** the rebuilt groundwater target, corrected evaluation and seasonal-naive baseline, plus an
@@ -25,15 +25,15 @@
 > - Most of the v4.1 gain comes from the improved LightGBM, which is about as accurate as the Ensemble but has
 >   intervals that are too narrow (61–75% coverage).
 >
-> **Run it:** `Models/TFT/09_tft_colab_production_v4_1.ipynb` with `master_dataset_v4target.csv`. Results
-> are in `result zips/v4_1/`, and `Models/TFT/RESULTS_GUIDE.md` explains every file.
+> **Run it:** `03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb` with `master_dataset_v4target.csv`. Results
+> are in `04_results/tft_v4_1/`, and `docs/RESULTS_GUIDE.md` explains every file.
 >
 > **Superseded:**
 > - v4.0: locked 0.865 / 0.788 / 0.664;
 > - v3: MASE 0.958 / 0.909 / 0.834;
-> - `Latest results/` is the v1 run.
+> - `04_results/tft_prod_v1/` is the v1 run.
 >
-> **Scores of every version (v1 → v4.1) in one place: `Models/TFT/PROD_V1_vs_V2.md` §0.**
+> **Scores of every version (v1 → v4.1) in one place: `docs/history/TFT_VERSION_HISTORY.md` §0.**
 >
 > §4.2 below describes the **actual implemented architecture** (delta-target framing, data tiers,
 > shrinkage toward persistence, vectorised variable-selection networks). §4.3 (spatial GAT layer) and
@@ -363,9 +363,9 @@ Train these first. If your advanced model does not clearly beat XGBoost, the arc
 
 ### 4.2 Primary Architecture: Temporal Fusion Transformer (TFT) — IMPLEMENTED
 
-Implementation: `Models/TFT/tft_model_v3.py` (from-scratch PyTorch). Training/evaluation notebook:
-`Models/TFT/09_tft_colab_production_v3.ipynb`. Full results and design rationale:
-`Models/TFT/PROD_V1_vs_V2.md` and `Models/TFT/V3_PLAN.md`.
+Implementation: `03_models/tft/tft_model_v3.py` (from-scratch PyTorch). Training/evaluation notebook:
+`03_models/tft/notebooks/archive/09_tft_colab_production_v3.ipynb`. Full results and design rationale:
+`docs/history/TFT_VERSION_HISTORY.md` and `docs/history/V3_PLAN.md`.
 
 **Why TFT fits this problem:**
 - Explicitly handles **static covariates** (district identity, soil texture, aquifer category), **known future inputs** (month, season, horizon index — known in advance), and **observed past inputs** (rainfall, NDVI, GWL, etc.)
@@ -374,7 +374,7 @@ Implementation: `Models/TFT/tft_model_v3.py` (from-scratch PyTorch). Training/ev
 - Predicts 7, 14 and 30 days simultaneously in a single forward pass with calibrated q10/q50/q90 uncertainty.
 
 **Two decisions turned out to matter more than the architecture itself, and are worth stating up
-front** (full evidence in `PROD_V1_vs_V2.md`):
+front** (full evidence in `TFT_VERSION_HISTORY.md`):
 
 1. **Predict the change, not the level.** Groundwater is a near-random-walk — today's level tells
    you almost everything about next week's. A model asked to predict the absolute level spends its
@@ -385,7 +385,7 @@ front** (full evidence in `PROD_V1_vs_V2.md`):
 2. **Report MASE (model error ÷ persistence error) in every table, and treat MASE ≥ 1 as
    disqualifying, no matter how good RMSE/MAPE look.** An earlier full GPU run looked reasonable on
    RMSE/MAPE alone and was losing to persistence in 15 of 18 fold-horizon combinations — no metric
-   without a baseline would have revealed this. See `PROD_V1_vs_V2.md` §1–§2 for the full story.
+   without a baseline would have revealed this. See `TFT_VERSION_HISTORY.md` §1–§2 for the full story.
 
 **Architecture, as actually built:**
 
@@ -488,7 +488,7 @@ this can't silently drift again.
 | Evaluation horizons | t+7, t+14, t+30 (both a daily target and a 7-day-mean target are reported) |
 | Split | **6-fold walk-forward** (rolling-origin), each fold: train → early-stopping block → separate calibration block → test — never randomly split |
 | Folds | monsoon 2024, post-monsoon 2024, dry 2025, monsoon 2025, post-monsoon 2025, dry 2026 — one full seasonal cycle per test window |
-| Districts | 24–26 of 36, gated by a `data_tier` computed from station count + record completeness (see `PROJECT_STATUS.md` §4.5); 1 excluded from training entirely, 4 reported separately as low-station |
+| Districts | 24–26 of 36, gated by a `data_tier` computed from station count + record completeness (see `docs/PROJECT_STATUS.md` §4.5); 1 excluded from training entirely, 4 reported separately as low-station |
 | Ensemble | 3 seeds, averaged in prediction space |
 | Optimizer | AdamW, lr=1e-3 with 5-epoch warmup, `ReduceLROnPlateau` |
 | Batch size | 128 |
@@ -508,9 +508,9 @@ this can't silently drift again.
 > over 2,951 German groundwater wells found globally-trained models had no systematic advantage over
 > per-well models, and that dynamic similarity between wells mattered far more than training-set
 > volume than raw station count. With several Maharashtra districts still thin (2–4 stations, tier C
-> — see `PROJECT_STATUS.md` §4.5), a spatial graph risks adding capacity the data can't yet support.
+> — see `docs/PROJECT_STATUS.md` §4.5), a spatial graph risks adding capacity the data can't yet support.
 > Revisit once tier-C districts have more stations, or start with the cheaper alternative noted below.
-> Full citation and reasoning: `Models/TFT/PROD_V1_vs_V2.md` §15, `Models/TFT/V3_PLAN.md` §1 (M13).
+> Full citation and reasoning: `docs/history/TFT_VERSION_HISTORY.md` §15, `docs/history/V3_PLAN.md` §1 (M13).
 
 This remains the most novel planned contribution and, if the data catches up, the strongest research result.
 
@@ -619,7 +619,7 @@ Train in this order. Each phase adds one capability and should show a measurable
 | 7 | TFT + physics loss | Physical plausibility constraints | RMSE + violation rate | ⏸️ not started |
 
 The baseline ladder in phase 5's actual implementation additionally includes ridge regression and
-LightGBM, both fitted on the identical windows/target as the TFT — see `PROD_V1_vs_V2.md` §9.
+LightGBM, both fitted on the identical windows/target as the TFT — see `TFT_VERSION_HISTORY.md` §9.
 
 ### Curriculum Learning
 
@@ -665,92 +665,87 @@ These three analyses are the scientific contribution of the paper — they show 
 
 ## 7. Project Structure
 
+The project is split by **what a thing is**: code for each pipeline stage, all data, all results, all documents,
+and an archive that holds every backup and duplicate (nothing was deleted). The full old-path → new-path table
+is in `docs/STRUCTURE.md`.
+
 ```
-MajorProject-Jalvani/
-│
-├── Data Collection/
-│   ├── groundwater_data.py          # CGWB groundwater from India WRIS
-│   ├── chirps_rainfall.py           # CHIRPS gridded rainfall from GEE (primary)
-│   ├── CWC_Rainfall.py              # CWC rainfall from India WRIS (superseded by CHIRPS)
-│   ├── era5_land.py                 # ET, PET, 4-depth soil moisture from ERA5-Land/GEE (primary)
-│   ├── ET_data.py                   # NRSC ET from India WRIS (superseded — stopped publishing 2025-06-30)
-│   ├── soil_moisture_data.py        # NRSC soil moisture from India WRIS (superseded, same reason)
-│   ├── temperature_openmeteo.py     # ERA5 temp + humidity from Open-Meteo (primary)
-│   ├── temperature_data.py          # CWC temperature from India WRIS (superseded by Open-Meteo)
-│   ├── humidity_data.py             # CWC humidity from India WRIS (superseded by Open-Meteo)
-│   ├── sentinel_indices.py          # Sentinel-1 and Sentinel-2 from GEE
-│   ├── soil_type_gee.py             # Soil texture (sand/clay/silt) via OpenLandMap in GEE (primary)
-│   ├── soil_type_api.py             # Soil texture via ISRIC SoilGrids REST API (fallback, no GEE needed)
-│   ├── cgwb_extraction.py           # CGWB annual recharge/extraction/category per district
-│   ├── cwc_reservoir.py             # Reservoir storage (needs data.gov.in key) — not yet run
-│   └── txt files/                   # Per-dataset progress tracking files
-│
-├── Data Preprocessing/
-│   ├── preprocess_groundwater.py    # Sign fix, Hampel filter, station panel + drift filters, per-station anomaly aggregation
-│   ├── preprocess_env_features.py   # ERA5-Land (primary) or WRIS (fallback) ET/soil moisture + temp/humidity merge
-│   ├── merge_master.py              # Full-calendar merge + feature engineering + district gate + data_tier → master CSV
-│   ├── extract_station_geojson.py   # Export station locations to GeoJSON
-│   └── clean datasets/
-│       ├── groundwater_clean.csv
-│       ├── rainfall_clean.csv
-│       ├── env_features_clean.csv
-│       ├── master_dataset.csv       # Final training dataset (55 columns, includes data_tier)
-│       ├── district_data_quality.csv  # Per-district station count / coverage / tier scorecard
-│       ├── excluded_districts.csv
-│       └── groundwater_stations.geojson
-│
-├── Models/TFT/
-│   ├── tft_model_v3.py              # Current TFT implementation (vectorised VSN, monotone quantiles)
-│   ├── 09_tft_colab_production_v4_1.ipynb # CURRENT notebook (v4.1) — improvements + simple per-district results
-│   ├── RESULTS_GUIDE.md                  # what every file in the results zip is and how to analyse it
-│   ├── 09_tft_colab_production_v4.ipynb  # v4.0 notebook — uses tft_v4.py, master_dataset_v4target.csv
-│   ├── tft_v4.py                         # v4 pipeline: fixed evaluation, seasonal-naive, calibration, ensemble
-│   ├── tft_model_v3.py                   # the network used by v3 AND v4 (only architecture change since v1; see PROD_V1_vs_V2.md appendix)
-│   ├── tft_model.py                      # original network (v1/v2)
-│   ├── 09_tft_colab_production_v3.ipynb  # v3 notebook — walk-forward, 3-seed, baseline ladder (superseded)
-│   ├── PROD_V1_vs_V2.md             # Full v1 -> v2 -> v3 results, diagnosis, and design rationale
-│   └── V3_PLAN.md                   # v2 -> v3 audit findings and the fix for each
-│
-├── result zips/
-│   ├── tft_v4_1_outputs.zip         # v4.1 Colab results (2026-10-29)
-│   └── v4_1/                        # the same, extracted (read with Models/TFT/RESULTS_GUIDE.md)
-│
-├── PROJECT_STATUS.md                # Data collection and preprocessing log
-├── TFT_IMPROVEMENT_PLAN.md          # Windowing/evaluation rewrite diagnosis (repo root)
-└── README.md                        # This file
+Major Project/
+├── README.md                         this file
+├── docs/                             all documents
+│   ├── REPORT.md                     the project report (start here for the full story)
+│   ├── PROJECT_STATUS.md             data-collection and preprocessing log
+│   ├── RESULTS_GUIDE.md              how to read a results folder
+│   ├── STRUCTURE.md                  every folder explained + old -> new path table
+│   └── history/                      TFT_VERSION_HISTORY.md (v1 -> v4.1, scores of every version),
+│                                     V3_PLAN.md, TFT_IMPROVEMENT_PLAN.md
+├── data/                             ALL data, one live copy each
+│   ├── raw/                          what the collectors downloaded (+ cgwb_pdfs/)
+│   ├── clean/                        what preprocessing produced (master_dataset.csv = latest build)
+│   ├── master/                       frozen training sets: master_dataset_v4target.csv (CURRENT),
+│   │                                 master_dataset_v3target.csv (+ its district_data_quality)
+│   └── audit/                        groundwater-target audit plots and tables
+├── 01_data_collection/               collectors (run in this folder or anywhere)
+│   ├── *.py                          active: groundwater_data, chirps_rainfall, era5_land, temperature_openmeteo,
+│   │                                 sentinel_indices, soil_type_gee / soil_type_api, cgwb_extraction,
+│   │                                 consolidate_cgwb, cwc_reservoir (not run), run_*_incremental, chirps_* tail tools
+│   ├── legacy/                       superseded WRIS collectors (CWC rainfall, NRSC ET / soil moisture, ...)
+│   ├── progress/                     resume files for each collector
+│   └── logs/                         fetch and validation logs
+├── 02_preprocessing/                 preprocess_groundwater, audit_groundwater_target, preprocess_env_features,
+│   │                                 merge_master, extract_station_geojson
+│   └── legacy/                       preprocess_rainfall (CWC), merge_cgwb_into_master (now inside merge_master)
+├── 03_models/
+│   ├── baselines_phase1/             Phase 1 ARIMA / XGBoost / LSTM: notebooks/ + scripts/
+│   └── tft/                          tft_model_v3.py (network), tft_v4.py (pipeline), run_v4.py, tune_snaive.py
+│       ├── notebooks/                09_tft_colab_production_v4_1.ipynb  <- CURRENT notebook
+│       │   └── archive/              production v1, v2, v3, v4 notebooks + early prototypes
+│       └── legacy/                   tft_model.py (v1/v2 network)
+├── 04_results/                       ALL results, one folder per run
+│   ├── phase1_baselines/             Phase 1 outputs and plots
+│   ├── tft_prod_v1/                  first full TFT run (worse than "no change"; kept for comparison)
+│   ├── tft_v4_0_dev/                 v4.0 development runs, ablations, seasonal-naive tuning, caches
+│   ├── tft_v4_1/                     v4.1 results  <- CURRENT (read with docs/RESULTS_GUIDE.md)
+│   ├── tft_runs/                     where new local runs of run_v4.py are written
+│   └── zips/                         the original results zip(s)
+└── archive/                          nothing here is used by the pipeline
+    ├── MANIFEST.csv                  every archived file: md5, original path, new path, reason
+    ├── backups/                      2026-04_pre_extend, 2026-10_pre_extend, 2026-10_v3_target
+    ├── duplicates/                   byte-identical extra copies
+    └── notebook_checkpoints/         Jupyter autosaves
 ```
 
 ---
 
 ## 8. Pipeline Order
 
-Run in this exact order to reproduce all datasets from scratch:
+Scripts find their files relative to their own location, so they can be started from any folder.
 
 ```bash
-# ── Step 1: Data Collection (run from Data Collection/) ────────────────
-python groundwater_data.py
-python chirps_rainfall.py           # requires: earthengine authenticate
-# then: copy datasets/rainfall_chirps_maharashtra_23_25.csv -> ../Data Preprocessing/clean datasets/rainfall_clean.csv
-python era5_land.py                 # requires: earthengine authenticate — ET/PET/soil moisture, replaces ET_data.py + soil_moisture_data.py (reads directly, no copy step)
-python temperature_openmeteo.py
-python sentinel_indices.py          # requires: earthengine authenticate
-python soil_type_gee.py             # requires: earthengine authenticate + registered GCP project
-python cgwb_extraction.py           # CGWB annual recharge/extraction/category (static, per district)
-# fallback if GEE unavailable:
-# python soil_type_api.py           # uses ISRIC REST API, no GEE needed
+# ── Step 1: collect (01_data_collection/) → writes data/raw/ ─────────────────────
+python 01_data_collection/groundwater_data.py
+python 01_data_collection/chirps_rainfall.py        # needs: earthengine authenticate
+#   then copy data/raw/rainfall_chirps_maharashtra_23_25.csv -> data/clean/rainfall_clean.csv
+python 01_data_collection/era5_land.py              # ET, PET, 4 soil-moisture layers (needs Earth Engine)
+python 01_data_collection/temperature_openmeteo.py
+python 01_data_collection/sentinel_indices.py       # needs Earth Engine
+python 01_data_collection/soil_type_gee.py          # or soil_type_api.py without Earth Engine
+python 01_data_collection/cgwb_extraction.py
+# extending an existing collection: run_gw_incremental.py, run_chirps_incremental.py,
+# run_sentinel_incremental.py, run_temp_incremental.py, run_om_precip.py, chirps_extend_assemble.py
 
-# ── Step 2: Data Preprocessing (run from Data Preprocessing/) ──────────
-python extract_station_geojson.py   # optional — exports station map
-python preprocess_groundwater.py
-python preprocess_env_features.py   # prints an observed-rate-by-year table — check it before trusting the output
-python merge_master.py              # must run last — writes master_dataset.csv + district_data_quality.csv
-# preprocess_rainfall.py is no longer part of this pipeline — CHIRPS (above) replaced the
-# WRIS/CWC station rainfall it used to clean.
+# ── Step 2: preprocess (02_preprocessing/) → reads data/raw/, writes data/clean/ ──
+python 02_preprocessing/preprocess_groundwater.py
+python 02_preprocessing/audit_groundwater_target.py # optional: target audit -> data/audit/
+python 02_preprocessing/preprocess_env_features.py
+python 02_preprocessing/merge_master.py             # last: writes data/clean/master_dataset.csv
+#   to freeze a new training set, copy it to data/master/ under a versioned name
 
-# ── Step 3: Train + evaluate the TFT (Colab, T4 GPU) ────────────────────
-# Upload Models/TFT/tft_model_v3.py and the rebuilt master_dataset.csv, then run
-# Models/TFT/09_tft_colab_production_v3.ipynb end to end. Results + design log:
-# Models/TFT/PROD_V1_vs_V2.md and Models/TFT/V3_PLAN.md.
+# ── Step 3: train + evaluate the TFT (Colab, T4 GPU) ─────────────────────────────
+# Open 03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb in Colab and upload
+# 03_models/tft/tft_model_v3.py, 03_models/tft/tft_v4.py, data/master/master_dataset_v4target.csv
+# and docs/RESULTS_GUIDE.md. Unzip the downloaded results into 04_results/<run name>/.
+# Locally: python 03_models/tft/run_v4.py --help   (writes to 04_results/tft_runs/)
 ```
 
-All collection scripts are **resumable** — they track completed districts in `txt files/*.txt` and skip already-fetched districts on re-run. If a script is interrupted, simply re-run it and it continues from where it stopped.
+All collection scripts are **resumable** — they track completed districts in `01_data_collection/progress/*.txt` and skip already-fetched districts on re-run. If a script is interrupted, simply re-run it and it continues from where it stopped.

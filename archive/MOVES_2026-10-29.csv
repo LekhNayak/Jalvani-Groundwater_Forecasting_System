@@ -1,0 +1,735 @@
+old_path,new_path,reason
+REPORT.md,docs/REPORT.md,restructure
+PROJECT_STATUS.md,docs/PROJECT_STATUS.md,restructure
+TFT_IMPROVEMENT_PLAN.md,docs/history/TFT_IMPROVEMENT_PLAN.md,restructure
+Models/TFT/PROD_V1_vs_V2.md,docs/history/TFT_VERSION_HISTORY.md,renamed: old name only said v1 vs v2
+Models/TFT/V3_PLAN.md,docs/history/V3_PLAN.md,restructure
+Models/TFT/RESULTS_GUIDE.md,docs/RESULTS_GUIDE.md,restructure
+Data Collection/datasets/cgwb_extraction_maharashtra.csv,data/raw/cgwb_extraction_maharashtra.csv,restructure
+Data Collection/datasets/cgwb_extraction_TEMPLATE.csv,data/raw/cgwb_extraction_TEMPLATE.csv,restructure
+Data Collection/datasets/chirps_gee_increment_2026.csv,data/raw/chirps_gee_increment_2026.csv,restructure
+Data Collection/datasets/chirps_prelim_2026.csv,data/raw/chirps_prelim_2026.csv,restructure
+Data Collection/datasets/era5_land_maharashtra_23_26.csv,data/raw/era5_land_maharashtra_23_26.csv,restructure
+Data Collection/datasets/et_maharashtra_23_25_uncleaned.csv,data/raw/et_maharashtra_23_25_uncleaned.csv,restructure
+Data Collection/datasets/groundwater_maharashtra_23_25_uncleaned.csv,data/raw/groundwater_maharashtra_23_25_uncleaned.csv,restructure
+Data Collection/datasets/humidity_maharashtra_23_25_uncleaned.csv,data/raw/humidity_maharashtra_23_25_uncleaned.csv,restructure
+Data Collection/datasets/maharashtra_district_geoms.geojson,data/raw/maharashtra_district_geoms.geojson,restructure
+Data Collection/datasets/mh_gw_2023.csv,data/raw/mh_gw_2023.csv,restructure
+Data Collection/datasets/mh_gw_2024.csv,data/raw/mh_gw_2024.csv,restructure
+Data Collection/datasets/mh_gw_2025.csv,data/raw/mh_gw_2025.csv,restructure
+Data Collection/datasets/openmeteo_precip_2026.csv,data/raw/openmeteo_precip_2026.csv,restructure
+Data Collection/datasets/rainfall_chirps_maharashtra_23_25.csv,data/raw/rainfall_chirps_maharashtra_23_25.csv,restructure
+Data Collection/datasets/rainfall_chirps_missing_districts.csv,data/raw/rainfall_chirps_missing_districts.csv,restructure
+Data Collection/datasets/rainfall_maharashtra_23_25_uncleaned.csv,data/raw/rainfall_maharashtra_23_25_uncleaned.csv,restructure
+Data Collection/datasets/sentinel1_backscatter_maharashtra_23_25.csv,data/raw/sentinel1_backscatter_maharashtra_23_25.csv,restructure
+Data Collection/datasets/sentinel2_indices_maharashtra_23_25.csv,data/raw/sentinel2_indices_maharashtra_23_25.csv,restructure
+Data Collection/datasets/soil_moisture_maharashtra_23_25_uncleaned.csv,data/raw/soil_moisture_maharashtra_23_25_uncleaned.csv,restructure
+Data Collection/datasets/soil_texture_maharashtra.csv,data/raw/soil_texture_maharashtra.csv,restructure
+Data Collection/datasets/temperature_humidity_maharashtra_23_25.csv,data/raw/temperature_humidity_maharashtra_23_25.csv,restructure
+Data Preprocessing/clean datasets/district_data_quality.csv,data/clean/district_data_quality.csv,restructure
+Data Preprocessing/clean datasets/env_features_clean.csv,data/clean/env_features_clean.csv,restructure
+Data Preprocessing/clean datasets/excluded_districts.csv,data/clean/excluded_districts.csv,restructure
+Data Preprocessing/clean datasets/groundwater_clean.csv,data/clean/groundwater_clean.csv,restructure
+Data Preprocessing/clean datasets/groundwater_station_daily.csv,data/clean/groundwater_station_daily.csv,restructure
+Data Preprocessing/clean datasets/groundwater_stations.geojson,data/clean/groundwater_stations.geojson,restructure
+Data Preprocessing/clean datasets/master_dataset.csv,data/clean/master_dataset.csv,restructure
+Data Preprocessing/clean datasets/rainfall_clean.csv,data/clean/rainfall_clean.csv,restructure
+Data Preprocessing/clean datasets/station_qc_log.csv,data/clean/station_qc_log.csv,restructure
+Models/TFT/master_dataset_v4target.csv,data/master/master_dataset_v4target.csv,restructure
+Models/TFT/master_dataset_v3target.csv,data/master/master_dataset_v3target.csv,restructure
+Data Preprocessing/clean datasets/v3_target_backup/district_data_quality.csv,data/master/district_data_quality_v3target.csv,tier scorecard that goes with the v3-target master
+Data Preprocessing/audit/single_well_qc.png,data/audit/single_well_qc.png,restructure
+Data Preprocessing/audit/target_akola.png,data/audit/target_akola.png,restructure
+Data Preprocessing/audit/target_audit_loso.csv,data/audit/target_audit_loso.csv,restructure
+Data Preprocessing/audit/target_audit_per_district.csv,data/audit/target_audit_per_district.csv,restructure
+Data Preprocessing/audit/target_audit_summary.csv,data/audit/target_audit_summary.csv,restructure
+Data Preprocessing/audit/target_aurangabad.png,data/audit/target_aurangabad.png,restructure
+Data Preprocessing/audit/target_dhule.png,data/audit/target_dhule.png,restructure
+Data Preprocessing/audit/target_jalgaon.png,data/audit/target_jalgaon.png,restructure
+Data Preprocessing/audit/target_nagpur.png,data/audit/target_nagpur.png,restructure
+Data Preprocessing/audit/target_nashik.png,data/audit/target_nashik.png,restructure
+Models/TFT/master_dataset.csv,archive/duplicates/master_dataset_v3target__dup_models_tft.csv,duplicate of data/master/master_dataset_v3target.csv
+Data Preprocessing/clean datasets/v3_target_backup/master_dataset.csv,archive/duplicates/master_dataset_v3target__dup_v3_target_backup.csv,duplicate of data/master/master_dataset_v3target.csv
+Models/TFT/district_data_quality.csv,archive/duplicates/district_data_quality_v3target__dup_models_tft.csv,duplicate of data/master/district_data_quality_v3target.csv
+Models/TFT/09_tft_colab.ipynb,archive/duplicates/09_tft_colab_production__dup_09_tft_colab.ipynb,duplicate of 03_models/tft/notebooks/archive/09_tft_colab_production.ipynb
+Data Preprocessing/unclean datasets/et_maharashtra_23_25_uncleaned.csv,archive/duplicates/et_maharashtra_23_25_uncleaned__dup_unclean_datasets.csv,duplicate of data/raw/et_maharashtra_23_25_uncleaned.csv (manual copy step removed)
+Data Preprocessing/unclean datasets/groundwater_maharashtra_23_25_uncleaned.csv,archive/duplicates/groundwater_maharashtra_23_25_uncleaned__dup_unclean_datasets.csv,duplicate of data/raw/groundwater_maharashtra_23_25_uncleaned.csv (manual copy step removed)
+Data Preprocessing/unclean datasets/humidity_maharashtra_23_25_uncleaned.csv,archive/duplicates/humidity_maharashtra_23_25_uncleaned__dup_unclean_datasets.csv,duplicate of data/raw/humidity_maharashtra_23_25_uncleaned.csv (manual copy step removed)
+Data Preprocessing/unclean datasets/rainfall_maharashtra_23_25_uncleaned.csv,archive/duplicates/rainfall_maharashtra_23_25_uncleaned__dup_unclean_datasets.csv,duplicate of data/raw/rainfall_maharashtra_23_25_uncleaned.csv (manual copy step removed)
+Data Preprocessing/unclean datasets/soil_moisture_maharashtra_23_25_uncleaned.csv,archive/duplicates/soil_moisture_maharashtra_23_25_uncleaned__dup_unclean_datasets.csv,duplicate of data/raw/soil_moisture_maharashtra_23_25_uncleaned.csv (manual copy step removed)
+Data Preprocessing/unclean datasets/temperature_humidity_maharashtra_23_25.csv,archive/duplicates/temperature_humidity_maharashtra_23_25__dup_unclean_datasets.csv,duplicate of data/raw/temperature_humidity_maharashtra_23_25.csv (manual copy step removed)
+Data Preprocessing/clean datasets/v3_target_backup/groundwater_clean.csv,archive/backups/2026-10_v3_target/groundwater_clean__v3_target.csv,v3-target groundwater series
+Data Collection/backup_pre_2026_10_extend/env_features_clean.csv,archive/backups/2026-10_pre_extend/env_features_clean__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/groundwater_clean.csv,archive/backups/2026-10_pre_extend/groundwater_clean__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/groundwater_maharashtra_23_25_uncleaned.csv,archive/backups/2026-10_pre_extend/groundwater_maharashtra_23_25_uncleaned__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/master_dataset.csv,archive/backups/2026-10_pre_extend/master_dataset__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/rainfall_chirps_maharashtra_23_25.csv,archive/backups/2026-10_pre_extend/rainfall_chirps_maharashtra_23_25__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/rainfall_clean.csv,archive/backups/2026-10_pre_extend/rainfall_clean__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/sentinel1_backscatter_maharashtra_23_25.csv,archive/backups/2026-10_pre_extend/sentinel1_backscatter_maharashtra_23_25__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/sentinel2_indices_maharashtra_23_25.csv,archive/backups/2026-10_pre_extend/sentinel2_indices_maharashtra_23_25__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/temperature_humidity_maharashtra_23_25.csv,archive/backups/2026-10_pre_extend/temperature_humidity_maharashtra_23_25__pre_2026_10_extend.csv,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/chirps_progress.txt,archive/backups/2026-10_pre_extend/progress/chirps_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/et_progress.txt,archive/backups/2026-10_pre_extend/progress/et_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/humidity_progress.txt,archive/backups/2026-10_pre_extend/progress/humidity_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/progress.txt,archive/backups/2026-10_pre_extend/progress/progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/rainfall_progress.txt,archive/backups/2026-10_pre_extend/progress/rainfall_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/sentinel1_progress.txt,archive/backups/2026-10_pre_extend/progress/sentinel1_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/sentinel2_progress.txt,archive/backups/2026-10_pre_extend/progress/sentinel2_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/soil_moisture_progress.txt,archive/backups/2026-10_pre_extend/progress/soil_moisture_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_10_extend/txt_files/temperature_openmeteo_progress.txt,archive/backups/2026-10_pre_extend/progress/temperature_openmeteo_progress__pre_2026_10_extend.txt,backup before Oct-2026 extension
+Data Collection/backup_pre_2026_extend/et_maharashtra_23_25_uncleaned.csv.bak,archive/backups/2026-04_pre_extend/et_maharashtra_23_25_uncleaned__pre_2026_04_extend.csv,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/et_progress.txt.bak,archive/backups/2026-04_pre_extend/et_progress__pre_2026_04_extend.txt,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/groundwater_maharashtra_23_25_uncleaned.csv.bak,archive/backups/2026-04_pre_extend/groundwater_maharashtra_23_25_uncleaned__pre_2026_04_extend.csv,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/progress.txt.bak,archive/backups/2026-04_pre_extend/progress__pre_2026_04_extend.txt,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/soil_moisture_maharashtra_23_25_uncleaned.csv.bak,archive/backups/2026-04_pre_extend/soil_moisture_maharashtra_23_25_uncleaned__pre_2026_04_extend.csv,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/soil_moisture_progress.txt.bak,archive/backups/2026-04_pre_extend/soil_moisture_progress__pre_2026_04_extend.txt,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/temperature_humidity_maharashtra_23_25.csv.bak,archive/backups/2026-04_pre_extend/temperature_humidity_maharashtra_23_25__pre_2026_04_extend.csv,backup from Apr 2026
+Data Collection/backup_pre_2026_extend/temperature_openmeteo_progress.txt.bak,archive/backups/2026-04_pre_extend/temperature_openmeteo_progress__pre_2026_04_extend.txt,backup from Apr 2026
+Data Collection/cgwb_extraction.py,01_data_collection/cgwb_extraction.py,restructure
+Data Collection/chirps_extend_assemble.py,01_data_collection/chirps_extend_assemble.py,restructure
+Data Collection/chirps_prelim_fill.py,01_data_collection/chirps_prelim_fill.py,restructure
+Data Collection/chirps_rainfall.py,01_data_collection/chirps_rainfall.py,restructure
+Data Collection/collect_dataset.py,01_data_collection/legacy/collect_dataset.py,restructure
+Data Collection/consolidate_cgwb.py,01_data_collection/consolidate_cgwb.py,restructure
+Data Collection/CWC_Rainfall.py,01_data_collection/legacy/CWC_Rainfall.py,restructure
+Data Collection/cwc_reservoir.py,01_data_collection/cwc_reservoir.py,restructure
+Data Collection/era5_land.py,01_data_collection/era5_land.py,restructure
+Data Collection/ET_data.py,01_data_collection/legacy/ET_data.py,restructure
+Data Collection/groundwater_data.py,01_data_collection/groundwater_data.py,restructure
+Data Collection/humidity_data.py,01_data_collection/legacy/humidity_data.py,restructure
+Data Collection/run_chirps_incremental.py,01_data_collection/run_chirps_incremental.py,restructure
+Data Collection/run_gw_incremental.py,01_data_collection/run_gw_incremental.py,restructure
+Data Collection/run_om_precip.py,01_data_collection/run_om_precip.py,restructure
+Data Collection/run_sentinel_incremental.py,01_data_collection/run_sentinel_incremental.py,restructure
+Data Collection/run_temp_incremental.py,01_data_collection/run_temp_incremental.py,restructure
+Data Collection/sentinel_indices.py,01_data_collection/sentinel_indices.py,restructure
+Data Collection/soil_moisture_data.py,01_data_collection/legacy/soil_moisture_data.py,restructure
+Data Collection/soil_type_api.py,01_data_collection/soil_type_api.py,restructure
+Data Collection/soil_type_gee.py,01_data_collection/soil_type_gee.py,restructure
+Data Collection/temperature_data.py,01_data_collection/legacy/temperature_data.py,restructure
+Data Collection/temperature_openmeteo.py,01_data_collection/temperature_openmeteo.py,restructure
+Data Collection/test.py,01_data_collection/legacy/test.py,restructure
+Data Collection/txt files/chirps_progress.txt,01_data_collection/progress/chirps_progress.txt,restructure
+Data Collection/txt files/era5_progress.txt,01_data_collection/progress/era5_progress.txt,restructure
+Data Collection/txt files/et_progress.txt,01_data_collection/progress/et_progress.txt,restructure
+Data Collection/txt files/humidity_progress.txt,01_data_collection/progress/humidity_progress.txt,restructure
+Data Collection/txt files/progress.txt,01_data_collection/progress/progress.txt,restructure
+Data Collection/txt files/progress_2026_10_extend.txt,01_data_collection/progress/progress_2026_10_extend.txt,restructure
+Data Collection/txt files/rainfall_progress.txt,01_data_collection/progress/rainfall_progress.txt,restructure
+Data Collection/txt files/sentinel1_progress.txt,01_data_collection/progress/sentinel1_progress.txt,restructure
+Data Collection/txt files/sentinel2_progress.txt,01_data_collection/progress/sentinel2_progress.txt,restructure
+Data Collection/txt files/soil_moisture_progress.txt,01_data_collection/progress/soil_moisture_progress.txt,restructure
+Data Collection/txt files/temperature_openmeteo_progress.txt,01_data_collection/progress/temperature_openmeteo_progress.txt,restructure
+Data Collection/log/chirps_incremental.out,01_data_collection/logs/chirps_incremental.out,restructure
+Data Collection/log/chirps_prelim.out,01_data_collection/logs/chirps_prelim.out,restructure
+Data Collection/log/chirps_prelim2.out,01_data_collection/logs/chirps_prelim2.out,restructure
+Data Collection/log/era5_land.out,01_data_collection/logs/era5_land.out,restructure
+Data Collection/log/et_fetch.log,01_data_collection/logs/et_fetch.log,restructure
+Data Collection/log/et_validation_issues.log,01_data_collection/logs/et_validation_issues.log,restructure
+Data Collection/log/fetch.log,01_data_collection/logs/fetch.log,restructure
+Data Collection/log/gw_incremental.out,01_data_collection/logs/gw_incremental.out,restructure
+Data Collection/log/humidity_fetch.log,01_data_collection/logs/humidity_fetch.log,restructure
+Data Collection/log/humidity_validation_issues.log,01_data_collection/logs/humidity_validation_issues.log,restructure
+Data Collection/log/pp_env.out,01_data_collection/logs/pp_env.out,restructure
+Data Collection/log/pp_gw.out,01_data_collection/logs/pp_gw.out,restructure
+Data Collection/log/pp_master.out,01_data_collection/logs/pp_master.out,restructure
+Data Collection/log/rainfall_fetch.log,01_data_collection/logs/rainfall_fetch.log,restructure
+Data Collection/log/rainfall_validation_issues.log,01_data_collection/logs/rainfall_validation_issues.log,restructure
+Data Collection/log/sentinel_incremental.out,01_data_collection/logs/sentinel_incremental.out,restructure
+Data Collection/log/soil_moisture_fetch.log,01_data_collection/logs/soil_moisture_fetch.log,restructure
+Data Collection/log/soil_moisture_validation_issues.log,01_data_collection/logs/soil_moisture_validation_issues.log,restructure
+Data Collection/log/temp_incremental.out,01_data_collection/logs/temp_incremental.out,restructure
+Data Collection/log/temperature_fetch.log,01_data_collection/logs/temperature_fetch.log,restructure
+Data Collection/log/temperature_openmeteo_fetch.log,01_data_collection/logs/temperature_openmeteo_fetch.log,restructure
+Data Collection/log/validation_issues.log,01_data_collection/logs/validation_issues.log,restructure
+Data Collection/.claude/settings.local.json,01_data_collection/.claude/settings.local.json,tool settings
+Data Preprocessing/audit_groundwater_target.py,02_preprocessing/audit_groundwater_target.py,restructure
+Data Preprocessing/extract_station_geojson.py,02_preprocessing/extract_station_geojson.py,restructure
+Data Preprocessing/merge_cgwb_into_master.py,02_preprocessing/legacy/merge_cgwb_into_master.py,restructure
+Data Preprocessing/merge_master.py,02_preprocessing/merge_master.py,restructure
+Data Preprocessing/preprocess_env_features.py,02_preprocessing/preprocess_env_features.py,restructure
+Data Preprocessing/preprocess_groundwater.py,02_preprocessing/preprocess_groundwater.py,restructure
+Data Preprocessing/preprocess_rainfall.py,02_preprocessing/legacy/preprocess_rainfall.py,restructure
+Models/baselines/01_arima_sarima.ipynb,03_models/baselines_phase1/notebooks/01_arima_sarima.ipynb,restructure
+Models/baselines/02_xgboost.ipynb,03_models/baselines_phase1/notebooks/02_xgboost.ipynb,restructure
+Models/baselines/03_lstm.ipynb,03_models/baselines_phase1/notebooks/03_lstm.ipynb,restructure
+Models/baselines/04_evaluate.ipynb,03_models/baselines_phase1/notebooks/04_evaluate.ipynb,restructure
+Models/baselines/05_arima_multihorizon.ipynb,03_models/baselines_phase1/notebooks/05_arima_multihorizon.ipynb,restructure
+Models/baselines/06_xgboost_multihorizon.ipynb,03_models/baselines_phase1/notebooks/06_xgboost_multihorizon.ipynb,restructure
+Models/baselines/07_lstm_multihorizon.ipynb,03_models/baselines_phase1/notebooks/07_lstm_multihorizon.ipynb,restructure
+Models/baselines/08_evaluate_multihorizon.ipynb,03_models/baselines_phase1/notebooks/08_evaluate_multihorizon.ipynb,restructure
+Models/baselines/scripts/arima_multihorizon.py,03_models/baselines_phase1/scripts/arima_multihorizon.py,restructure
+Models/baselines/scripts/arima_sarima_baseline.py,03_models/baselines_phase1/scripts/arima_sarima_baseline.py,restructure
+Models/baselines/scripts/evaluate_baselines.py,03_models/baselines_phase1/scripts/evaluate_baselines.py,restructure
+Models/baselines/scripts/evaluate_multihorizon.py,03_models/baselines_phase1/scripts/evaluate_multihorizon.py,restructure
+Models/baselines/scripts/lstm_baseline.py,03_models/baselines_phase1/scripts/lstm_baseline.py,restructure
+Models/baselines/scripts/lstm_multihorizon.py,03_models/baselines_phase1/scripts/lstm_multihorizon.py,restructure
+Models/baselines/scripts/xgboost_baseline.py,03_models/baselines_phase1/scripts/xgboost_baseline.py,restructure
+Models/baselines/scripts/xgboost_multihorizon.py,03_models/baselines_phase1/scripts/xgboost_multihorizon.py,restructure
+Models/baselines/.ipynb_checkpoints/01_arima_sarima-checkpoint.ipynb,archive/notebook_checkpoints/baselines/01_arima_sarima-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/02_xgboost-checkpoint.ipynb,archive/notebook_checkpoints/baselines/02_xgboost-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/03_lstm-checkpoint.ipynb,archive/notebook_checkpoints/baselines/03_lstm-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/04_evaluate-checkpoint.ipynb,archive/notebook_checkpoints/baselines/04_evaluate-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/05_arima_multihorizon-checkpoint.ipynb,archive/notebook_checkpoints/baselines/05_arima_multihorizon-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/06_xgboost_multihorizon-checkpoint.ipynb,archive/notebook_checkpoints/baselines/06_xgboost_multihorizon-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/07_lstm_multihorizon-checkpoint.ipynb,archive/notebook_checkpoints/baselines/07_lstm_multihorizon-checkpoint.ipynb,Jupyter autosave
+Models/baselines/.ipynb_checkpoints/08_evaluate_multihorizon-checkpoint.ipynb,archive/notebook_checkpoints/baselines/08_evaluate_multihorizon-checkpoint.ipynb,Jupyter autosave
+Models/TFT/tft_model_v3.py,03_models/tft/tft_model_v3.py,restructure
+Models/TFT/tft_v4.py,03_models/tft/tft_v4.py,restructure
+Models/TFT/run_v4.py,03_models/tft/run_v4.py,restructure
+Models/TFT/tune_snaive.py,03_models/tft/tune_snaive.py,restructure
+Models/TFT/09_tft_colab_production_v4_1.ipynb,03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb,restructure
+Models/TFT/09_tft_colab_production.ipynb,03_models/tft/notebooks/archive/09_tft_colab_production.ipynb,restructure
+Models/TFT/09_tft_colab_production_v2.ipynb,03_models/tft/notebooks/archive/09_tft_colab_production_v2.ipynb,restructure
+Models/TFT/09_tft_colab_production_v3.ipynb,03_models/tft/notebooks/archive/09_tft_colab_production_v3.ipynb,restructure
+Models/TFT/09_tft_colab_production_v4.ipynb,03_models/tft/notebooks/archive/09_tft_colab_production_v4.ipynb,restructure
+Models/TFT/09_tft_groundwater.ipynb,03_models/tft/notebooks/archive/09_tft_groundwater.ipynb,restructure
+Models/TFT/09_tft_colab_v2_backup.ipynb,03_models/tft/notebooks/archive/09_tft_colab_v2_backup.ipynb,restructure
+Models/TFT/tft_model.py,03_models/tft/legacy/tft_model.py,v1/v2 network
+Models/TFT/.ipynb_checkpoints/09_tft_colab-checkpoint.ipynb,archive/notebook_checkpoints/tft/09_tft_colab-checkpoint.ipynb,Jupyter autosave
+Models/TFT/.ipynb_checkpoints/09_tft_colab_v2_backup-checkpoint.ipynb,archive/notebook_checkpoints/tft/09_tft_colab_v2_backup-checkpoint.ipynb,Jupyter autosave
+Models/TFT/.ipynb_checkpoints/09_tft_groundwater-checkpoint.ipynb,archive/notebook_checkpoints/tft/09_tft_groundwater-checkpoint.ipynb,Jupyter autosave
+Models/baselines/outputs/arima_metrics.csv,04_results/phase1_baselines/arima_metrics.csv,restructure
+Models/baselines/outputs/arima_multihorizon_metrics.csv,04_results/phase1_baselines/arima_multihorizon_metrics.csv,restructure
+Models/baselines/outputs/arima_multihorizon_t14.csv,04_results/phase1_baselines/arima_multihorizon_t14.csv,restructure
+Models/baselines/outputs/arima_multihorizon_t30.csv,04_results/phase1_baselines/arima_multihorizon_t30.csv,restructure
+Models/baselines/outputs/arima_multihorizon_t7.csv,04_results/phase1_baselines/arima_multihorizon_t7.csv,restructure
+Models/baselines/outputs/arima_predictions.csv,04_results/phase1_baselines/arima_predictions.csv,restructure
+Models/baselines/outputs/comparison_per_district.csv,04_results/phase1_baselines/comparison_per_district.csv,restructure
+Models/baselines/outputs/comparison_summary.csv,04_results/phase1_baselines/comparison_summary.csv,restructure
+Models/baselines/outputs/lstm_checkpoint.pt,04_results/phase1_baselines/lstm_checkpoint.pt,restructure
+Models/baselines/outputs/lstm_metrics.csv,04_results/phase1_baselines/lstm_metrics.csv,restructure
+Models/baselines/outputs/lstm_multihorizon_summary.csv,04_results/phase1_baselines/lstm_multihorizon_summary.csv,restructure
+Models/baselines/outputs/lstm_multihorizon_t14.csv,04_results/phase1_baselines/lstm_multihorizon_t14.csv,restructure
+Models/baselines/outputs/lstm_multihorizon_t14.pt,04_results/phase1_baselines/lstm_multihorizon_t14.pt,restructure
+Models/baselines/outputs/lstm_multihorizon_t30.csv,04_results/phase1_baselines/lstm_multihorizon_t30.csv,restructure
+Models/baselines/outputs/lstm_multihorizon_t30.pt,04_results/phase1_baselines/lstm_multihorizon_t30.pt,restructure
+Models/baselines/outputs/lstm_multihorizon_t7.csv,04_results/phase1_baselines/lstm_multihorizon_t7.csv,restructure
+Models/baselines/outputs/lstm_multihorizon_t7.pt,04_results/phase1_baselines/lstm_multihorizon_t7.pt,restructure
+Models/baselines/outputs/lstm_predictions.csv,04_results/phase1_baselines/lstm_predictions.csv,restructure
+Models/baselines/outputs/multihorizon_per_district.csv,04_results/phase1_baselines/multihorizon_per_district.csv,restructure
+Models/baselines/outputs/multihorizon_summary.csv,04_results/phase1_baselines/multihorizon_summary.csv,restructure
+Models/baselines/outputs/plots/arima_multihorizon_degradation.png,04_results/phase1_baselines/plots/arima_multihorizon_degradation.png,restructure
+Models/baselines/outputs/plots/arima_multihorizon_overlay.png,04_results/phase1_baselines/plots/arima_multihorizon_overlay.png,restructure
+Models/baselines/outputs/plots/comparison_bar.png,04_results/phase1_baselines/plots/comparison_bar.png,restructure
+Models/baselines/outputs/plots/comparison_heatmap.png,04_results/phase1_baselines/plots/comparison_heatmap.png,restructure
+Models/baselines/outputs/plots/comparison_overlay.png,04_results/phase1_baselines/plots/comparison_overlay.png,restructure
+Models/baselines/outputs/plots/lstm_actual_vs_pred.png,04_results/phase1_baselines/plots/lstm_actual_vs_pred.png,restructure
+Models/baselines/outputs/plots/lstm_multihorizon_curves.png,04_results/phase1_baselines/plots/lstm_multihorizon_curves.png,restructure
+Models/baselines/outputs/plots/lstm_multihorizon_overlay.png,04_results/phase1_baselines/plots/lstm_multihorizon_overlay.png,restructure
+Models/baselines/outputs/plots/lstm_scatter.png,04_results/phase1_baselines/plots/lstm_scatter.png,restructure
+Models/baselines/outputs/plots/lstm_training_curve.png,04_results/phase1_baselines/plots/lstm_training_curve.png,restructure
+Models/baselines/outputs/plots/multihorizon_crossover.png,04_results/phase1_baselines/plots/multihorizon_crossover.png,restructure
+Models/baselines/outputs/plots/multihorizon_district_heatmap_t7.png,04_results/phase1_baselines/plots/multihorizon_district_heatmap_t7.png,restructure
+Models/baselines/outputs/plots/multihorizon_rmse_comparison.png,04_results/phase1_baselines/plots/multihorizon_rmse_comparison.png,restructure
+Models/baselines/outputs/plots/sarima_actual_vs_pred.png,04_results/phase1_baselines/plots/sarima_actual_vs_pred.png,restructure
+Models/baselines/outputs/plots/sarima_rmse_per_district.png,04_results/phase1_baselines/plots/sarima_rmse_per_district.png,restructure
+Models/baselines/outputs/plots/shap_evolution_by_horizon.png,04_results/phase1_baselines/plots/shap_evolution_by_horizon.png,restructure
+Models/baselines/outputs/plots/xgboost_feature_importance.png,04_results/phase1_baselines/plots/xgboost_feature_importance.png,restructure
+Models/baselines/outputs/plots/xgboost_multihorizon_curves.png,04_results/phase1_baselines/plots/xgboost_multihorizon_curves.png,restructure
+Models/baselines/outputs/plots/xgboost_scatter.png,04_results/phase1_baselines/plots/xgboost_scatter.png,restructure
+Models/baselines/outputs/plots/xgboost_shap_lag_vs_env.png,04_results/phase1_baselines/plots/xgboost_shap_lag_vs_env.png,restructure
+Models/baselines/outputs/plots/xgboost_shap_multihorizon.png,04_results/phase1_baselines/plots/xgboost_shap_multihorizon.png,restructure
+Models/baselines/outputs/plots/xgboost_training_curve.png,04_results/phase1_baselines/plots/xgboost_training_curve.png,restructure
+Models/baselines/outputs/xgboost_feature_importance.csv,04_results/phase1_baselines/xgboost_feature_importance.csv,restructure
+Models/baselines/outputs/xgboost_metrics.csv,04_results/phase1_baselines/xgboost_metrics.csv,restructure
+Models/baselines/outputs/xgboost_multihorizon_summary.csv,04_results/phase1_baselines/xgboost_multihorizon_summary.csv,restructure
+Models/baselines/outputs/xgboost_multihorizon_t14.csv,04_results/phase1_baselines/xgboost_multihorizon_t14.csv,restructure
+Models/baselines/outputs/xgboost_multihorizon_t30.csv,04_results/phase1_baselines/xgboost_multihorizon_t30.csv,restructure
+Models/baselines/outputs/xgboost_multihorizon_t7.csv,04_results/phase1_baselines/xgboost_multihorizon_t7.csv,restructure
+Models/baselines/outputs/xgboost_predictions.csv,04_results/phase1_baselines/xgboost_predictions.csv,restructure
+Models/baselines/outputs/xgboost_shap_t14.csv,04_results/phase1_baselines/xgboost_shap_t14.csv,restructure
+Models/baselines/outputs/xgboost_shap_t30.csv,04_results/phase1_baselines/xgboost_shap_t30.csv,restructure
+Models/baselines/outputs/xgboost_shap_t7.csv,04_results/phase1_baselines/xgboost_shap_t7.csv,restructure
+Models/baselines/outputs/xgboost_shap_values.csv,04_results/phase1_baselines/xgboost_shap_values.csv,restructure
+Models/TFT/outputs/v4/_cache/04789861eb_fold1_monsoon2024.pkl,04_results/tft_v4_0_dev/_cache/04789861eb_fold1_monsoon2024.pkl,restructure
+Models/TFT/outputs/v4/_cache/2d9d7d2758_fold1_monsoon2024.pkl,04_results/tft_v4_0_dev/_cache/2d9d7d2758_fold1_monsoon2024.pkl,restructure
+Models/TFT/outputs/v4/_cache/2d9d7d2758_fold2_postmonsoon2024.pkl,04_results/tft_v4_0_dev/_cache/2d9d7d2758_fold2_postmonsoon2024.pkl,restructure
+Models/TFT/outputs/v4/_cache/2d9d7d2758_fold3_dry2025.pkl,04_results/tft_v4_0_dev/_cache/2d9d7d2758_fold3_dry2025.pkl,restructure
+Models/TFT/outputs/v4/_cache/2d9d7d2758_fold4_monsoon2025.pkl,04_results/tft_v4_0_dev/_cache/2d9d7d2758_fold4_monsoon2025.pkl,restructure
+Models/TFT/outputs/v4/ablations.csv,04_results/tft_v4_0_dev/ablations.csv,restructure
+Models/TFT/outputs/v4/log_v3fixed_dev.txt,04_results/tft_v4_0_dev/log_v3fixed_dev.txt,restructure
+Models/TFT/outputs/v4/snaive_tuning.csv,04_results/tft_v4_0_dev/snaive_tuning.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/baseline_ladder.csv,04_results/tft_v4_0_dev/v3fixed_dev/baseline_ladder.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/config.json,04_results/tft_v4_0_dev/v3fixed_dev/config.json,restructure
+Models/TFT/outputs/v4/v3fixed_dev/coverage_calibrated.csv,04_results/tft_v4_0_dev/v3fixed_dev/coverage_calibrated.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/coverage_calibrated_by_district.csv,04_results/tft_v4_0_dev/v3fixed_dev/coverage_calibrated_by_district.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/district_gap.csv,04_results/tft_v4_0_dev/v3fixed_dev/district_gap.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/metrics_headline.csv,04_results/tft_v4_0_dev/v3fixed_dev/metrics_headline.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/metrics_per_district.csv,04_results/tft_v4_0_dev/v3fixed_dev/metrics_per_district.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/metrics_per_fold.csv,04_results/tft_v4_0_dev/v3fixed_dev/metrics_per_fold.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_0_dev/v3fixed_dev/model_fold1_monsoon2024_lastseed.pt,restructure
+Models/TFT/outputs/v4/v3fixed_dev/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_0_dev/v3fixed_dev/model_fold2_postmonsoon2024_lastseed.pt,restructure
+Models/TFT/outputs/v4/v3fixed_dev/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_0_dev/v3fixed_dev/model_fold3_dry2025_lastseed.pt,restructure
+Models/TFT/outputs/v4/v3fixed_dev/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_0_dev/v3fixed_dev/model_fold4_monsoon2025_lastseed.pt,restructure
+Models/TFT/outputs/v4/v3fixed_dev/predictions_base.csv,04_results/tft_v4_0_dev/v3fixed_dev/predictions_base.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/predictions_daily.csv,04_results/tft_v4_0_dev/v3fixed_dev/predictions_daily.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/predictions_keys.csv,04_results/tft_v4_0_dev/v3fixed_dev/predictions_keys.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/predictions_weekly.csv,04_results/tft_v4_0_dev/v3fixed_dev/predictions_weekly.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/significance.csv,04_results/tft_v4_0_dev/v3fixed_dev/significance.csv,restructure
+Models/TFT/outputs/v4/v3fixed_dev/windows.csv,04_results/tft_v4_0_dev/v3fixed_dev/windows.csv,restructure
+Latest results/per_district_mape_t14.png,04_results/tft_prod_v1/per_district_mape_t14.png,restructure
+Latest results/per_district_mape_t30.png,04_results/tft_prod_v1/per_district_mape_t30.png,restructure
+Latest results/per_district_mape_t7.png,04_results/tft_prod_v1/per_district_mape_t7.png,restructure
+Latest results/quantile_akola.png,04_results/tft_prod_v1/quantile_akola.png,restructure
+Latest results/quantile_nagpur.png,04_results/tft_prod_v1/quantile_nagpur.png,restructure
+Latest results/quantile_wardha.png,04_results/tft_prod_v1/quantile_wardha.png,restructure
+Latest results/quantile_washim.png,04_results/tft_prod_v1/quantile_washim.png,restructure
+Latest results/README.md,04_results/tft_prod_v1/RUN_README.md,restructure
+Latest results/tft_checkpoint_fold1_monsoon2024.pt,04_results/tft_prod_v1/tft_checkpoint_fold1_monsoon2024.pt,restructure
+Latest results/tft_checkpoint_fold2_postmonsoon2024.pt,04_results/tft_prod_v1/tft_checkpoint_fold2_postmonsoon2024.pt,restructure
+Latest results/tft_checkpoint_fold3_dry2025.pt,04_results/tft_prod_v1/tft_checkpoint_fold3_dry2025.pt,restructure
+Latest results/tft_checkpoint_fold4_monsoon2025.pt,04_results/tft_prod_v1/tft_checkpoint_fold4_monsoon2025.pt,restructure
+Latest results/tft_checkpoint_fold5_postmonsoon2025.pt,04_results/tft_prod_v1/tft_checkpoint_fold5_postmonsoon2025.pt,restructure
+Latest results/tft_checkpoint_fold6_dry2026.pt,04_results/tft_prod_v1/tft_checkpoint_fold6_dry2026.pt,restructure
+Latest results/tft_coverage_by_district.csv,04_results/tft_prod_v1/tft_coverage_by_district.csv,restructure
+Latest results/tft_coverage_heatmap.png,04_results/tft_prod_v1/tft_coverage_heatmap.png,restructure
+Latest results/tft_metrics_headline.csv,04_results/tft_prod_v1/tft_metrics_headline.csv,restructure
+Latest results/tft_metrics_per_district.csv,04_results/tft_prod_v1/tft_metrics_per_district.csv,restructure
+Latest results/tft_metrics_per_season.csv,04_results/tft_prod_v1/tft_metrics_per_season.csv,restructure
+Latest results/tft_predictions_all_folds.csv,04_results/tft_prod_v1/tft_predictions_all_folds.csv,restructure
+Latest results/tft_predictions_calibrated.csv,04_results/tft_prod_v1/tft_predictions_calibrated.csv,restructure
+Latest results/tft_training_curves.png,04_results/tft_prod_v1/tft_training_curves.png,restructure
+Latest results/tft_vsn_importance.png,04_results/tft_prod_v1/tft_vsn_importance.png,restructure
+result zips/v4_1/ablations.csv,04_results/tft_v4_1/ablations.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/baseline_ladder.csv,04_results/tft_v4_1/dev_d48_tab2_refit/baseline_ladder.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/best_epochs.csv,04_results/tft_v4_1/dev_d48_tab2_refit/best_epochs.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/config.json,04_results/tft_v4_1/dev_d48_tab2_refit/config.json,restructure
+result zips/v4_1/dev_d48_tab2_refit/coverage_calibrated.csv,04_results/tft_v4_1/dev_d48_tab2_refit/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_d48_tab2_refit/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/district_gap.csv,04_results/tft_v4_1/dev_d48_tab2_refit/district_gap.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_district_gap.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/ensemble_significance.csv,04_results/tft_v4_1/dev_d48_tab2_refit/ensemble_significance.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/metrics_headline.csv,04_results/tft_v4_1/dev_d48_tab2_refit/metrics_headline.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/metrics_per_district.csv,04_results/tft_v4_1/dev_d48_tab2_refit/metrics_per_district.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/metrics_per_fold.csv,04_results/tft_v4_1/dev_d48_tab2_refit/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_d48_tab2_refit/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_d48_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_d48_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_d48_tab2_refit/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_d48_tab2_refit/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_d48_tab2_refit/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_d48_tab2_refit/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_d48_tab2_refit/significance.csv,04_results/tft_v4_1/dev_d48_tab2_refit/significance.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/stack_weights.csv,04_results/tft_v4_1/dev_d48_tab2_refit/stack_weights.csv,restructure
+result zips/v4_1/dev_d48_tab2_refit/windows.csv,04_results/tft_v4_1/dev_d48_tab2_refit/windows.csv,restructure
+result zips/v4_1/dev_ref/baseline_ladder.csv,04_results/tft_v4_1/dev_ref/baseline_ladder.csv,restructure
+result zips/v4_1/dev_ref/best_epochs.csv,04_results/tft_v4_1/dev_ref/best_epochs.csv,restructure
+result zips/v4_1/dev_ref/config.json,04_results/tft_v4_1/dev_ref/config.json,restructure
+result zips/v4_1/dev_ref/coverage_calibrated.csv,04_results/tft_v4_1/dev_ref/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_ref/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_ref/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_ref/district_gap.csv,04_results/tft_v4_1/dev_ref/district_gap.csv,restructure
+result zips/v4_1/dev_ref/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_ref/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_ref/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_ref/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_ref/ensemble_district_gap.csv,04_results/tft_v4_1/dev_ref/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_ref/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_ref/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_ref/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_ref/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_ref/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_ref/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_ref/ensemble_significance.csv,04_results/tft_v4_1/dev_ref/ensemble_significance.csv,restructure
+result zips/v4_1/dev_ref/metrics_headline.csv,04_results/tft_v4_1/dev_ref/metrics_headline.csv,restructure
+result zips/v4_1/dev_ref/metrics_per_district.csv,04_results/tft_v4_1/dev_ref/metrics_per_district.csv,restructure
+result zips/v4_1/dev_ref/metrics_per_fold.csv,04_results/tft_v4_1/dev_ref/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_ref/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_ref/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_ref/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_ref/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_ref/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_ref/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_ref/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_ref/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_ref/significance.csv,04_results/tft_v4_1/dev_ref/significance.csv,restructure
+result zips/v4_1/dev_ref/stack_weights.csv,04_results/tft_v4_1/dev_ref/stack_weights.csv,restructure
+result zips/v4_1/dev_ref/windows.csv,04_results/tft_v4_1/dev_ref/windows.csv,restructure
+result zips/v4_1/dev_refit/baseline_ladder.csv,04_results/tft_v4_1/dev_refit/baseline_ladder.csv,restructure
+result zips/v4_1/dev_refit/best_epochs.csv,04_results/tft_v4_1/dev_refit/best_epochs.csv,restructure
+result zips/v4_1/dev_refit/config.json,04_results/tft_v4_1/dev_refit/config.json,restructure
+result zips/v4_1/dev_refit/coverage_calibrated.csv,04_results/tft_v4_1/dev_refit/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_refit/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_refit/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_refit/district_gap.csv,04_results/tft_v4_1/dev_refit/district_gap.csv,restructure
+result zips/v4_1/dev_refit/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_refit/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_refit/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_refit/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_refit/ensemble_district_gap.csv,04_results/tft_v4_1/dev_refit/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_refit/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_refit/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_refit/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_refit/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_refit/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_refit/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_refit/ensemble_significance.csv,04_results/tft_v4_1/dev_refit/ensemble_significance.csv,restructure
+result zips/v4_1/dev_refit/metrics_headline.csv,04_results/tft_v4_1/dev_refit/metrics_headline.csv,restructure
+result zips/v4_1/dev_refit/metrics_per_district.csv,04_results/tft_v4_1/dev_refit/metrics_per_district.csv,restructure
+result zips/v4_1/dev_refit/metrics_per_fold.csv,04_results/tft_v4_1/dev_refit/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_refit/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_refit/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_refit/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_refit/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_refit/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_refit/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_refit/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_refit/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_refit/significance.csv,04_results/tft_v4_1/dev_refit/significance.csv,restructure
+result zips/v4_1/dev_refit/stack_weights.csv,04_results/tft_v4_1/dev_refit/stack_weights.csv,restructure
+result zips/v4_1/dev_refit/windows.csv,04_results/tft_v4_1/dev_refit/windows.csv,restructure
+result zips/v4_1/dev_s1_tab2/baseline_ladder.csv,04_results/tft_v4_1/dev_s1_tab2/baseline_ladder.csv,restructure
+result zips/v4_1/dev_s1_tab2/best_epochs.csv,04_results/tft_v4_1/dev_s1_tab2/best_epochs.csv,restructure
+result zips/v4_1/dev_s1_tab2/config.json,04_results/tft_v4_1/dev_s1_tab2/config.json,restructure
+result zips/v4_1/dev_s1_tab2/coverage_calibrated.csv,04_results/tft_v4_1/dev_s1_tab2/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_s1_tab2/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_s1_tab2/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_s1_tab2/district_gap.csv,04_results/tft_v4_1/dev_s1_tab2/district_gap.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_district_gap.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_s1_tab2/ensemble_significance.csv,04_results/tft_v4_1/dev_s1_tab2/ensemble_significance.csv,restructure
+result zips/v4_1/dev_s1_tab2/metrics_headline.csv,04_results/tft_v4_1/dev_s1_tab2/metrics_headline.csv,restructure
+result zips/v4_1/dev_s1_tab2/metrics_per_district.csv,04_results/tft_v4_1/dev_s1_tab2/metrics_per_district.csv,restructure
+result zips/v4_1/dev_s1_tab2/metrics_per_fold.csv,04_results/tft_v4_1/dev_s1_tab2/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_s1_tab2/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2/significance.csv,04_results/tft_v4_1/dev_s1_tab2/significance.csv,restructure
+result zips/v4_1/dev_s1_tab2/stack_weights.csv,04_results/tft_v4_1/dev_s1_tab2/stack_weights.csv,restructure
+result zips/v4_1/dev_s1_tab2/windows.csv,04_results/tft_v4_1/dev_s1_tab2/windows.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/baseline_ladder.csv,04_results/tft_v4_1/dev_s1_tab2_refit/baseline_ladder.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/best_epochs.csv,04_results/tft_v4_1/dev_s1_tab2_refit/best_epochs.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/config.json,04_results/tft_v4_1/dev_s1_tab2_refit/config.json,restructure
+result zips/v4_1/dev_s1_tab2_refit/coverage_calibrated.csv,04_results/tft_v4_1/dev_s1_tab2_refit/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_s1_tab2_refit/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/district_gap.csv,04_results/tft_v4_1/dev_s1_tab2_refit/district_gap.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_district_gap.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/ensemble_significance.csv,04_results/tft_v4_1/dev_s1_tab2_refit/ensemble_significance.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/metrics_headline.csv,04_results/tft_v4_1/dev_s1_tab2_refit/metrics_headline.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/metrics_per_district.csv,04_results/tft_v4_1/dev_s1_tab2_refit/metrics_per_district.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/metrics_per_fold.csv,04_results/tft_v4_1/dev_s1_tab2_refit/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2_refit/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2_refit/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2_refit/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2_refit/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_s1_tab2_refit/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_s1_tab2_refit/significance.csv,04_results/tft_v4_1/dev_s1_tab2_refit/significance.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/stack_weights.csv,04_results/tft_v4_1/dev_s1_tab2_refit/stack_weights.csv,restructure
+result zips/v4_1/dev_s1_tab2_refit/windows.csv,04_results/tft_v4_1/dev_s1_tab2_refit/windows.csv,restructure
+result zips/v4_1/dev_screening_summary.csv,04_results/tft_v4_1/dev_screening_summary.csv,restructure
+result zips/v4_1/dev_tab2/baseline_ladder.csv,04_results/tft_v4_1/dev_tab2/baseline_ladder.csv,restructure
+result zips/v4_1/dev_tab2/best_epochs.csv,04_results/tft_v4_1/dev_tab2/best_epochs.csv,restructure
+result zips/v4_1/dev_tab2/config.json,04_results/tft_v4_1/dev_tab2/config.json,restructure
+result zips/v4_1/dev_tab2/coverage_calibrated.csv,04_results/tft_v4_1/dev_tab2/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_tab2/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_tab2/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_tab2/district_gap.csv,04_results/tft_v4_1/dev_tab2/district_gap.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_tab2/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_tab2/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_district_gap.csv,04_results/tft_v4_1/dev_tab2/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_tab2/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_tab2/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_tab2/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_tab2/ensemble_significance.csv,04_results/tft_v4_1/dev_tab2/ensemble_significance.csv,restructure
+result zips/v4_1/dev_tab2/metrics_headline.csv,04_results/tft_v4_1/dev_tab2/metrics_headline.csv,restructure
+result zips/v4_1/dev_tab2/metrics_per_district.csv,04_results/tft_v4_1/dev_tab2/metrics_per_district.csv,restructure
+result zips/v4_1/dev_tab2/metrics_per_fold.csv,04_results/tft_v4_1/dev_tab2/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_tab2/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_tab2/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_tab2/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_tab2/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_tab2/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_tab2/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_tab2/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_tab2/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_tab2/significance.csv,04_results/tft_v4_1/dev_tab2/significance.csv,restructure
+result zips/v4_1/dev_tab2/stack_weights.csv,04_results/tft_v4_1/dev_tab2/stack_weights.csv,restructure
+result zips/v4_1/dev_tab2/windows.csv,04_results/tft_v4_1/dev_tab2/windows.csv,restructure
+result zips/v4_1/dev_tab2_refit/baseline_ladder.csv,04_results/tft_v4_1/dev_tab2_refit/baseline_ladder.csv,restructure
+result zips/v4_1/dev_tab2_refit/best_epochs.csv,04_results/tft_v4_1/dev_tab2_refit/best_epochs.csv,restructure
+result zips/v4_1/dev_tab2_refit/config.json,04_results/tft_v4_1/dev_tab2_refit/config.json,restructure
+result zips/v4_1/dev_tab2_refit/coverage_calibrated.csv,04_results/tft_v4_1/dev_tab2_refit/coverage_calibrated.csv,restructure
+result zips/v4_1/dev_tab2_refit/coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_tab2_refit/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_tab2_refit/district_gap.csv,04_results/tft_v4_1/dev_tab2_refit/district_gap.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_district_gap.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_district_gap.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_metrics_headline.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_metrics_per_district.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/dev_tab2_refit/ensemble_significance.csv,04_results/tft_v4_1/dev_tab2_refit/ensemble_significance.csv,restructure
+result zips/v4_1/dev_tab2_refit/metrics_headline.csv,04_results/tft_v4_1/dev_tab2_refit/metrics_headline.csv,restructure
+result zips/v4_1/dev_tab2_refit/metrics_per_district.csv,04_results/tft_v4_1/dev_tab2_refit/metrics_per_district.csv,restructure
+result zips/v4_1/dev_tab2_refit/metrics_per_fold.csv,04_results/tft_v4_1/dev_tab2_refit/metrics_per_fold.csv,restructure
+result zips/v4_1/dev_tab2_refit/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/dev_tab2_refit/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/dev_tab2_refit/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/dev_tab2_refit/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/dev_tab2_refit/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/dev_tab2_refit/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/dev_tab2_refit/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/dev_tab2_refit/significance.csv,04_results/tft_v4_1/dev_tab2_refit/significance.csv,restructure
+result zips/v4_1/dev_tab2_refit/stack_weights.csv,04_results/tft_v4_1/dev_tab2_refit/stack_weights.csv,restructure
+result zips/v4_1/dev_tab2_refit/windows.csv,04_results/tft_v4_1/dev_tab2_refit/windows.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/baseline_ladder.csv,04_results/tft_v4_1/FINAL_s1_tab2/baseline_ladder.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/best_epochs.csv,04_results/tft_v4_1/FINAL_s1_tab2/best_epochs.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/config.json,04_results/tft_v4_1/FINAL_s1_tab2/config.json,restructure
+result zips/v4_1/FINAL_s1_tab2/coverage_calibrated.csv,04_results/tft_v4_1/FINAL_s1_tab2/coverage_calibrated.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/coverage_calibrated_by_district.csv,04_results/tft_v4_1/FINAL_s1_tab2/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/district_gap.csv,04_results/tft_v4_1/FINAL_s1_tab2/district_gap.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_district_gap.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_district_gap.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_headline.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_per_district.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/ensemble_significance.csv,04_results/tft_v4_1/FINAL_s1_tab2/ensemble_significance.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/metrics_headline.csv,04_results/tft_v4_1/FINAL_s1_tab2/metrics_headline.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/metrics_per_district.csv,04_results/tft_v4_1/FINAL_s1_tab2/metrics_per_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/metrics_per_fold.csv,04_results/tft_v4_1/FINAL_s1_tab2/metrics_per_fold.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold5_postmonsoon2025_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold5_postmonsoon2025_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/model_fold6_dry2026_lastseed.pt,04_results/tft_v4_1/FINAL_s1_tab2/model_fold6_dry2026_lastseed.pt,restructure
+result zips/v4_1/FINAL_s1_tab2/predictions_base.csv,04_results/tft_v4_1/FINAL_s1_tab2/predictions_base.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/predictions_daily.csv,04_results/tft_v4_1/FINAL_s1_tab2/predictions_daily.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/predictions_keys.csv,04_results/tft_v4_1/FINAL_s1_tab2/predictions_keys.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/predictions_weekly.csv,04_results/tft_v4_1/FINAL_s1_tab2/predictions_weekly.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/significance.csv,04_results/tft_v4_1/FINAL_s1_tab2/significance.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/stack_weights.csv,04_results/tft_v4_1/FINAL_s1_tab2/stack_weights.csv,restructure
+result zips/v4_1/FINAL_s1_tab2/windows.csv,04_results/tft_v4_1/FINAL_s1_tab2/windows.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/baseline_ladder.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/baseline_ladder.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/best_epochs.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/best_epochs.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/config.json,04_results/tft_v4_1/FINAL_s1_tab2_locked/config.json,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/coverage_calibrated.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/coverage_calibrated.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/coverage_calibrated_by_district.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/district_gap.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/district_gap.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_district_gap.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_district_gap.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_headline.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_district.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/ensemble_significance.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/ensemble_significance.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/metrics_headline.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/metrics_headline.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/metrics_per_district.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/metrics_per_district.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/metrics_per_fold.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/metrics_per_fold.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/significance.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/significance.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/stack_weights.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/stack_weights.csv,restructure
+result zips/v4_1/FINAL_s1_tab2_locked/windows.csv,04_results/tft_v4_1/FINAL_s1_tab2_locked/windows.csv,restructure
+result zips/v4_1/post_sweep_summary.csv,04_results/tft_v4_1/post_sweep_summary.csv,restructure
+result zips/v4_1/RESULTS_TO_QUOTE.csv,04_results/tft_v4_1/RESULTS_TO_QUOTE.csv,restructure
+result zips/v4_1/RUN_SUMMARY.md,04_results/tft_v4_1/RUN_SUMMARY.md,restructure
+result zips/v4_1/simple/ensemble/ensemble_coverage_by_district.csv,04_results/tft_v4_1/simple/ensemble/ensemble_coverage_by_district.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_coverage_heatmap.png,04_results/tft_v4_1/simple/ensemble/ensemble_coverage_heatmap.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t14.png,04_results/tft_v4_1/simple/ensemble/ensemble_forecast_grid_t14.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t30.png,04_results/tft_v4_1/simple/ensemble/ensemble_forecast_grid_t30.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_forecast_grid_t7.png,04_results/tft_v4_1/simple/ensemble/ensemble_forecast_grid_t7.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_mape_by_district.csv,04_results/tft_v4_1/simple/ensemble/ensemble_mape_by_district.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_mase_by_district.csv,04_results/tft_v4_1/simple/ensemble/ensemble_mase_by_district.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_metrics_headline.csv,04_results/tft_v4_1/simple/ensemble/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_metrics_headline_locked.csv,04_results/tft_v4_1/simple/ensemble/ensemble_metrics_headline_locked.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_metrics_per_district.csv,04_results/tft_v4_1/simple/ensemble/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_metrics_per_season.csv,04_results/tft_v4_1/simple/ensemble/ensemble_metrics_per_season.csv,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t14.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mape_t14.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t30.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mape_t30.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mape_t7.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mape_t7.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t14.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mase_t14.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t30.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mase_t30.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_per_district_mase_t7.png,04_results/tft_v4_1/simple/ensemble/ensemble_per_district_mase_t7.png,restructure
+result zips/v4_1/simple/ensemble/ensemble_predictions_all_folds.csv,04_results/tft_v4_1/simple/ensemble/ensemble_predictions_all_folds.csv,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_akola.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_akola.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_amravati.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_amravati.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_aurangabad.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_aurangabad.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_bhandara.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_bhandara.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_chandrapur.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_chandrapur.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_dhule.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_dhule.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_gadchiroli.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_gadchiroli.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_gondia.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_gondia.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_jalgaon.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_jalgaon.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_jalna.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_jalna.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_kolhapur.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_kolhapur.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_nagpur.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_nagpur.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_nanded.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_nanded.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_nandurbar.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_nandurbar.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_nashik.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_nashik.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_parbhani.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_parbhani.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_pune.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_pune.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_raigad.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_raigad.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_ratnagiri.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_ratnagiri.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_solapur.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_solapur.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_thane.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_thane.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_wardha.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_wardha.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_washim.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_washim.png,restructure
+result zips/v4_1/simple/ensemble/quantile/quantile_yavatmal.png,04_results/tft_v4_1/simple/ensemble/quantile/quantile_yavatmal.png,restructure
+result zips/v4_1/simple/summary_tft_vs_ensemble.csv,04_results/tft_v4_1/simple/summary_tft_vs_ensemble.csv,restructure
+result zips/v4_1/simple/tft/quantile/quantile_akola.png,04_results/tft_v4_1/simple/tft/quantile/quantile_akola.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_amravati.png,04_results/tft_v4_1/simple/tft/quantile/quantile_amravati.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_aurangabad.png,04_results/tft_v4_1/simple/tft/quantile/quantile_aurangabad.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_bhandara.png,04_results/tft_v4_1/simple/tft/quantile/quantile_bhandara.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_chandrapur.png,04_results/tft_v4_1/simple/tft/quantile/quantile_chandrapur.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_dhule.png,04_results/tft_v4_1/simple/tft/quantile/quantile_dhule.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_gadchiroli.png,04_results/tft_v4_1/simple/tft/quantile/quantile_gadchiroli.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_gondia.png,04_results/tft_v4_1/simple/tft/quantile/quantile_gondia.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_jalgaon.png,04_results/tft_v4_1/simple/tft/quantile/quantile_jalgaon.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_jalna.png,04_results/tft_v4_1/simple/tft/quantile/quantile_jalna.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_kolhapur.png,04_results/tft_v4_1/simple/tft/quantile/quantile_kolhapur.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_nagpur.png,04_results/tft_v4_1/simple/tft/quantile/quantile_nagpur.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_nanded.png,04_results/tft_v4_1/simple/tft/quantile/quantile_nanded.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_nandurbar.png,04_results/tft_v4_1/simple/tft/quantile/quantile_nandurbar.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_nashik.png,04_results/tft_v4_1/simple/tft/quantile/quantile_nashik.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_parbhani.png,04_results/tft_v4_1/simple/tft/quantile/quantile_parbhani.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_pune.png,04_results/tft_v4_1/simple/tft/quantile/quantile_pune.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_raigad.png,04_results/tft_v4_1/simple/tft/quantile/quantile_raigad.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_ratnagiri.png,04_results/tft_v4_1/simple/tft/quantile/quantile_ratnagiri.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_solapur.png,04_results/tft_v4_1/simple/tft/quantile/quantile_solapur.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_thane.png,04_results/tft_v4_1/simple/tft/quantile/quantile_thane.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_wardha.png,04_results/tft_v4_1/simple/tft/quantile/quantile_wardha.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_washim.png,04_results/tft_v4_1/simple/tft/quantile/quantile_washim.png,restructure
+result zips/v4_1/simple/tft/quantile/quantile_yavatmal.png,04_results/tft_v4_1/simple/tft/quantile/quantile_yavatmal.png,restructure
+result zips/v4_1/simple/tft/tft_coverage_by_district.csv,04_results/tft_v4_1/simple/tft/tft_coverage_by_district.csv,restructure
+result zips/v4_1/simple/tft/tft_coverage_heatmap.png,04_results/tft_v4_1/simple/tft/tft_coverage_heatmap.png,restructure
+result zips/v4_1/simple/tft/tft_forecast_grid_t14.png,04_results/tft_v4_1/simple/tft/tft_forecast_grid_t14.png,restructure
+result zips/v4_1/simple/tft/tft_forecast_grid_t30.png,04_results/tft_v4_1/simple/tft/tft_forecast_grid_t30.png,restructure
+result zips/v4_1/simple/tft/tft_forecast_grid_t7.png,04_results/tft_v4_1/simple/tft/tft_forecast_grid_t7.png,restructure
+result zips/v4_1/simple/tft/tft_mape_by_district.csv,04_results/tft_v4_1/simple/tft/tft_mape_by_district.csv,restructure
+result zips/v4_1/simple/tft/tft_mase_by_district.csv,04_results/tft_v4_1/simple/tft/tft_mase_by_district.csv,restructure
+result zips/v4_1/simple/tft/tft_metrics_headline.csv,04_results/tft_v4_1/simple/tft/tft_metrics_headline.csv,restructure
+result zips/v4_1/simple/tft/tft_metrics_headline_locked.csv,04_results/tft_v4_1/simple/tft/tft_metrics_headline_locked.csv,restructure
+result zips/v4_1/simple/tft/tft_metrics_per_district.csv,04_results/tft_v4_1/simple/tft/tft_metrics_per_district.csv,restructure
+result zips/v4_1/simple/tft/tft_metrics_per_season.csv,04_results/tft_v4_1/simple/tft/tft_metrics_per_season.csv,restructure
+result zips/v4_1/simple/tft/tft_per_district_mape_t14.png,04_results/tft_v4_1/simple/tft/tft_per_district_mape_t14.png,restructure
+result zips/v4_1/simple/tft/tft_per_district_mape_t30.png,04_results/tft_v4_1/simple/tft/tft_per_district_mape_t30.png,restructure
+result zips/v4_1/simple/tft/tft_per_district_mape_t7.png,04_results/tft_v4_1/simple/tft/tft_per_district_mape_t7.png,restructure
+result zips/v4_1/simple/tft/tft_per_district_mase_t14.png,04_results/tft_v4_1/simple/tft/tft_per_district_mase_t14.png,restructure
+result zips/v4_1/simple/tft/tft_per_district_mase_t30.png,04_results/tft_v4_1/simple/tft/tft_per_district_mase_t30.png,restructure
+result zips/v4_1/simple/tft/tft_per_district_mase_t7.png,04_results/tft_v4_1/simple/tft/tft_per_district_mase_t7.png,restructure
+result zips/v4_1/simple/tft/tft_predictions_all_folds.csv,04_results/tft_v4_1/simple/tft/tft_predictions_all_folds.csv,restructure
+result zips/v4_1/simple/tft_training_curves.png,04_results/tft_v4_1/simple/tft_training_curves.png,restructure
+result zips/v4_1/simple/tft_vsn_importance.csv,04_results/tft_v4_1/simple/tft_vsn_importance.csv,restructure
+result zips/v4_1/simple/tft_vsn_importance.png,04_results/tft_v4_1/simple/tft_vsn_importance.png,restructure
+result zips/v4_1/sweep_aci0.005/baseline_ladder.csv,04_results/tft_v4_1/sweep_aci0.005/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_aci0.005/best_epochs.csv,04_results/tft_v4_1/sweep_aci0.005/best_epochs.csv,restructure
+result zips/v4_1/sweep_aci0.005/config.json,04_results/tft_v4_1/sweep_aci0.005/config.json,restructure
+result zips/v4_1/sweep_aci0.005/coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.005/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.005/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.005/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.005/district_gap.csv,04_results/tft_v4_1/sweep_aci0.005/district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.005/ensemble_significance.csv,04_results/tft_v4_1/sweep_aci0.005/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_aci0.005/metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.005/metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.005/metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.005/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.005/metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.005/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.005/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.005/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.005/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.005/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.005/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.005/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.005/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.005/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.005/significance.csv,04_results/tft_v4_1/sweep_aci0.005/significance.csv,restructure
+result zips/v4_1/sweep_aci0.005/stack_weights.csv,04_results/tft_v4_1/sweep_aci0.005/stack_weights.csv,restructure
+result zips/v4_1/sweep_aci0.005/windows.csv,04_results/tft_v4_1/sweep_aci0.005/windows.csv,restructure
+result zips/v4_1/sweep_aci0.02/baseline_ladder.csv,04_results/tft_v4_1/sweep_aci0.02/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_aci0.02/best_epochs.csv,04_results/tft_v4_1/sweep_aci0.02/best_epochs.csv,restructure
+result zips/v4_1/sweep_aci0.02/config.json,04_results/tft_v4_1/sweep_aci0.02/config.json,restructure
+result zips/v4_1/sweep_aci0.02/coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.02/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.02/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.02/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.02/district_gap.csv,04_results/tft_v4_1/sweep_aci0.02/district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.02/ensemble_significance.csv,04_results/tft_v4_1/sweep_aci0.02/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_aci0.02/metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.02/metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.02/metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.02/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.02/metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.02/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.02/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.02/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.02/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.02/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.02/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.02/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.02/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.02/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.02/significance.csv,04_results/tft_v4_1/sweep_aci0.02/significance.csv,restructure
+result zips/v4_1/sweep_aci0.02/stack_weights.csv,04_results/tft_v4_1/sweep_aci0.02/stack_weights.csv,restructure
+result zips/v4_1/sweep_aci0.02/windows.csv,04_results/tft_v4_1/sweep_aci0.02/windows.csv,restructure
+result zips/v4_1/sweep_aci0.05/baseline_ladder.csv,04_results/tft_v4_1/sweep_aci0.05/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_aci0.05/best_epochs.csv,04_results/tft_v4_1/sweep_aci0.05/best_epochs.csv,restructure
+result zips/v4_1/sweep_aci0.05/config.json,04_results/tft_v4_1/sweep_aci0.05/config.json,restructure
+result zips/v4_1/sweep_aci0.05/coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.05/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.05/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.05/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.05/district_gap.csv,04_results/tft_v4_1/sweep_aci0.05/district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.05/ensemble_significance.csv,04_results/tft_v4_1/sweep_aci0.05/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_aci0.05/metrics_headline.csv,04_results/tft_v4_1/sweep_aci0.05/metrics_headline.csv,restructure
+result zips/v4_1/sweep_aci0.05/metrics_per_district.csv,04_results/tft_v4_1/sweep_aci0.05/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_aci0.05/metrics_per_fold.csv,04_results/tft_v4_1/sweep_aci0.05/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_aci0.05/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.05/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.05/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_aci0.05/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.05/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.05/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.05/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_aci0.05/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_aci0.05/significance.csv,04_results/tft_v4_1/sweep_aci0.05/significance.csv,restructure
+result zips/v4_1/sweep_aci0.05/stack_weights.csv,04_results/tft_v4_1/sweep_aci0.05/stack_weights.csv,restructure
+result zips/v4_1/sweep_aci0.05/windows.csv,04_results/tft_v4_1/sweep_aci0.05/windows.csv,restructure
+result zips/v4_1/sweep_spn100/baseline_ladder.csv,04_results/tft_v4_1/sweep_spn100/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_spn100/best_epochs.csv,04_results/tft_v4_1/sweep_spn100/best_epochs.csv,restructure
+result zips/v4_1/sweep_spn100/config.json,04_results/tft_v4_1/sweep_spn100/config.json,restructure
+result zips/v4_1/sweep_spn100/coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn100/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn100/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn100/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn100/district_gap.csv,04_results/tft_v4_1/sweep_spn100/district_gap.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn100/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn100/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_spn100/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_spn100/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_spn100/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn100/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn100/ensemble_significance.csv,04_results/tft_v4_1/sweep_spn100/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_spn100/metrics_headline.csv,04_results/tft_v4_1/sweep_spn100/metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn100/metrics_per_district.csv,04_results/tft_v4_1/sweep_spn100/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn100/metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn100/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn100/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn100/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn100/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn100/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn100/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_spn100/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn100/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_spn100/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn100/significance.csv,04_results/tft_v4_1/sweep_spn100/significance.csv,restructure
+result zips/v4_1/sweep_spn100/stack_weights.csv,04_results/tft_v4_1/sweep_spn100/stack_weights.csv,restructure
+result zips/v4_1/sweep_spn100/windows.csv,04_results/tft_v4_1/sweep_spn100/windows.csv,restructure
+result zips/v4_1/sweep_spn1000/baseline_ladder.csv,04_results/tft_v4_1/sweep_spn1000/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_spn1000/best_epochs.csv,04_results/tft_v4_1/sweep_spn1000/best_epochs.csv,restructure
+result zips/v4_1/sweep_spn1000/config.json,04_results/tft_v4_1/sweep_spn1000/config.json,restructure
+result zips/v4_1/sweep_spn1000/coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn1000/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn1000/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn1000/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn1000/district_gap.csv,04_results/tft_v4_1/sweep_spn1000/district_gap.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn1000/ensemble_significance.csv,04_results/tft_v4_1/sweep_spn1000/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_spn1000/metrics_headline.csv,04_results/tft_v4_1/sweep_spn1000/metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn1000/metrics_per_district.csv,04_results/tft_v4_1/sweep_spn1000/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn1000/metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn1000/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn1000/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn1000/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn1000/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn1000/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn1000/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_spn1000/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn1000/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_spn1000/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn1000/significance.csv,04_results/tft_v4_1/sweep_spn1000/significance.csv,restructure
+result zips/v4_1/sweep_spn1000/stack_weights.csv,04_results/tft_v4_1/sweep_spn1000/stack_weights.csv,restructure
+result zips/v4_1/sweep_spn1000/windows.csv,04_results/tft_v4_1/sweep_spn1000/windows.csv,restructure
+result zips/v4_1/sweep_spn250/baseline_ladder.csv,04_results/tft_v4_1/sweep_spn250/baseline_ladder.csv,restructure
+result zips/v4_1/sweep_spn250/best_epochs.csv,04_results/tft_v4_1/sweep_spn250/best_epochs.csv,restructure
+result zips/v4_1/sweep_spn250/config.json,04_results/tft_v4_1/sweep_spn250/config.json,restructure
+result zips/v4_1/sweep_spn250/coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn250/coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn250/coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn250/coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn250/district_gap.csv,04_results/tft_v4_1/sweep_spn250/district_gap.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_coverage_calibrated.csv,04_results/tft_v4_1/sweep_spn250/ensemble_coverage_calibrated.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_coverage_calibrated_by_district.csv,04_results/tft_v4_1/sweep_spn250/ensemble_coverage_calibrated_by_district.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_district_gap.csv,04_results/tft_v4_1/sweep_spn250/ensemble_district_gap.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_metrics_headline.csv,04_results/tft_v4_1/sweep_spn250/ensemble_metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_metrics_per_district.csv,04_results/tft_v4_1/sweep_spn250/ensemble_metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn250/ensemble_metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn250/ensemble_significance.csv,04_results/tft_v4_1/sweep_spn250/ensemble_significance.csv,restructure
+result zips/v4_1/sweep_spn250/metrics_headline.csv,04_results/tft_v4_1/sweep_spn250/metrics_headline.csv,restructure
+result zips/v4_1/sweep_spn250/metrics_per_district.csv,04_results/tft_v4_1/sweep_spn250/metrics_per_district.csv,restructure
+result zips/v4_1/sweep_spn250/metrics_per_fold.csv,04_results/tft_v4_1/sweep_spn250/metrics_per_fold.csv,restructure
+result zips/v4_1/sweep_spn250/model_fold1_monsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn250/model_fold1_monsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn250/model_fold2_postmonsoon2024_lastseed.pt,04_results/tft_v4_1/sweep_spn250/model_fold2_postmonsoon2024_lastseed.pt,restructure
+result zips/v4_1/sweep_spn250/model_fold3_dry2025_lastseed.pt,04_results/tft_v4_1/sweep_spn250/model_fold3_dry2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn250/model_fold4_monsoon2025_lastseed.pt,04_results/tft_v4_1/sweep_spn250/model_fold4_monsoon2025_lastseed.pt,restructure
+result zips/v4_1/sweep_spn250/significance.csv,04_results/tft_v4_1/sweep_spn250/significance.csv,restructure
+result zips/v4_1/sweep_spn250/stack_weights.csv,04_results/tft_v4_1/sweep_spn250/stack_weights.csv,restructure
+result zips/v4_1/sweep_spn250/windows.csv,04_results/tft_v4_1/sweep_spn250/windows.csv,restructure
+result zips/v4_1/v4_vs_v4_1.csv,04_results/tft_v4_1/v4_vs_v4_1.csv,restructure
+result zips/tft_v4_1_outputs.zip,04_results/zips/tft_v4_1_outputs.zip,restructure
