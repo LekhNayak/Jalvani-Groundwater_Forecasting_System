@@ -1,12 +1,88 @@
-# TFT Production v1 → v2 → v3: What Changed and Why
+# TFT Production v1 → v2 → v3 → v4: What Changed and Why
 
 **v1** = `09_tft_colab_production.ipynb` — full 6-fold run on Colab T4, ~3 hours, completed 2026-08-14
 **v2** = `09_tft_colab_production_v2.ipynb` — rebuilt 2026-08-15 after the v1 post-mortem; full 6-fold T4 run completed
 **v3** = `09_tft_colab_production_v3.ipynb` — rebuilt 2026-08-15 after a full audit of v2; full 6-fold, 3-seed T4 run completed in **6.5 minutes**
+**v4** = `09_tft_colab_production_v4.ipynb` + `tft_v4.py` — rebuilt target, fixed evaluation, seasonal-naive baseline, TFT-led ensemble; Colab T4 run 2026-10-03 (v4 section near the end)
+**v4.1** = `09_tft_colab_production_v4_1.ipynb` — improvement run + simple per-district results; Colab T4 run 2026-10-29 (54 min), **best version so far** (v4.1 section at the end; results in `result zips/v4_1/`)
 
 *v1 and v2 ran on different master datasets (v2's groundwater layer was rebuilt), so raw RMSE is not
 directly comparable between them. v2 and v3 ran on the **same district set and the same headline
 21-district exclusion list**, so their numbers are a fair apples-to-apples comparison — see §11.*
+
+---
+
+## 0. Scores by version (summary, updated 2026-10-29)
+
+**How to read.** MASE is model error ÷ the error of "no change" (persistence). "vs seasonal" is model
+error ÷ the error of the seasonal-naive forecast (today's level + the district's usual change for this
+time of year, from past data only). Below 1 is better for both. Coverage of the 80% interval should be
+about 80%. All values are t+7 / t+14 / t+30.
+
+**The versions were not all measured the same way.** The target data, test folds and scoring changed
+between them. Table A is the history as each version reported it. Table B is the only like-for-like
+comparison.
+
+### Table A — every version as originally reported
+
+| Version | Model | Test set | MASE vs no-change | vs seasonal | MAE (m) | MAPE (%) | 80% coverage (%) |
+|---|---|---|---|---|---|---|---|
+| **v1** (`Latest results/`) | TFT, 11.6M params, absolute-level target | old target, 6 folds | **2.12 / 1.37 / 1.04** (median); 2.78 / 2.07 / 1.53 (pooled) | – | 1.28 / 1.37 / 1.53 (median) | 18.5 / 19.5 / 23.2 (median) | 52 / 52 / 53 raw; the reported "80%" was fitted on the test set itself, so invalid |
+| **v2** | TFT, change-from-anchor target | rebuilt target, 6 folds | 1.004 / 0.940 / 0.827 (median) | – | – | – | 76 / 71 / 64 raw; the reported "80%" was invalid (same reason) |
+| **v3** | TFT + shrinkage toward no-change | same target, 6 folds, 21 districts | 0.958 / 0.909 / 0.834 | – | 0.53 / 0.75 / 1.11 | 9.7 / 13.6 / 20.1 | 70 / 66 / 63 |
+| v3 run | LightGBM (v3 baseline ladder) | same | 0.949 / 0.937 / 0.857 | – | – | – | – |
+| **v4** | **TFT alone** | new target, all 6 folds | 0.937 / 0.877 / 0.773 | 1.003 / 1.002 / 0.987 | 0.45 / 0.63 / 0.93 | 6.2 / 8.8 / 13.2 | 74 / 69 / 65 |
+| **v4** | **Ensemble** (TFT + LightGBM + seasonal-naive + no-change) | new target, all 6 folds | **0.911 / 0.850 / 0.750** | **0.975 / 0.972 / 0.958** | **0.43 / 0.61 / 0.91** | **6.0 / 8.6 / 12.9** | **81 / 80 / 78** |
+| **v4, locked test** | TFT alone | folds 5-6 only | 0.910 / 0.834 / 0.697 | 1.017 / 1.008 / 0.992 | 0.34 / 0.44 / 0.62 | 4.6 / 6.0 / 7.7 | 74 / 70 / 67 |
+| **v4, locked test** | **Ensemble** | folds 5-6 only | **0.865 / 0.788 / 0.664** | **0.967 / 0.952 / 0.945** | **0.32 / 0.42 / 0.59** | **4.4 / 5.7 / 7.4** | **81 / 82 / 81** |
+| v4 run | seasonal-naive baseline | all 6 folds | 0.934 / 0.875 / 0.783 | 1.000 | – | – | – |
+| v4 run | LightGBM alone | all 6 folds | 0.914 / 0.864 / 0.759 | 0.978 / 0.987 / 0.970 | – | – | – |
+| **v4.1** | **TFT alone** | new target, all 6 folds | 0.935 / 0.876 / 0.764 | 1.000 / 1.002 / 0.976 | 0.44 / 0.63 / 0.92 | 6.2 / 8.7 / 13.0 | 73 / 69 / 64 |
+| **v4.1** | **Ensemble** | new target, all 6 folds | **0.903 / 0.830 / 0.712** | **0.967 / 0.949 / 0.909** | **0.43 / 0.60 / 0.86** | **6.0 / 8.4 / 12.4** | **80 / 78 / 78** |
+| **v4.1, locked test** | TFT alone | folds 5-6 only | 0.872 / 0.803 / 0.675 | 0.976 / 0.971 / 0.960 | 0.33 / 0.43 / 0.60 | 4.4 / 5.8 / 7.6 | 74 / 70 / 66 |
+| **v4.1, locked test** | **Ensemble (best so far)** | folds 5-6 only | **0.839 / 0.763 / 0.616** | **0.938 / 0.922 / 0.877** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.1** | **81 / 80 / 80** |
+| v4.1 run | LightGBM alone (new features) | all 6 folds | 0.903 / 0.832 / 0.703 | 0.967 / 0.951 / 0.897 | 0.43 / 0.60 / 0.85 | 6.1 / 8.6 / 12.3 | 73 / 69 / 61 |
+| v4.1 run | LightGBM alone (new features) | folds 5-6 only | 0.833 / 0.770 / 0.612 | 0.932 / 0.931 / 0.871 | 0.31 / 0.41 / 0.55 | 4.3 / 5.7 / 7.2 | 75 / 72 / 67 |
+
+Notes on Table A:
+- **v1** was scored on the old, noisy groundwater series. Its MASE was computed afterwards from the `Latest results/` predictions. §1 below quotes ~2.96 / 2.15 / 1.56 from a slightly different post-hoc calculation; both say v1 lost to "no change".
+- **v1 and v2 coverage:** the reported 80% was fitted on the same test rows it was applied to, so it is not a result.
+- **v3** also had a window-end-date bug: some t+7 test targets fell inside the validation period, and the last 23 days of each season were never scored. No v2 or v3 output files exist on disk.
+- **MAPE across versions is not comparable.** v1's figure is a median over districts on the old target; v3 and v4 use pooled MAPE with a 0.5 m floor.
+- The old ARIMA / XGBoost / LSTM baselines in `Models/baselines/` used an older dataset and a single Feb-Apr 2025 test window, so they cannot go in this table.
+
+### Table B — like-for-like: dev folds 1-4, identical windows, scoring and seasonal-naive baseline (v4 Colab screening)
+
+| Set-up | Model | MASE vs no-change | vs seasonal | MAE (m) | Coverage (%) |
+|---|---|---|---|---|---|
+| v3 with fixed evaluation, **old** target | TFT | 0.982 / 0.951 / 0.889 | 1.008 / 1.032 / 1.040 | 0.57 / 0.83 / 1.31 | 74 / 69 / 64 |
+| v3 with fixed evaluation, **new** target | TFT | 0.974 / 0.932 / 0.862 | 1.028 / 1.047 / 1.066 | 0.51 / 0.75 / 1.18 | 72 / 68 / 63 |
+| + v4 calibration + ensemble | TFT | 0.977 / 0.938 / 0.849 | 1.031 / 1.055 / 1.050 | 0.51 / 0.75 / 1.16 | 71 / 66 / 63 |
+| | Ensemble | 0.927 / 0.876 / 0.807 | 0.978 / 0.985 / 0.998 | 0.48 / 0.70 / 1.10 | 78 / 77 / 73 |
+| **+ residual-on-seasonal target (v4 chosen)** | TFT | 0.944 / 0.880 / 0.789 | 0.996 / 0.989 / 0.976 | 0.49 / 0.71 / 1.08 | 74 / 69 / 65 |
+| | **Ensemble** | **0.922 / 0.860 / 0.769** | **0.973 / 0.966 / 0.951** | **0.48 / 0.69 / 1.05** | **81 / 81 / 77** |
+| + loss weighting on t+7/14/30 | Ensemble | 0.921 / 0.862 / 0.780 | 0.972 / 0.969 / 0.964 | 0.48 / 0.69 / 1.07 | 82 / 81 / 78 |
+| without ERA5 and Sentinel inputs | Ensemble | 0.926 / 0.872 / 0.789 | 0.978 / 0.980 / 0.975 | 0.48 / 0.70 / 1.08 | 80 / 78 / 77 |
+| **v4.1 screening** (same folds and windows; MAE not saved): | | | | | |
+| v4 set-up + shrink toward seasonal-naive (`ref`) | TFT | 0.943 / 0.880 / 0.769 | 0.996 / 0.990 / 0.951 | – | 74 / 70 / 67 |
+| | Ensemble | 0.922 / 0.860 / 0.769 | 0.973 / 0.966 / 0.951 | – | 81 / 81 / 77 |
+| + new LightGBM (`tab2`) | Ensemble | 0.924 / 0.848 / 0.744 | 0.976 / 0.953 / 0.919 | – | 82 / 80 / 77 |
+| + refit pass (`tab2_refit`) | Ensemble | 0.920 / 0.845 / 0.743 | 0.971 / 0.950 / 0.918 | – | 79 / 78 / 78 |
+| **+ stride-1 network sampling (`s1_tab2`, v4.1 chosen)** | TFT | 0.937 / 0.880 / 0.783 | 0.989 / 0.990 / 0.967 | – | 73 / 69 / 64 |
+| | **Ensemble** | **0.907 / 0.841 / 0.739** | **0.958 / 0.945 / 0.913** | – | **80 / 79 / 78** |
+| stride-1 + refit (`s1_tab2_refit`) | Ensemble | 0.932 / 0.851 / 0.746 | 0.983 / 0.956 / 0.922 | – | 79 / 78 / 77 |
+| d_model 48 + refit (`d48_tab2_refit`) | TFT | 0.986 / 0.940 / 0.814 | 1.041 / 1.057 / 1.006 | – | 73 / 69 / 65 |
+
+### What the scores say
+- **Best so far: the v4.1 Ensemble.** On the locked test it is 16-38% better than "no change" and 6-12% better than the seasonal forecast. Every one of those six comparisons is significant (p = 0.003, Holm-adjusted). The 80% intervals cover 80-81% and are narrower than v4's.
+- **v4 to v4.1:** better at every horizon on both test sets. The largest gain is at t+30, where the locked score vs seasonal moved from 0.945 to 0.877.
+- **v1 to v4.1:** from worse than doing nothing (2.12 at t+7) to clearly better (0.90 over all folds, 0.84 on the locked test).
+- **The TFT alone:**
+  - on the locked test it now beats the seasonal forecast by 2-4%, though this is significant only at t+7;
+  - over all 6 folds it still ties the seasonal forecast;
+  - on a fair comparison, v3's TFT was worse than the seasonal forecast (1.03-1.07).
+- **Most of the v4.1 gain came from the new LightGBM.** On its own it is now about as accurate as the Ensemble. The Ensemble's advantage is its honest intervals (80% coverage against LightGBM's 61-75%). The v4.1 section explains this.
+- **Quote MASE (and "vs seasonal"), not MAPE,** when comparing versions.
 
 ---
 
@@ -589,3 +665,320 @@ Full design rationale for every v3 change: `V3_PLAN.md` (same directory).
 *v1/v2 sections written 2026-08-15 from the v1 and v2 Colab T4 run logs. v3 sections added 2026-08-15
 from the real 6-fold × 3-seed Colab T4 run (6.5 min total). Full diagnosis and design rationale for
 every fix: `TFT_IMPROVEMENT_PLAN.md` (repo root, v1→v2) and `V3_PLAN.md` (this directory, v2→v3).*
+
+---
+
+# v4 (2026-10-03) — cleaner target, honest evaluation, seasonal baseline, TFT-led ensemble
+
+**v4** = `09_tft_colab_production_v4.ipynb` + `tft_v4.py` (+ `tft_model_v3.py`, unchanged network).
+Run on a Colab T4: dev screening on folds 1-4 (3 seeds), final run on all 6 folds (5 seeds),
+folds 5-6 (Oct 2025 -> 4 Jun 2026) reported separately as the untouched test.
+Data: `master_dataset_v4target.csv` (25 districts, 31,275 rows, 64 cols).
+
+> **Note on `Latest results/`:** that folder holds the **v1** run (11.6M-parameter, absolute-level
+> target, pre-fix groundwater series; median MASE 2.12 / 1.37 / 1.04). It is not the best model.
+
+## What changed vs v3
+
+| # | Change | Where |
+|---|---|---|
+| 1 | **Groundwater target rebuilt.** Placeholder (+1.000) and stuck-logger readings removed; two-sided time-based Hampel; dry-well plateau check; step detection against the last accepted value; 12 wells wrongly discarded by the sign rule recovered; district value = median of offset/amplitude-adjusted wells so a well joining or leaving no longer moves the series; no ffill/bfill. Jumps > 2 m: 329 -> 193. | `Data Preprocessing/preprocess_groundwater.py`, `audit_groundwater_target.py` |
+| 2 | **Evaluation fixed.** Windows keyed by issue date; a window is in a split if any target date is; every scored row has `anchor_date` and `target_date`; all models scored on identical keys (asserted). Removes v3's window-end-date bug (some t+7 targets sat in the val block; the last 23 days of each season were never scored). | `tft_v4.py` |
+| 3 | **Seasonal-naive (SN) baseline** - anchor + the district's typical h-day change for this day of year (past data only; bandwidth 30 d, shrinkage 20, damping 1.0 tuned on SN's own dev-fold skill). Every result is now reported against persistence **and** SN. | `tft_v4.py`, `tune_snaive.py` |
+| 4 | **Residual-on-SN target.** The TFT predicts what SN gets wrong; output 0 = SN. | `target_mode='snaive'` |
+| 5 | **Calibration.** Season-weighted pool of earlier folds' out-of-sample errors, per-district normalised scores, each tail calibrated separately, adaptive conformal with delayed feedback. | `calib_mode='v4'` |
+| 6 | **Ensemble.** Simplex-weighted blend of persistence, SN, TFT and LightGBM, weights fitted on the pool, intervals from the TFT's spreads. Both "TFT" and "Ensemble" are reported. | `combine='stack'` |
+
+The network (`tft_model_v3.py`, ~222k parameters) is unchanged.
+
+## Dev-screening results (folds 1-4, identical windows; pooled rMAE; lower is better)
+
+rMAE vs persistence / rMAE vs seasonal-naive / 80%-interval coverage (%), t+7 | t+14 | t+30:
+
+| Run | Model | vs persistence | vs seasonal-naive | coverage |
+|---|---|---|---|---|
+| v3-fixed, **old** target | TFT | 0.982 / 0.951 / 0.889 | 1.008 / 1.032 / 1.040 | 74 / 69 / 64 |
+| v3-fixed, new target | TFT | 0.974 / 0.932 / 0.862 | 1.028 / 1.047 / 1.066 | 72 / 68 / 63 |
+| + v4 calibration + ensemble | TFT | 0.977 / 0.938 / 0.849 | 1.031 / 1.055 / 1.050 | 71 / 66 / 63 |
+| | Ensemble | 0.927 / 0.876 / 0.807 | 0.978 / 0.985 / 0.998 | 78 / 77 / 73 |
+| + residual-on-SN target (**chosen**) | TFT | 0.944 / 0.880 / 0.789 | 0.996 / 0.989 / 0.976 | 74 / 69 / 65 |
+| | **Ensemble** | **0.922 / 0.860 / 0.769** | **0.973 / 0.966 / 0.951** | **81 / 81 / 77** |
+| + loss weight on t+7/14/30 | Ensemble | 0.921 / 0.862 / 0.780 | 0.972 / 0.969 / 0.964 | 82 / 81 / 78 |
+| - ERA5 and Sentinel inputs | Ensemble | 0.926 / 0.872 / 0.789 | 0.978 / 0.980 / 0.975 | 80 / 78 / 77 |
+
+What each step contributed (dev folds):
+* **Cleaning the target:** small gain vs persistence (t+30 0.889 -> 0.862); MAE fell 0.57 -> 0.51 m at t+7 and 1.31 -> 1.18 m at t+30 (a cleaner series also strengthens persistence, so the ratio understates it).
+* **The v3-style TFT was worse than the seasonal baseline** (rMAE vs SN 1.03-1.07). This was previously hidden because v3 only compared against persistence.
+* **Ensemble alone** (same networks): 0.977 -> 0.927 at t+7, 0.938 -> 0.876 at t+14, 0.849 -> 0.807 at t+30, and coverage 71/66/63 -> 78/77/73.
+* **Residual-on-SN target:** the TFT alone goes 0.977 -> 0.944 (t+7), 0.938 -> 0.880 (t+14), 0.849 -> 0.789 (t+30) and now ties/just beats SN; for the Ensemble the extra gain is smaller (it already contains SN).
+* **Loss weighting** did not help. **Dropping ERA5/Sentinel hurt slightly** (mean rMAE vs SN 0.978 vs 0.963), so those inputs carry a small amount of information - an earlier ridge probe suggesting otherwise did not carry over to the TFT.
+* Differences between the top three candidates (0.963 / 0.968 / 0.978) are small relative to seed noise (3 seeds); the choice rule (lowest mean rMAE vs SN) was fixed in advance.
+
+## Final run (set-up `snaive` + Ensemble, 5 seeds, new target)
+
+Pooled over the 21 headline districts (single-well Beed, Latur, Nanded, Raigad, Thane excluded; Latur is tier D). Headline = **Ensemble (calibrated)**, with the TFT alone beside it.
+
+| Test set | Model | Horizon | MAE (m) | MAPE (%)* | vs persistence | vs seasonal | 80% coverage | districts < 1 |
+|---|---|---|---|---|---|---|---|---|
+| **Locked, folds 5-6** | Ensemble | t+7 | 0.323 | 4.4 | **0.865** | **0.967** | 80.6 | 21/21 |
+| | | t+14 | 0.419 | 5.7 | **0.788** | **0.952** | 81.5 | 21/21 |
+| | | t+30 | 0.593 | 7.4 | **0.664** | **0.945** | 81.2 | 20/21 |
+| | TFT alone | t+7 | 0.340 | 4.6 | 0.910 | 1.017 | 74.0 | 20/21 |
+| | | t+14 | 0.444 | 6.0 | 0.834 | 1.008 | 70.1 | 20/21 |
+| | | t+30 | 0.623 | 7.7 | 0.697 | 0.992 | 66.8 | 20/21 |
+| **All 6 folds** | Ensemble | t+7 | 0.433 | 6.0 | 0.911 | 0.975 | 80.8 | 20/21 |
+| | | t+14 | 0.610 | 8.6 | 0.850 | 0.972 | 80.3 | 20/21 |
+| | | t+30 | 0.907 | 12.9 | 0.750 | 0.958 | 77.7 | 20/21 |
+| | TFT alone | t+7 | 0.445 | 6.2 | 0.937 | 1.003 | 74.1 | 20/21 |
+| | | t+14 | 0.629 | 8.8 | 0.877 | 1.002 | 69.4 | 19/21 |
+| | | t+30 | 0.934 | 13.2 | 0.773 | 0.987 | 65.0 | 20/21 |
+
+\* MAPE with |actual| floored at 0.5 m; pooled, not a median over districts.
+
+Significance (district-cluster bootstrap, Holm-adjusted; p = 0.003 is the floor of a 2,000-draw bootstrap):
+the Ensemble beats persistence at all 3 horizons and the seasonal baseline at all 3 horizons on the locked
+test (t+30 vs seasonal p = 0.018); the **TFT alone does not beat the seasonal baseline significantly**.
+
+Dev-fold ratios (Ensemble, 0.973 / 0.966 / 0.951 vs SN) held up on the locked folds (0.967 / 0.952 / 0.945): no sign of tuning on the test set.
+
+## Honest caveats
+
+1. **The TFT alone ties the seasonal baseline** (rMAE vs SN about 1.00). The gain over SN (3-5%) comes from the ensemble. The TFT is the primary model and supplies the interval width; the Ensemble is the TFT-led final forecaster. Report both.
+2. **The best-vs-worst district gap did not shrink** (worst-5 minus best-5 mean rMAE vs persistence, dev folds: v3-fixed 0.120 / 0.186 / 0.286 -> Ensemble 0.146 / 0.243 / 0.371), because the best districts improved most. Worst districts still only tie persistence (about 0.94-0.98).
+3. **Folds 5-6 contain no monsoon**; the locked numbers are for the easier seasons. The monsoon fold 1 is the weakest (Ensemble 0.915 at t+30).
+4. **Intervals still miss low** (11-17% of targets below q10 vs 7% above q90): the actual level often ends up *deeper* than forecast, i.e. dry-season / post-monsoon **declines are under-forecast** (an earlier draft said 'under-predicts recharge rises' - that was the wrong direction). Part of the cause for the TFT-alone rows: v4.0's shrinkage pulled the residual-on-SN forecast toward no-change, removing part of the seasonal decline (fixed in v4.1).
+5. The TFT alone has weak coverage (65-74%); only the Ensemble reaches about 80%.
+6. The ranking among the top three candidates is within seed noise.
+
+*v4 section written 2026-10-03 from the Colab run's `ablations.csv`, `dev_screening_summary.csv` and `RESULTS_TO_QUOTE.csv`.*
+
+---
+
+# Appendix — model-file history (`tft_model.py` -> `tft_model_v3.py`) and what is in each file
+
+Only **two** network files exist. The architecture was changed once (v1 -> v3); v2 and v4 are
+configuration / pipeline changes around an existing network file.
+
+| Version | Network file | Code change to the network? | What differs |
+|---|---|---|---|
+| v1 | `tft_model.py` (487 lines) | original | Variable-selection network (VSN) is a Python loop: one `Linear(1 -> d_model)` and one full GRN per feature, per forward pass. q10 / q50 / q90 are three independent linear outputs and can cross (3.2% of v1 predictions did). Plain `QuantileLoss`; the masked loss was defined in the notebook. Three layers (`static_proj`, `past_proj`, `future_proj`, ~17k parameters) are defined but never used. Config: d_model 192, 3 LSTM layers, 8 heads, ~11.6M parameters. |
+| v2 | `tft_model.py` (same) | **none** | Notebook config only: d_model 64, 1 LSTM layer, 4 heads, dropout 0.25, weight decay 1e-2, encoder 60. The notebook printed "205,173 parameters"; the real count was 1,231,159 (the VSN GRN was larger than the rest of the network). |
+| v3 | `tft_model_v3.py` (475 lines) | **yes** | (1) `BatchedGRN`, `BatchedFeatureProjection`, `BatchedFeatureCompression`: the VSN math is vectorised (identical computation, batched; 6-fold run ~3 h -> 6.5 min). (2) `d_select` (8): each variable is compressed before the selector sees it, plus `grn_hidden_factor` (0.5) narrowing the per-variable GRN - the real parameter count at d_model 32 is ~222k (5.5x below v2's real size, ~50x below v1). (3) `monotone_quantiles=True`: q50 plus two softplus spreads, so q10 <= q50 <= q90 by construction. (4) the three unused projection layers are removed. (5) `MaskedQuantileLoss(quantiles, q50_boost, horizon_weights)` now lives in the model file. |
+| v4 | `tft_model_v3.py` (same) | **none** | Imported unchanged by the new `tft_v4.py`. All v4 changes are around the network: target (change from the last reading, then the residual on seasonal-naive), cleaned groundwater data, windowing / evaluation, calibration and the ensemble. Details in the v4 section above. |
+
+Unchanged in every version: the TFT structure itself - static covariate encoder, LSTM encoder and
+decoder with gated skip connections, static enrichment, interpretable multi-head attention, the
+position-wise GRN and the quantile head on decoder positions.
+
+Pipeline files by version (training / evaluation code, not network code):
+
+| Version | Notebook / code | Key characteristics |
+|---|---|---|
+| v1 | `09_tft_colab_production.ipynb` (= `09_tft_colab.ipynb`) | absolute-level target, stride 1, in-sample conformal, no baselines, windows keyed by decoder-end date |
+| v2 | `09_tft_colab_production_v2.ipynb` | delta-from-anchor target, panel + anomaly + drift groundwater filter, stride 7, MASE vs persistence |
+| v3 | `09_tft_colab_production_v3.ipynb` + `tft_model_v3.py` | per-horizon scaling, shrinkage toward persistence, honest calibration block, monotone head, baseline ladder, significance tests, 3 seeds; still windows keyed by decoder-end date |
+| v4 | `09_tft_colab_production_v4.ipynb` + `tft_v4.py` (+ `run_v4.py`, `tune_snaive.py`) | issue-date windows, seasonal-naive baseline and residual target, rebuilt groundwater target, season-weighted adaptive conformal, ensemble, locked folds 5-6 |
+
+*Appendix verified against the code on 2026-10-03.*
+
+---
+
+# v4.1 (built 2026-10-26, Colab T4 run 2026-10-29) — improvement run + simple results
+
+Notebook `09_tft_colab_production_v4_1.ipynb`, pipeline `tft_v4.py` v4.5, guide `RESULTS_GUIDE.md`.
+The v4 notebook is unchanged.
+
+What v4.1 changes:
+
+| # | Change | Why |
+|---|---|---|
+| 1 | The TFT's shrinkage pulls toward **seasonal-naive** instead of no-change (residual-on-SN target) | v4.0 shrank the seasonal part of the forecast too, biasing it high (TFT-alone rows only; the Ensemble uses the raw TFT) |
+| 2 | **Stronger LightGBM** (`tab_features='v2'`): + day-of-year, SN change, change scale, level and year-on-year features; stride-1 windows; the cal-block model is trained to the end of the early-stopping block and the test model **up to the day before the test period** | LightGBM is the strongest single component but could not see the time of year and was trained 3 months stale |
+| 3 | **Refit pass** (`refit=True`): each network is retrained on train + early-stopping windows for pass 1's best epoch, replaying pass 1's learning-rate path | Networks stopped learning 3 months before each test period |
+| 4 | Candidates: stride-1 network sampling; `d_model` 48 | Not tested before |
+| 5 | Sweeps of per-district stacking strength and interval adaptivity (pre-registered pick rules) | Evenness across districts; interval tails |
+| 6 | 10 seeds in the final run | Seed averaging |
+| 7 | Networks, tabular models and post-processing cached separately | LightGBM / post-processing changes never retrain the networks; 7 candidates need only 3 network trainings |
+| 8 | **Simple v1-style outputs** for all 24 districts, for both the Ensemble and the TFT (`export_simple`, `export_shared`), plus Beed/Latur "no usable data" rows, training curves, VSN importance, optional v1 comparison | Results in the familiar format |
+
+Selection uses dev folds 1-4 only; folds 5-6 were viewed once in v4.0, which is stated in the write-up.
+
+## v4.1 results (Colab T4, 2026-10-29, 54 min)
+
+Files: `result zips/tft_v4_1_outputs.zip`, extracted to `result zips/v4_1/` (guide: `RESULTS_GUIDE.md`).
+Pipeline 4.5, data `master_dataset_v4target.csv` (md5 e035dc26), 10 seeds.
+
+### How the set-up was chosen (dev folds 1-4, 3 seeds, pre-registered rule)
+Rule: the lowest mean Ensemble error ÷ seasonal-naive error. A simpler candidate wins if it is within 0.002.
+
+| Candidate | What it adds | Ensemble mean vs seasonal | TFT mean vs seasonal |
+|---|---|---|---|
+| `ref` | v4 set-up + shrink toward seasonal-naive | 0.963 | 0.979 |
+| `tab2` | + new LightGBM | 0.949 | 0.979 |
+| `refit` | + refit pass | 0.969 | 0.990 |
+| `tab2_refit` | + new LightGBM + refit | 0.946 | 0.990 |
+| **`s1_tab2`** | **+ new LightGBM + stride-1 network sampling** | **0.939 (chosen)** | **0.982** |
+| `s1_tab2_refit` | + all three | 0.954 | 0.992 |
+| `d48_tab2_refit` | bigger network (d_model 48) | 0.961 | 1.034 |
+
+What the screening shows:
+- **The new LightGBM helped most.** It took the Ensemble from 0.963 to 0.949.
+- **Stride-1 sampling helped further** (0.939). Each epoch draws 1/7 of all daily windows, so the cost is the same as stride 7.
+- **The refit pass did not help.** It made the TFT worse (0.990 vs 0.979) and did not improve the Ensemble, so the chosen set-up uses pass 1.
+- **The bigger network was worse.**
+- **Shrinking toward seasonal-naive (`ref`) improved the TFT alone at t+30**, from 0.976 to 0.951 vs seasonal, compared with the v4 set-up in Table B.
+
+Post-processing sweeps on `s1_tab2`, using the same rule:
+- **Stacking strength.** `stack_prior_n` 100 / 250 / 500 / 1000 gave 0.943 / 0.939 / 0.939 / 0.939, so the default of 500 was kept.
+- **Interval adaptivity.** `aci_gamma` 0.005 / 0.01 / 0.02 / 0.05 leaves the medians unchanged.
+  - Ensemble t+30 coverage was 78.4 / 78.4 / 75.0 / 68.1%.
+  - The rule keeps 0.01. 0.005 would have given a slightly better interval score (4.57 vs 4.64).
+
+### Final run (all 6 folds, 10 seeds; 21 headline districts)
+
+| Test set | Model | Horizon | MAE (m) | vs no-change | vs seasonal | Coverage | below q10 / above q90 | districts beating no-change |
+|---|---|---|---|---|---|---|---|---|
+| **Locked 5-6** | **Ensemble** | t+7 | 0.314 | **0.839** | **0.938** | 81.1 | 10.7 / 8.2 | 21/21 |
+| | | t+14 | 0.406 | **0.763** | **0.922** | 80.1 | 12.7 / 7.1 | 21/21 |
+| | | t+30 | 0.550 | **0.616** | **0.877** | 80.0 | 14.8 / 5.2 | 21/21 |
+| | TFT alone | t+7 | 0.326 | 0.872 | 0.976 | 74.2 | 14.3 / 11.5 | 20/21 |
+| | | t+14 | 0.428 | 0.803 | 0.971 | 70.0 | 18.8 / 11.2 | 20/21 |
+| | | t+30 | 0.602 | 0.675 | 0.960 | 65.7 | 25.1 / 9.2 | 20/21 |
+| **All 6 folds** | **Ensemble** | t+7 | 0.429 | 0.903 | 0.967 | 79.9 | 10.7 / 9.5 | 21/21 |
+| | | t+14 | 0.595 | 0.830 | 0.949 | 78.4 | 12.8 / 8.8 | 20/21 |
+| | | t+30 | 0.861 | 0.712 | 0.909 | 78.1 | 13.2 / 8.6 | 20/21 |
+| | TFT alone | t+7 | 0.444 | 0.935 | 1.000 | 73.0 | 14.1 / 12.9 | 19/21 |
+| | | t+14 | 0.629 | 0.876 | 1.002 | 68.6 | 17.2 / 14.2 | 19/21 |
+| | | t+30 | 0.924 | 0.764 | 0.976 | 64.3 | 20.9 / 14.8 | 20/21 |
+
+**Significance** (district-cluster bootstrap and Diebold–Mariano, Holm-adjusted):
+- **The Ensemble beats no-change and seasonal-naive at all three horizons on the locked test**, with p = 0.003, the floor of the bootstrap. Its locked 95% confidence interval vs seasonal at t+30 is 0.815–0.927.
+- **The TFT alone beats seasonal-naive on the locked test only at t+7** (p = 0.003). At t+14 and t+30 it does not (p = 0.063). Over all 6 folds it does not beat seasonal-naive at t+7 or t+14.
+
+**Dev vs locked folds** (no sign of overfitting the selection): the Ensemble scored 0.958 / 0.945 / 0.913 vs seasonal on the dev folds and **0.938 / 0.922 / 0.877** on the locked folds.
+
+### v4.0 -> v4.1 (Ensemble, calibrated)
+
+| Test set | Horizon | MAE (m) | vs no-change | vs seasonal | Coverage | Interval width (m) |
+|---|---|---|---|---|---|---|
+| Locked 5-6 | t+7 | 0.323 -> **0.314** | 0.865 -> **0.839** | 0.967 -> **0.938** | 80.6 -> 81.1 | 1.15 -> **1.10** |
+| | t+14 | 0.419 -> **0.406** | 0.788 -> **0.763** | 0.952 -> **0.922** | 81.5 -> 80.1 | 1.60 -> **1.52** |
+| | t+30 | 0.593 -> **0.550** | 0.664 -> **0.616** | 0.945 -> **0.877** | 81.2 -> 80.0 | 2.45 -> **2.22** |
+| All 6 folds | t+7 | 0.433 -> **0.429** | 0.911 -> **0.903** | 0.975 -> **0.967** | 80.8 -> 79.9 | 1.63 -> **1.52** |
+| | t+14 | 0.610 -> **0.595** | 0.850 -> **0.830** | 0.972 -> **0.949** | 80.3 -> 78.4 | 2.74 -> **2.50** |
+| | t+30 | 0.907 -> **0.861** | 0.750 -> **0.712** | 0.958 -> **0.909** | 77.7 -> 78.1 | 4.15 -> **3.62** |
+
+- **Accuracy and sharpness improved everywhere.** Every MAE and ratio is lower and every interval is narrower, while coverage stays close to 80%.
+- **The gain grows with horizon.** At t+30, MAE fell 7% on the locked test and 5% over all folds.
+- **The TFT alone also improved on the locked test:** vs seasonal went from 1.017 / 1.008 / 0.992 to 0.976 / 0.971 / 0.960.
+
+### Per season (Ensemble, all 6 folds, `simple/ensemble/ensemble_metrics_per_season.csv`)
+
+| Season (folds) | vs no-change t+7 / t+14 / t+30 | vs seasonal t+7 / t+14 / t+30 |
+|---|---|---|
+| Monsoon (1, 4) | 0.953 / 0.882 / 0.751 | 0.979 / 0.960 / 0.902 |
+| Post-monsoon (2, 5) | 0.857 / 0.777 / 0.659 | 0.936 / 0.912 / 0.850 |
+| Dry (3, 6) | 0.871 / 0.794 / 0.691 | 0.969 / 0.954 / 0.955 |
+
+- **The monsoon is still the hardest season at t+7 and t+14**, because future rain is unknown. At t+30, though, the monsoon gain over seasonal-naive (0.902) is larger than the dry season's (0.955).
+- **Fold 1 (monsoon 2024) is the weakest fold:** 0.973 / 0.953 / 0.924 vs no-change.
+
+### Per district (Ensemble MASE, all 6 folds, `simple/ensemble/ensemble_mase_by_district.csv`)
+
+**Best at t+30:**
+
+| District | MASE |
+|---|---|
+| Nagpur | 0.527 |
+| Nandurbar | 0.541 |
+| Amravati | 0.546 |
+| Yavatmal | 0.576 |
+| Wardha | 0.592 |
+
+**Weakest at t+30:**
+
+| District | MASE | Note |
+|---|---|---|
+| Pune | 1.128 | the only district that loses to no-change, here and at t+14 (1.050); tier C |
+| Nashik | 0.883 | |
+| Parbhani | 0.883 | |
+| Aurangabad | 0.867 | |
+| Dhule | 0.864 | |
+
+**On the locked test, all 21 headline districts beat no-change at every horizon.** In v4, 20/21 did at t+30.
+
+**The gap between the best and worst districts widened again:**
+
+| Test set | v4 worst-5 minus best-5 MASE (t+7 / t+14 / t+30) | v4.1 |
+|---|---|---|
+| All folds | 0.144 / 0.236 / 0.343 | 0.175 / 0.290 / 0.368 |
+| Locked | 0.237 / 0.308 / 0.390 | 0.264 / 0.336 / 0.457 |
+
+The best districts improved most, so the gap grew. The worst five now average 0.87–0.93 on the locked test.
+
+### What drives the v4.1 gain: LightGBM, not the network
+
+Average stacking weights over districts (`FINAL_s1_tab2/stack_weights.csv`):
+
+| Horizon | No-change | Seasonal-naive | TFT | LightGBM |
+|---|---|---|---|---|
+| t+7 | 0.24 | 0.03 | 0.29 | 0.45 |
+| t+14 | 0.13 | 0.03 | 0.30 | 0.54 |
+| t+30 | 0.12 | 0.04 | 0.19 | 0.64 |
+
+- **LightGBM alone, with the new features, is about as accurate as the Ensemble:**
+  - locked test: 0.833 / 0.770 / 0.612 vs no-change, against the Ensemble's 0.839 / 0.763 / 0.616;
+  - all folds: 0.903 / 0.832 / 0.703, against 0.903 / 0.830 / 0.712.
+- **But LightGBM's intervals are badly too narrow** (61-75% coverage). The Ensemble keeps LightGBM's accuracy and adds honest intervals, which are the TFT's spread around the blended median.
+- **The TFT's share is 20-30%** and its spread sets the interval width.
+
+So, honestly:
+- The Ensemble is the forecaster to quote.
+- Its point accuracy now comes mainly from the gradient-boosted model fed with seasonal features.
+- The TFT mainly contributes the uncertainty (quantile) estimate and a 20-30% share of the median.
+
+### Interval calibration hurts the TFT (found in this run)
+
+Computed from `FINAL_s1_tab2/predictions_daily.csv` (21 headline districts). The interval score is the Winkler score for the 80% interval: width plus 10 × the size of each miss. Lower is better.
+
+| Model | Rows | Dev folds 1-4: coverage / interval score (t+7, t+14, t+30) | Locked 5-6: coverage / interval score |
+|---|---|---|---|
+| TFT | `TFT` (λ only, no conformal) | 80 / 77 / 71 · 2.82 / 3.98 / 5.72 | 80 / 78 / 77 · 1.78 / 2.21 / 2.89 |
+| TFT | `TFT (calibrated)` | 72 / 68 / 64 · 3.07 / 4.67 / 6.87 | 74 / 70 / 66 · 2.01 / 2.49 / 3.56 |
+| Ensemble | `Ensemble` (no conformal) | 81 / 78 / 74 · 2.77 / 3.83 / 5.44 | 82 / 81 / 80 · 1.73 / 2.12 / 2.74 |
+| Ensemble | `Ensemble (calibrated)` | 79 / 78 / 77 · 2.74 / 4.32 / 6.55 | 81 / 80 / 80 · 1.68 / 2.06 / 3.06 |
+
+**For the TFT, the conformal + ACI step is worse in every fold and at every horizon.**
+- It shifts the intervals and mostly narrows them.
+- It raises the misses below q10 (on the dev folds, from 8-9% to 14-19%).
+- It cuts coverage by 6-12 points, to 64-74%.
+
+So **the TFT-alone's "65-74% coverage" reported since v4 is caused by the calibration step, not by the network.** The network's own quantiles cover 77-80% on the locked test.
+
+**For the Ensemble the step is mixed.**
+- At t+30 it lifts dev-fold coverage from 74% to 77%, but at the cost of much wider intervals (mean width 4.3 m vs 2.8 m).
+- On the dev folds its interval score is worse at t+14 and t+30.
+
+**Evidence on the cause (not yet confirmed):** in the `aci_gamma` sweep, faster adaptation lowers coverage for *both* models. That points at the adaptive (ACI) update, which:
+- is fed about 10 highly correlated daily outcomes per anchor;
+- is clipped at alpha ≥ 0.01;
+- may be working from a cal-block pool whose TFT errors are smaller than the test errors.
+
+**What to quote now.** This decision rests on the dev folds alone:
+- for the TFT alone, quote the un-calibrated `TFT` rows;
+- for the Ensemble, keep `Ensemble (calibrated)`.
+
+**Fix for a v4.2 (post-processing only, no retraining needed):**
+- add `calib_mode='none'` per model;
+- feed ACI one outcome per anchor and band;
+- choose calibration on/off per model and horizon on dev folds by interval score.
+
+### Caveats for the write-up
+1. Folds 5-6 were viewed once before, in v4.0. v4.1 was chosen on folds 1-4 only, and the dev-to-locked ratios held up.
+2. Folds 5-6 contain no monsoon.
+3. Most of the v4.1 accuracy gain is from LightGBM, as described above. Report the TFT alone alongside it.
+4. The district gap widened, and Pune still loses to no-change at t+14 and t+30 over all folds.
+5. Intervals still miss low more often than high (Ensemble, locked t+30: 14.8% below q10, 5.2% above q90). Declines are still under-forecast at long horizons.
+6. The refit pass and the d_model-48 network did not help. Both are recorded as negative results.
+
+*v4.1 results section written 2026-10-29 from `RUN_SUMMARY.md`, `RESULTS_TO_QUOTE.csv`, `v4_vs_v4_1.csv`, `dev_screening_summary.csv`, `post_sweep_summary.csv`, `FINAL_s1_tab2*/` and `simple/`.*

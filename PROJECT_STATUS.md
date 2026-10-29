@@ -739,6 +739,37 @@ capacity the data can't support yet. Revisit after more stations are collected f
 or after a cheaper first step — partitioning districts by dynamic similarity (correlation of their
 Δ-series) rather than pure geographic adjacency. Full citation: `Models/TFT/V3_PLAN.md` §1 (M13).
 
-**Current baseline to beat (production v3, real GPU run):** MASE 0.958 / 0.909 / 0.834 at
-t+7/t+14/t+30, all statistically significant vs. persistence (Diebold–Mariano p < 0.05). Full
-numbers: `Models/TFT/PROD_V1_vs_V2.md` §9.
+**Current baseline to beat: production v4.1, Colab T4, 2026-10-29.** Results are in `result zips/v4_1/`.
+
+Locked test (folds 5–6), Ensemble, at t+7 / t+14 / t+30:
+- error ÷ persistence error: 0.839 / 0.763 / 0.616;
+- error ÷ seasonal-naive error: 0.938 / 0.922 / 0.877;
+- 80% interval coverage 80–81%;
+- all significant (district-cluster bootstrap and Diebold–Mariano, Holm-adjusted, p = 0.003).
+
+All 6 folds: 0.903 / 0.830 / 0.712.
+
+Chosen set-up `s1_tab2`:
+- LightGBM with seasonal features, stride 1, trained up to the day before each test period;
+- stride-1 network sampling;
+- shrinkage toward seasonal-naive;
+- 10 seeds.
+
+The refit pass and d_model 48 did not help. The TFT alone beats seasonal-naive on the locked test by 2–4% (significant only at t+7) and ties it over all folds. Most of the gain is from LightGBM.
+
+Open issues:
+- the best-vs-worst district gap widened again;
+- Pune still loses to persistence at t+14 and t+30;
+- folds 5–6 contain no monsoon;
+- the conformal + ACI step makes the TFT's intervals worse: its own quantiles cover 77–80% on the locked test, the calibrated ones only 66–74%. The fix is post-processing only, planned for v4.2.
+
+Full numbers: `Models/TFT/PROD_V1_vs_V2.md` (§0 and the v4.1 section).
+
+Superseded:
+- v4.0: locked 0.865 / 0.788 / 0.664;
+- production v3: MASE 0.958 / 0.909 / 0.834; its evaluation had a window-end-date bug.
+
+**v4 pipeline files:** `Data Preprocessing/preprocess_groundwater.py` (rebuilt target),
+`audit_groundwater_target.py`, `Models/TFT/tft_v4.py`, `run_v4.py`, `tune_snaive.py`,
+`09_tft_colab_production_v4.ipynb`, `09_tft_colab_production_v4_1.ipynb` (current), `RESULTS_GUIDE.md`,
+dataset `master_dataset_v4target.csv`.

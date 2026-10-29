@@ -4,12 +4,36 @@
 **Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `PROJECT_STATUS.md` §1 for per-source ranges.
 **Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
 
-> ## Current status (2026-08-15)
-> The Temporal Fusion Transformer (§4.2) is implemented, trained, and evaluated — this is no longer
-> a proposal. **For current results, go straight to `Models/TFT/PROD_V1_vs_V2.md`.** Headline: MASE
-> 0.958 / 0.909 / 0.834 at t+7/t+14/t+30 (< 1 beats a naive "nothing changes" forecast), all
-> statistically significant (Diebold–Mariano p < 0.05 at every horizon), evaluated on a 6-fold
-> walk-forward split with a persistence, climatology, ridge and LightGBM baseline ladder alongside it.
+> ## Current status (2026-10-29) — v4.1
+> The Temporal Fusion Transformer (§4.2) is implemented, trained and evaluated, so this is no longer a
+> proposal. **For current results, go straight to `Models/TFT/PROD_V1_vs_V2.md`: §0 has the scores, and the
+> v4.1 section is at the end.**
+>
+> **What v4.1 is:** the rebuilt groundwater target, corrected evaluation and seasonal-naive baseline, plus an
+> ensemble of TFT + LightGBM + seasonal-naive + no-change.
+>
+> **Headline (locked test, folds 5–6, Oct 2025 → Jun 2026, Ensemble), at t+7 / t+14 / t+30, < 1 = better:**
+> - error ÷ "nothing changes" error: **0.839 / 0.763 / 0.616**;
+> - error ÷ seasonal-naive error: **0.938 / 0.922 / 0.877**;
+> - all six comparisons significant (p = 0.003); 80% intervals cover 80–81%.
+>
+> **Over all 6 folds:** 0.903 / 0.830 / 0.712.
+>
+> **The TFT alone and LightGBM:**
+> - On the locked test the TFT alone beats seasonal-naive by 2–4%, significant only at t+7.
+> - Over all folds the TFT alone ties seasonal-naive.
+> - Most of the v4.1 gain comes from the improved LightGBM, which is about as accurate as the Ensemble but has
+>   intervals that are too narrow (61–75% coverage).
+>
+> **Run it:** `Models/TFT/09_tft_colab_production_v4_1.ipynb` with `master_dataset_v4target.csv`. Results
+> are in `result zips/v4_1/`, and `Models/TFT/RESULTS_GUIDE.md` explains every file.
+>
+> **Superseded:**
+> - v4.0: locked 0.865 / 0.788 / 0.664;
+> - v3: MASE 0.958 / 0.909 / 0.834;
+> - `Latest results/` is the v1 run.
+>
+> **Scores of every version (v1 → v4.1) in one place: `Models/TFT/PROD_V1_vs_V2.md` §0.**
 >
 > §4.2 below describes the **actual implemented architecture** (delta-target framing, data tiers,
 > shrinkage toward persistence, vectorised variable-selection networks). §4.3 (spatial GAT layer) and
@@ -677,9 +701,19 @@ MajorProject-Jalvani/
 │
 ├── Models/TFT/
 │   ├── tft_model_v3.py              # Current TFT implementation (vectorised VSN, monotone quantiles)
-│   ├── 09_tft_colab_production_v3.ipynb  # Current training/eval notebook — walk-forward, 3-seed, baseline ladder
+│   ├── 09_tft_colab_production_v4_1.ipynb # CURRENT notebook (v4.1) — improvements + simple per-district results
+│   ├── RESULTS_GUIDE.md                  # what every file in the results zip is and how to analyse it
+│   ├── 09_tft_colab_production_v4.ipynb  # v4.0 notebook — uses tft_v4.py, master_dataset_v4target.csv
+│   ├── tft_v4.py                         # v4 pipeline: fixed evaluation, seasonal-naive, calibration, ensemble
+│   ├── tft_model_v3.py                   # the network used by v3 AND v4 (only architecture change since v1; see PROD_V1_vs_V2.md appendix)
+│   ├── tft_model.py                      # original network (v1/v2)
+│   ├── 09_tft_colab_production_v3.ipynb  # v3 notebook — walk-forward, 3-seed, baseline ladder (superseded)
 │   ├── PROD_V1_vs_V2.md             # Full v1 -> v2 -> v3 results, diagnosis, and design rationale
 │   └── V3_PLAN.md                   # v2 -> v3 audit findings and the fix for each
+│
+├── result zips/
+│   ├── tft_v4_1_outputs.zip         # v4.1 Colab results (2026-10-29)
+│   └── v4_1/                        # the same, extracted (read with Models/TFT/RESULTS_GUIDE.md)
 │
 ├── PROJECT_STATUS.md                # Data collection and preprocessing log
 ├── TFT_IMPROVEMENT_PLAN.md          # Windowing/evaluation rewrite diagnosis (repo root)
