@@ -1,0 +1,110 @@
+Master: (32526, 63) | 26 districts | 2023-01-01 -> 2026-06-04
+Past=45 Future=7 Static=13+2cat | modelling 25 districts (dropped tier ['D']: ['Latur'])
+Device: cpu | config key 2d9d7d2758 | tag v3fixed_dev | mode dev | seeds [42, 1337, 2026]
+[fold1_monsoon2024] fit<= 2024-03-30 | es 2024-03-31..2024-05-24 | cal 2024-05-25..2024-06-30 | test 2024-07-01..2024-09-30 | windows {'fold': 'fold1_monsoon2024', 'train': 932, 'es': 1041, 'cal': 817, 'test': 3015}
+    [fold1_monsoon2024|s42] stopped ep 16, best val 0.5837 at ep 6
+    [fold1_monsoon2024|s1337] stopped ep 18, best val 0.5838 at ep 8
+    [fold1_monsoon2024|s2026] stopped ep 17, best val 0.6216 at ep 7
+[fold1_monsoon2024] done in 651s | TFT rMAE_P {'t+7': 1.001, 't+14': 0.975, 't+30': 0.918} | rMAE_SN {'t+7': 0.907, 't+14': 0.848, 't+30': 0.819}
+[fold2_postmonsoon2024] fit<= 2024-06-30 | es 2024-07-01..2024-08-24 | cal 2024-08-25..2024-09-30 | test 2024-10-01..2024-12-31 | windows {'fold': 'fold2_postmonsoon2024', 'train': 1257, 'es': 1041, 'cal': 816, 'test': 2974}
+    [fold2_postmonsoon2024|s42] stopped ep 16, best val 1.2628 at ep 6
+    [fold2_postmonsoon2024|s1337] stopped ep 17, best val 1.2463 at ep 7
+    [fold2_postmonsoon2024|s2026] stopped ep 17, best val 1.2963 at ep 7
+[fold2_postmonsoon2024] done in 795s | TFT rMAE_P {'t+7': 0.982, 't+14': 0.969, 't+30': 0.978} | rMAE_SN {'t+7': 0.973, 't+14': 0.955, 't+30': 1.013}
+[fold3_dry2025] fit<= 2024-09-30 | es 2024-10-01..2024-11-24 | cal 2024-11-25..2024-12-31 | test 2025-01-01..2025-05-31 | windows {'fold': 'fold3_dry2025', 'train': 1582, 'es': 1042, 'cal': 800, 'test': 4295}
+    [fold3_dry2025|s42] stopped ep 19, best val 0.3947 at ep 9
+    [fold3_dry2025|s1337] stopped ep 39, best val 0.4001 at ep 29
+    [fold3_dry2025|s2026] stopped ep 17, best val 0.4071 at ep 7
+[fold3_dry2025] done in 1560s | TFT rMAE_P {'t+7': 0.95, 't+14': 0.904, 't+30': 0.812} | rMAE_SN {'t+7': 0.946, 't+14': 0.93, 't+30': 0.896}
+[fold4_monsoon2025] fit<= 2025-02-28 | es 2025-03-01..2025-04-24 | cal 2025-04-25..2025-05-31 | test 2025-06-01..2025-09-30 | windows {'fold': 'fold4_monsoon2025', 'train': 2130, 'es': 1020, 'cal': 755, 'test': 3543}
+    [fold4_monsoon2025|s42] stopped ep 23, best val 0.4302 at ep 13
+    [fold4_monsoon2025|s1337] stopped ep 21, best val 0.4082 at ep 11
+    [fold4_monsoon2025|s2026] stopped ep 14, best val 0.4307 at ep 4
+[fold4_monsoon2025] done in 2085s | TFT rMAE_P {'t+7': 0.954, 't+14': 0.907, 't+30': 0.78} | rMAE_SN {'t+7': 0.949, 't+14': 0.984, 't+30': 1.022}
+
+====================================================================================================
+HEADLINE — TFT, dev folds, 21 districts, daily target
+====================================================================================================
+         MAE (m)  RMSE (m)  Persist MAE  SN MAE  rMAE_P  rMAE_SN  Skill %  MAPE (%)     NSE     n
+Horizon                                                                                          
+t+7       0.5611    1.0803       0.5792  0.5963  0.9688   0.9410   6.3321   10.1894  0.8600  9174
+t+14      0.8166    1.4927       0.8742  0.8855  0.9342   0.9222  12.7027   14.6609  0.7331  9153
+t+30      1.2734    2.2317       1.4783  1.3909  0.8613   0.9155  21.3277   22.9647  0.4076  9149
+
+BASELINE LADDER (pooled rMAE vs persistence | vs seasonal-naive)
+Horizon             t+7   t+14   t+30
+model                                
+Seasonal-naive    1.030  1.013  0.941
+Ridge             1.095  1.128  1.087
+LightGBM          0.958  0.929  0.896
+TFT (raw)         1.048  0.967  0.863
+TFT               0.969  0.934  0.861
+TFT (calibrated)  0.969  0.934  0.861
+Horizon             t+7   t+14   t+30
+model                                
+Seasonal-naive    1.000  1.000  1.000
+Ridge             1.064  1.113  1.155
+LightGBM          0.930  0.918  0.952
+TFT (raw)         1.018  0.954  0.918
+TFT               0.941  0.922  0.916
+TFT (calibrated)  0.941  0.922  0.916
+
+PER FOLD (TFT rMAE_P / rMAE_SN)
+Horizon                  t+7   t+14   t+30
+fold                                      
+fold1_monsoon2024      1.001  0.975  0.918
+fold2_postmonsoon2024  0.982  0.969  0.978
+fold3_dry2025          0.950  0.904  0.812
+fold4_monsoon2025      0.954  0.907  0.780
+Horizon                  t+7   t+14   t+30
+fold                                      
+fold1_monsoon2024      0.907  0.848  0.819
+fold2_postmonsoon2024  0.973  0.955  1.013
+fold3_dry2025          0.946  0.930  0.896
+fold4_monsoon2025      0.949  0.984  1.022
+
+DISTRICT EVENNESS (per-district rMAE_P)
+      best5  worst5    gap  n_lt1     n  median
+t+14  0.863   1.024  0.160   18.0  21.0   0.944
+t+30  0.734   1.013  0.280   19.0  21.0   0.872
+t+7   0.934   1.014  0.081   16.0  21.0   0.987
+
+BY TIER
+              median rMAE_P  n  n<1
+tier Horizon                       
+A    t+14             0.924  9    9
+     t+30             0.855  9    9
+     t+7              0.979  9    9
+B    t+14             0.978  5    4
+     t+30             0.958  5    5
+     t+7              0.991  5    3
+C    t+14             0.960  7    5
+     t+30             0.883  7    5
+     t+7              0.971  7    4
+
+SIGNIFICANCE (district-cluster bootstrap + DM, Holm-adjusted)
+horizon          vs  pooled rMAE         95% CI   p_boot  DM stat         p_DM  p_boot_holm    p_DM_holm
+    t+7 persistence       0.9688 [0.949, 0.986] 0.000500   -4.750 2.037774e-06     0.002999 8.151095e-06
+    t+7      snaive       0.9410 [0.884, 0.999] 0.024488   -4.459 8.220127e-06     0.073463 2.466038e-05
+   t+14 persistence       0.9342 [0.897, 0.969] 0.000500   -4.921 8.612707e-07     0.002999 4.306354e-06
+   t+14      snaive       0.9222 [0.846, 1.009] 0.047476   -3.559 3.724402e-04     0.094953 7.448804e-04
+   t+30 persistence       0.8613 [0.784, 0.935] 0.000500   -5.895 3.755455e-09     0.002999 2.253273e-08
+   t+30      snaive       0.9155 [0.818, 1.033] 0.091954   -2.394 1.668077e-02     0.094953 1.668077e-02
+
+COVERAGE — TFT (calibrated), honest (cal block only)
+         Cov (%)  Below q10 (%)  Above q90 (%)  Width (m)
+Horizon                                                  
+t+7      73.8173        14.8790        11.3800     2.3593
+t+14     70.3157        15.4594        15.8309     2.9981
+t+30     64.2584        16.1111        20.4613     3.5245
+
+WEEKLY-MEAN TARGET
+         MAE (m)  rMAE_P  rMAE_SN     n
+Horizon                                
+t+7       0.3725  0.9755   0.9542  8839
+t+14      0.6635  0.9284   0.9065  8795
+t+30      1.1427  0.8548   0.9035  8801
+
+Outputs -> C:\Users\Nayak\Desktop\Major Project\Models\TFT\outputs\v4\v3fixed_dev   | ablation row appended -> C:\Users\Nayak\Desktop\Major Project\Models\TFT\outputs\v4\ablations.csv
+
+Total: 84.8 min
