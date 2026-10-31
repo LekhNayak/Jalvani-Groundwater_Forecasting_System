@@ -39,6 +39,15 @@ v4.2 switches (post-processing only; the defaults reproduce v4.1 exactly):
                    pool than both seasonal-naive alone and the TFT alone, use the better of the two
   interval_choice  {model: {horizon: 'raw' | 'calibrated'}}: which interval is REPORTED for that
                    model and horizon (missing = 'calibrated', as in v4.1). Both are always computed.
+
+v4.3 switches (post-processing only; the defaults reproduce v4.2 exactly):
+  lgbm_guard       per (district, horizon): if LightGBM alone is worse than seasonal-naive alone on the
+                   district's own pool by more than lgbm_guard_margin, that district's stack is refitted
+                   without LightGBM (v4.2's stack_guard replaced the whole blend and was rejected)
+  interval_width_cap  a calibrated interval may reach at most this many times the raw distance from the
+                   median on either side (removes rare 90-108 m intervals)
+and the operational forecast: forecast_latest() issues a forecast from the last groundwater reading with
+exactly the procedure of an evaluated fold; export_dashboard() writes the files the dashboards read.
 """
 
 from __future__ import annotations
@@ -93,7 +102,7 @@ DEFAULT_DATA = (REPO / "data" / "master" if REPO else HERE) / "master_dataset_v4
 DEFAULT_OUT = REPO / "04_results" / "tft_runs" if REPO else HERE / "outputs" / "v4"
 # Part of every cache key — bump whenever code that changes fold results is edited,
 # so a cached fold computed by older code can never be silently reused.
-PIPELINE_VERSION = "4.6"
+PIPELINE_VERSION = "4.7"
 
 # ─── Folds ────────────────────────────────────────────────────────────────────
 FOLDS = [
@@ -216,6 +225,11 @@ class Config:
     stack_guard: bool = False          # fall back to the better of SN / TFT where the stack loses to both
     stack_guard_min_n: float = 50.0    # weighted pool rows a district needs before the guard may act
     interval_choice: dict = field(default_factory=dict)   # {model: {horizon: 'raw'|'calibrated'}}
+    # ── v4.3 ── post-processing only (defaults = v4.2)
+    lgbm_guard: bool = False           # refit a district's stack without LightGBM where it loses to SN
+    lgbm_guard_margin: float = 0.20    # ... by more than this (LightGBM MAE > (1 + margin) * SN MAE)
+    lgbm_guard_min_n: float = 50.0     # weighted pool rows a district needs before the guard may act
+    interval_width_cap: float = None   # calibrated interval <= cap * raw distance from the median, per side
     only_folds: list = field(default_factory=list)   # smoke tests: restrict to these fold names
 
     # fields that do not change per-fold results (excluded from the cache key)
@@ -246,9 +260,41 @@ def _api(s, k):
     return out
 
 
-def load_data(cfg: Config, verbose=True):
-    """Cells 5-7 of v3: load, interpolate encoder series, engineer features, define roles."""
+SEASON_NAME = {12: "winter", 1: "winter", 2: "winter", 3: "summer", 4: "summer", 5: "summer",
+               6: "monsoon", 7: "monsoon", 8: "monsoon", 9: "monsoon", 10: "post_monsoon", 11: "post_monsoon"}
+# per-district columns that do not change day to day (copied onto future calendar rows)
+_STATIC_MASTER = ["district_id", "aquifer_category_id", "aquifer_type_id", "well_depth_m", "n_stations",
+                  "low_station_flag", "data_tier", "data_tier_v3"] + SOIL_COLS + CGWB_COLS
+
+
+def _extend_calendar(df, days):
+    """Append `days` future calendar rows per district after the master's last date: calendar fields as in
+    02_preprocessing/merge_master.py, static fields copied, groundwater unobserved, covariates missing.
+    Only the decoder of the newest windows sees these rows (as known-future calendar inputs)."""
+    rows = []
+    for dist, g in df.groupby("district", sort=False):
+        last = g.sort_values("date").iloc[-1]
+        dates = pd.date_range(last["date"] + pd.Timedelta(days=1), periods=days, freq="D")
+        fut = pd.DataFrame({"district": dist, "date": dates})
+        for c in _STATIC_MASTER:
+            if c in df.columns:
+                fut[c] = last[c]
+        rows.append(fut)
+    fut = pd.concat(rows, ignore_index=True)
+    fut["month"] = fut["date"].dt.month
+    fut["day_of_year"] = fut["date"].dt.dayofyear
+    fut["is_monsoon"] = fut["month"].isin([6, 7, 8, 9]).astype(int)
+    fut["season"] = fut["month"].map(SEASON_NAME)
+    fut[OBS_COL] = 0
+    return pd.concat([df, fut], ignore_index=True).sort_values(["district", "date"]).reset_index(drop=True)
+
+
+def load_data(cfg: Config, verbose=True, extend_days=0):
+    """Cells 5-7 of v3: load, interpolate encoder series, engineer features, define roles.
+    extend_days > 0 appends that many future calendar rows per district (operational forecast only)."""
     df = pd.read_csv(cfg.data_path, parse_dates=["date"]).sort_values(["district", "date"]).reset_index(drop=True)
+    if extend_days:
+        df = _extend_calendar(df, extend_days)
     if verbose:
         print(f"Master: {df.shape} | {df['district'].nunique()} districts | "
               f"{df['date'].min().date()} -> {df['date'].max().date()}")
@@ -841,9 +887,10 @@ SEASON_OF_MONTH = {12: "winter", 1: "winter", 2: "winter", 3: "summer", 4: "summ
                    6: "monsoon", 7: "monsoon", 8: "monsoon", 9: "monsoon", 10: "post", 11: "post"}
 
 
-def window_frame(ds, qd, gbm=None):
-    """Long frame of all masked (window, step) cells. Deltas are metres from the anchor."""
-    w_idx, s_idx = np.nonzero(ds.M > 0)
+def window_frame(ds, qd, gbm=None, all_cells=False):
+    """Long frame of all masked (window, step) cells. Deltas are metres from the anchor.
+    all_cells=True keeps every cell, observed or not (the operational forecast has no actuals yet)."""
+    w_idx, s_idx = np.nonzero(np.ones_like(ds.M, dtype=bool) if all_cells else ds.M > 0)
     ad = ds.anchor_date.values[w_idx]
     F = pd.DataFrame({
         "district": ds.district[w_idx], "anchor_date": ad,
@@ -948,6 +995,20 @@ def fit_stack(P, cfg: Config, guarded=None):
             n = float(w[idx].sum())
             wd = W[np.argmin((E[idx] * w[idx, None]).sum(0))]
             ws = (n * wd + cfg.stack_prior_n * g) / (n + cfg.stack_prior_n)
+            if cfg.lgbm_guard and n >= cfg.lgbm_guard_min_n:
+                y_, w_ = Q["y"].values[idx], w[idx]
+                e_gbm, e_sn = _wmae(y_ - C[idx, 3], w_), _wmae(y_ - C[idx, 1], w_)
+                if e_gbm > (1.0 + cfg.lgbm_guard_margin) * e_sn:
+                    no_gbm = W[:, 3] == 0
+                    wd = W[no_gbm][np.argmin((E[idx][:, no_gbm] * w[idx, None]).sum(0))]
+                    g3 = g.copy()
+                    g3[3] = 0.0
+                    g3 = g3 / g3.sum() if g3.sum() > 0 else np.eye(len(STACK_COMPONENTS))[1]
+                    ws = (n * wd + cfg.stack_prior_n * g3) / (n + cfg.stack_prior_n)
+                    if guarded is not None:
+                        guarded.append({"district": dist, "horizon": HNAME[s], "pool_n": round(n, 1),
+                                        "guard": "lgbm", "LightGBM MAE": round(e_gbm, 4), "SN MAE": round(e_sn, 4),
+                                        "uses": "stack without LightGBM"})
             if cfg.stack_guard and n >= cfg.stack_guard_min_n:
                 y_, w_ = Q["y"].values[idx], w[idx]
                 e_stack = _wmae(y_ - C[idx] @ ws, w_)
@@ -956,7 +1017,7 @@ def fit_stack(P, cfg: Config, guarded=None):
                     pick = 1 if e_sn <= e_tft else 2
                     ws = np.eye(len(STACK_COMPONENTS))[pick]
                     if guarded is not None:
-                        guarded.append({"district": dist, "horizon": HNAME[s], "pool_n": round(n, 1),
+                        guarded.append({"district": dist, "horizon": HNAME[s], "pool_n": round(n, 1), "guard": "stack",
                                         "stack MAE": round(e_stack, 4), "SN MAE": round(e_sn, 4),
                                         "TFT MAE": round(e_tft, 4), "uses": STACK_COMPONENTS[pick]})
             out[(dist, s)] = ws
@@ -1106,6 +1167,11 @@ def conformal_v4_online(T, t_mid, t_lo, t_hi, P, p_mid, p_lo, p_hi, cfg: Config,
             m_hi = side_q("hi", d_, b_, 1.0 - alpha.get((d_, b_, "hi"), a_star))
             lo_c[k] = min(t_lo[k] - m_lo * tw[k], t_mid[k])
             hi_c[k] = max(t_hi[k] + m_hi * tw[k], t_mid[k])
+            if cfg.interval_width_cap is not None:
+                lo_c[k] = max(lo_c[k], t_mid[k] - cfg.interval_width_cap * (t_mid[k] - t_lo[k]))
+                hi_c[k] = min(hi_c[k], t_mid[k] + cfg.interval_width_cap * (t_hi[k] - t_mid[k]))
+            if not np.isfinite(y[k]):
+                continue                       # no outcome to feed back (operational forecast)
             miss = (float(y[k] < lo_c[k]), float(y[k] > hi_c[k]))
             if cfg.aci_feedback == "anchor":
                 g = groups.setdefault((d_, b_), [tdates[k], [], []])
@@ -1490,15 +1556,18 @@ def _pick_pass(cfg: Config, s1):
     return s1["cal_qd"], s1["test_qd"], s1.get("model_state_p1", s1.get("model_state")), False
 
 
-def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True):
-    """Stage 2 (cheap, never cached): shrinkage, stacking, conformal, scored rows."""
+def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True, latest=False):
+    """Stage 2 (cheap, never cached): shrinkage, stacking, conformal, scored rows.
+    latest=True (operational forecast): the newest window per district, every step, no actuals."""
     fd, name = s1["fd"], fold["name"]
     cal_ds, test_ds, train_ds = s1["cal"], s1["test"], s1["train"]
     cal_qd, test_qd, _, _ = _pick_pass(cfg, s1)
     tab = tab or {"gbm_cal": None, "gbm_test": None, "ridge_test": None}
     bands = _bands(cfg)
     C = window_frame(cal_ds, cal_qd, tab["gbm_cal"])
-    T = window_frame(test_ds, test_qd, tab["gbm_test"])
+    T = window_frame(test_ds, test_qd, tab["gbm_test"], all_cells=latest)
+    if latest:
+        T = T[T["anchor_date"] == T.groupby("district")["anchor_date"].transform("max")].reset_index(drop=True)
     season = _fold_season(fd)
     use_pool = cfg.calib_mode == "v4" or cfg.combine == "stack"
     if use_pool:
@@ -1534,6 +1603,15 @@ def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True):
         parts += [frame_rows(T, e_mid, e_lo, e_hi, "Ensemble", name),
                   frame_rows(T, e_mid, elo_c, ehi_c, "Ensemble (calibrated)", name)]
     daily = pd.concat(parts, ignore_index=True)
+    if latest:
+        a = T["anchor"].values
+        path = pd.DataFrame({"district": T["district"].values, "issue_date": pd.to_datetime(T["anchor_date"].values),
+                             "target_date": pd.to_datetime(T["target_date"].values), "day": T["step"].values + 1,
+                             "level_now": a, "q10": a + t_lo, "q50": a + t_mid, "q90": a + t_hi,
+                             "q10_calibrated": a + lo_c, "q90_calibrated": a + hi_c,
+                             "seasonal_naive": a + T["sn"].values})
+        return dict(daily=daily, path=path, lam=lam, stack=stack,
+                    guarded=pd.DataFrame(guarded).assign(fold=name) if guarded else pd.DataFrame())
 
     # weekly-mean target for the shrunk TFT (array form)
     Lmat = np.ones(test_qd.shape[:2])
@@ -1581,7 +1659,7 @@ def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True):
 POST_FIELDS = ("calib_mode", "combine", "aci_gamma", "stack_prior_n", "season_weight_other", "lambda_center",
                "use_refit", "lambda_prior_n", "conf_min_n", "band_size", "target_coverage",
                "aci_feedback", "aci_alpha_min", "aci_alpha_max", "stack_guard", "stack_guard_min_n",
-               "interval_choice")
+               "interval_choice", "lgbm_guard", "lgbm_guard_margin", "lgbm_guard_min_n", "interval_width_cap")
 # tabular-model settings: changing these never retrains the networks
 TAB_FIELDS = ("with_tabular", "tab_features", "tab_stride", "tab_fresh", "gbm_n_estimators", "gbm_lr",
               "gbm_min_child", "gbm_leaves")
@@ -1670,7 +1748,7 @@ def run(cfg: Config, verbose=True):
     res.update(curves=curves, curves_p2=curves_p2, lams=lams, stacks=stacks, wins=pd.DataFrame(wins),
                guarded=pd.concat(guards, ignore_index=True) if guards else pd.DataFrame(),
                epochs=pd.DataFrame(epochs), model_states=states, meta=meta, cfg=cfg, ckey=ckey,
-               out_dir=out_dir, minutes=(time.time() - t0) / 60)
+               out_dir=out_dir, minutes=(time.time() - t0) / 60, pool=pool)
     return res
 
 
@@ -1790,6 +1868,7 @@ def report(res, verbose=True, save_predictions=True):
            "lambda_center": cfg.lambda_center, "aci_feedback": cfg.aci_feedback,
            "aci_alpha": f"{cfg.aci_alpha_min}-{cfg.aci_alpha_max}", "stack_guard": cfg.stack_guard,
            "interval_choice": json.dumps(cfg.interval_choice, sort_keys=True),
+           "lgbm_guard": cfg.lgbm_guard, "interval_width_cap": cfg.interval_width_cap,
            "data": Path(cfg.data_path).name, "data_md5": file_md5(cfg.data_path)[:8]}
     for name, sm in S.items():
         pre = "" if name == "TFT" else "ens "
@@ -2288,10 +2367,13 @@ def interval_table(res, folds=DEV_FOLDS):
             sub = headline_subset(D[D.model == name])
             if len(sub):
                 m = metrics(sub)
-                out.append(m[["Horizon"] + cols].rename(columns={"Horizon": "horizon"})
+                cd = metrics(sub, by="district")
+                even = cd.groupby("Horizon")["Cov (%)"].apply(lambda v: float(((v >= 65) & (v <= 90)).mean() * 100))
+                m["Districts 65-90 (%)"] = m["Horizon"].map(even)
+                out.append(m[["Horizon"] + cols + ["Districts 65-90 (%)"]].rename(columns={"Horizon": "horizon"})
                            .assign(model=model, interval=src))
     t = pd.concat(out, ignore_index=True)
-    return t[["model", "horizon", "interval"] + cols]
+    return t[["model", "horizon", "interval"] + cols + ["Districts 65-90 (%)"]]
 
 
 def calibration_score(table):
@@ -2322,3 +2404,151 @@ def pick_interval_choice(table, lo=75.0, hi=85.0, tie=0.01):
                     "raw score": r["Interval score (m)"], "cal score": c["Interval score (m)"],
                     "pick": pick, "reason": reason})
     return choice, pd.DataFrame(why)
+
+
+def pick_interval_choice_v2(table, lo=75.0, hi=85.0, score_tol=0.05, even_tol=5.0):
+    """Rule D2 (v4.3), per model x horizon, raw vs calibrated, evenness-aware:
+    1. feasible = dev pooled coverage in [lo, hi];
+    2. drop feasible options whose interval score is more than score_tol worse than the best feasible one;
+    3. of the rest, take the higher share of districts with coverage 65-90%; within even_tol points, the lower
+       interval score, then raw;
+    4. if neither is feasible, the lower interval score.
+    Returns (interval_choice dict for Config, table of the decisions)."""
+    choice, why = {}, []
+    for (model, h), g in table.groupby(["model", "horizon"], sort=False):
+        g = g.set_index("interval")
+        opts = [o for o in ("raw", "calibrated") if o in g.index]
+        score = {o: g.loc[o, "Interval score (m)"] for o in opts}
+        even = {o: g.loc[o, "Districts 65-90 (%)"] for o in opts}
+        feas = [o for o in opts if lo <= g.loc[o, "Cov (%)"] <= hi]
+        if feas:
+            best = min(score[o] for o in feas)
+            keep = [o for o in feas if score[o] <= best * (1 + score_tol)]
+            top = max(even[o] for o in keep)
+            near = [o for o in keep if even[o] >= top - even_tol]
+            pick = min(near, key=lambda o: (score[o], o != "raw"))
+            if len(feas) == 1:
+                reason = f"the only one in {lo:.0f}-{hi:.0f}% coverage"
+            else:
+                reason = (f"both in {lo:.0f}-{hi:.0f}% coverage; " + (
+                    "more even across districts" if len(near) < len(keep) else
+                    "lower interval score" if len(keep) == 2 else f"the other's interval score is > {score_tol:.0%} worse"))
+        else:
+            pick = min(opts, key=lambda o: (score[o], o != "raw"))
+            reason = f"neither in {lo:.0f}-{hi:.0f}%: lower interval score"
+        choice.setdefault(model, {})[h] = pick
+        why.append({"model": model, "horizon": h,
+                    **{f"{o} {k}": v for o in opts for k, v in (("cov", g.loc[o, "Cov (%)"]), ("score", score[o]),
+                                                               ("districts 65-90", even[o]))},
+                    "pick": pick, "reason": reason})
+    return choice, pd.DataFrame(why)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Operational forecast (v4.3): issued from the last groundwater reading
+# ══════════════════════════════════════════════════════════════════════════════
+LATEST_FOLD = "fold7_latest"
+
+
+def latest_fold(df, cfg: Config):
+    """The 'fold' an operational forecast is issued for: the decoder_len days after the last reading."""
+    start = df.loc[df[OBS_COL] == 1, "date"].max() + pd.Timedelta(days=1)
+    return {"name": LATEST_FOLD, "test_start": str(start.date()),
+            "test_end": str((start + pd.Timedelta(days=cfg.decoder_len - 1)).date())}
+
+
+def forecast_latest(cfg: Config, pool, verbose=True):
+    """Forecast t+1..t+30 from each district's last groundwater reading.
+
+    It is made exactly like an evaluated fold: the networks train on data up to three months before the
+    issue date, early-stop and calibrate on the last three months (train_fold), LightGBM is refitted up to
+    the issue date (tab_fold), and the post-processing (shrinkage, stack, calibration, reported intervals)
+    uses cfg plus `pool` = the out-of-sample errors of all evaluated folds (res["pool"] of a mode='all' run).
+    Returns dict(table, path, guarded, fold): `table` = Ensemble and TFT rows at t+7/t+14/t+30 with the
+    reported intervals; `path` = the TFT's 30 daily steps."""
+    device = get_device()
+    df, meta = load_data(cfg, verbose=False, extend_days=cfg.decoder_len)
+    fold = latest_fold(df, cfg)
+    cache_dir = Path(cfg.out_root) / "_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    c1 = cache_dir / f"net_{train_key(cfg)}_{fold['name']}_{fold['test_start']}.pkl"
+    if c1.exists():
+        s1 = pd.read_pickle(c1)
+    else:
+        s1 = train_fold(cfg, df, meta, fold, device, verbose=verbose)
+        pd.to_pickle(s1, c1)
+    tab = None
+    if cfg.with_tabular:
+        c2 = cache_dir / f"tab_{tab_key(cfg)}_{fold['name']}_{fold['test_start']}.pkl"
+        if c2.exists():
+            tab = pd.read_pickle(c2)
+        else:
+            tab = tab_fold(cfg, df, meta, fold, s1, verbose=verbose)
+            pd.to_pickle(tab, c2)
+    blob = postprocess_fold(cfg, meta, fold, s1, tab, pool=pool, verbose=False, latest=True)
+    rows = []
+    for model in ("Ensemble", "TFT"):
+        r = reported_rows(blob["daily"], model, cfg)
+        if len(r):
+            rows.append(r.assign(model=model, interval=r["horizon"].map(lambda h: interval_source(cfg, model, h))))
+    table = pd.concat(rows, ignore_index=True).rename(
+        columns={"anchor_date": "issue_date", "persistence": "level_now"})
+    table["tier"] = table["district"].map(meta["tier"])
+    table = table[["district", "tier", "model", "horizon", "issue_date", "target_date", "level_now", "q10", "q50",
+                   "q90", "interval", "snaive"]].rename(columns={"snaive": "seasonal_naive"})
+    table["horizon"] = pd.Categorical(table["horizon"], HORDER, ordered=True)
+    table = table.sort_values(["district", "model", "horizon"]).reset_index(drop=True)
+    table["horizon"] = table["horizon"].astype(str)
+    # modelled districts without a forecast window from their latest reading (same gates as every fold)
+    skipped = []
+    for dist in sorted(set(df["district"]) - set(table["district"])):
+        g = df[(df["district"] == dist) & (df["date"] <= pd.Timestamp(fold["test_start"]) - pd.Timedelta(days=1))]
+        last_obs = g.loc[g[OBS_COL] == 1, "date"].max()
+        share = float(g.tail(cfg.encoder_len)[OBS_COL].mean()) if len(g) else 0.0
+        skipped.append({"district": dist, "last_reading": last_obs, "observed_share_last_window": round(share, 2),
+                        "reason": (f"readings on {share:.0%} of the last {cfg.encoder_len} days "
+                                   f"(at least {cfg.enc_obs_min:.0%} needed)" if share < cfg.enc_obs_min
+                                   else "no reading on the latest day")})
+    if verbose:
+        print(f"forecast_latest: {table['district'].nunique()} districts, issued "
+              f"{table['issue_date'].min().date()} .. {table['issue_date'].max().date()} ({fold['name']}); "
+              f"no forecast for {[x['district'] for x in skipped]}")
+    return dict(table=table, path=blob["path"], guarded=blob["guarded"], fold=fold, skipped=pd.DataFrame(skipped))
+
+
+def export_dashboard(res, latest, out_dir):
+    """The files the dashboards read (dev/pipeline/build_dashboard_data.py), all from this run:
+    forecast_latest.csv, forecast_latest_tft_path.csv, backtest_<model>.csv (reported intervals, every fold),
+    metrics_<model>_per_district.csv (all folds and locked folds), districts.csv, export_manifest.json."""
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cfg, meta, D = res["cfg"], res["meta"], res["daily"]
+    latest["table"].to_csv(out_dir / "forecast_latest.csv", index=False)
+    latest["path"].to_csv(out_dir / "forecast_latest_tft_path.csv", index=False)
+    latest["skipped"].to_csv(out_dir / "forecast_latest_skipped.csv", index=False)
+    for model in ("Ensemble", "TFT"):
+        r = reported_rows(D, model, cfg).copy()
+        r["interval"] = r["horizon"].map(lambda h: interval_source(cfg, model, h))
+        r.rename(columns={"anchor_date": "issue_date", "persistence": "no_change", "snaive": "seasonal_naive"})[
+            ["district", "fold", "horizon", "issue_date", "target_date", "actual", "q10", "q50", "q90", "no_change",
+             "seasonal_naive", "interval"]].to_csv(out_dir / f"backtest_{model.lower()}.csv", index=False)
+        mets = []
+        for scope, rr in (("all folds", r), ("locked folds 5-6", r[r.fold.isin(LOCKED_FOLDS)])):
+            m = metrics(rr, by="district")
+            mets.append(m.assign(**{"test set": scope}))
+        pd.concat(mets, ignore_index=True).to_csv(out_dir / f"metrics_{model.lower()}_per_district.csv", index=False)
+    pd.DataFrame({"district": sorted(meta["tier"]),
+                  "tier": [meta["tier"][d] for d in sorted(meta["tier"])],
+                  "low_station": [int(meta["low_station"].get(d, 0)) for d in sorted(meta["tier"])],
+                  "modelled": [d not in meta["dropped"] for d in sorted(meta["tier"])],
+                  "in_headline": [d not in HEADLINE_EXCLUDE for d in sorted(meta["tier"])]}).to_csv(
+        out_dir / "districts.csv", index=False)
+    man = {"run_tag": cfg.tag, "pipeline_version": PIPELINE_VERSION, "data_file": Path(cfg.data_path).name,
+           "data_md5": file_md5(cfg.data_path), "created": pd.Timestamp.now().isoformat(timespec="seconds"),
+           "seeds": cfg.seeds, "latest_fold": latest["fold"],
+           "last_issue_date": str(latest["table"]["issue_date"].max().date()),
+           "no_forecast": latest["skipped"].to_dict("records"),
+           "interval_choice": cfg.interval_choice, "lgbm_guard": cfg.lgbm_guard,
+           "interval_width_cap": cfg.interval_width_cap, "aci_gamma": cfg.aci_gamma}
+    (out_dir / "export_manifest.json").write_text(json.dumps(man, indent=2, default=str), encoding="utf-8")
+    print(f"export_dashboard -> {out_dir}")

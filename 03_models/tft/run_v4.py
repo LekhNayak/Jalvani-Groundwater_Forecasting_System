@@ -15,6 +15,10 @@ Examples
   # Pune guard, and the TFT reported with its own (un-calibrated) intervals
   python run_v4.py --tag v42_try --mode dev --target-mode snaive --calib-mode v4 --combine stack       --aci-feedback anchor --aci-alpha-min 0 --aci-alpha-max 0.2 --stack-guard --tft-interval raw
 
+  # v4.3: LightGBM-only guard, width cap, and the operational forecast + dashboard export (needs --mode all)
+  python run_v4.py --tag v43_try --mode all --target-mode snaive --calib-mode v4 --combine stack \
+      --aci-gamma 0 --lgbm-guard --width-cap 3 --forecast-latest
+
 Every run writes 04_results/tft_runs/<tag>/ and appends one row to 04_results/tft_runs/ablations.csv
 (the v4.0 development runs are kept in 04_results/tft_v4_0_dev/).
 Networks, tabular models and post-processing are cached separately (see tft_v4.run), so changing
@@ -69,6 +73,12 @@ def main():
     ap.add_argument("--stack-guard", action="store_true", help="fall back to SN / TFT where the stack loses to both")
     ap.add_argument("--tft-interval", choices=["raw", "calibrated"], default=None, help="reported TFT interval")
     ap.add_argument("--ens-interval", choices=["raw", "calibrated"], default=None, help="reported Ensemble interval")
+    # v4.3
+    ap.add_argument("--lgbm-guard", action="store_true", help="refit a district's stack without LightGBM where it loses to SN")
+    ap.add_argument("--lgbm-guard-margin", type=float, default=None)
+    ap.add_argument("--width-cap", type=float, default=None, help="calibrated interval <= cap x raw distance from the median")
+    ap.add_argument("--forecast-latest", action="store_true",
+                    help="after the run: forecast from the last reading and write <out>/<tag>/dashboard_export/")
     ap.add_argument("--export-simple", action="store_true", help="write the v1-style simple outputs")
     ap.add_argument("--out-root", default=None, help="default 04_results/tft_runs")
     ap.add_argument("--no-tabular", action="store_true")
@@ -87,6 +97,7 @@ def main():
         "tab_features": a.tab_features, "tab_stride": a.tab_stride, "gbm_n_estimators": a.gbm_n_estimators,
         "gbm_lr": a.gbm_lr, "gbm_min_child": a.gbm_min_child,
         "aci_feedback": a.aci_feedback, "aci_alpha_min": a.aci_alpha_min, "aci_alpha_max": a.aci_alpha_max,
+        "lgbm_guard_margin": a.lgbm_guard_margin, "interval_width_cap": a.width_cap,
     }
     for k, v in overrides.items():
         if v is not None:
@@ -101,6 +112,8 @@ def main():
         cfg.with_tabular = False
     if a.stack_guard:
         cfg.stack_guard = True
+    if a.lgbm_guard:
+        cfg.lgbm_guard = True
     for model, src in (("TFT", a.tft_interval), ("Ensemble", a.ens_interval)):
         if src:
             cfg.interval_choice[model] = {h: src for h in v4.HORDER}
@@ -112,6 +125,10 @@ def main():
         for model in ("Ensemble", "TFT"):
             v4.export_simple(res, model, simple / model.lower())
         v4.export_shared(res, simple)
+    if a.forecast_latest:
+        assert a.mode == "all" and not a.folds, "--forecast-latest needs --mode all over every fold (it uses their errors)"
+        latest = v4.forecast_latest(res["cfg"], res["pool"])
+        v4.export_dashboard(res, latest, res["out_dir"] / "dashboard_export")
     print(f"\nTotal: {res['minutes']:.1f} min")
 
 
