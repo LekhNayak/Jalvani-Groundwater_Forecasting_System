@@ -6,8 +6,9 @@ from app.services.priorities import district_flags, priorities
 def synthetic_district(**over):
     rec = {"district": "Synthetic", "slug": "synthetic", "status": "forecast",
            "monitoring": {"wells": 5, "tier": "A", "single_well": False},
-           "groundwater": {"vs_usual": "about", "vs_usual_m": 0.1, "depth_m": 5.0},
-           "forecast": {"horizons": {"t+30": {"change_m": -0.8, "change_q10_m": -1.4, "change_q90_m": -0.2}}},
+           "groundwater": {"vs_usual": "about", "vs_usual_m": 0.1, "depth_m": 5.0, "last_reading": "2099-01-01"},
+           "forecast": {"issue_date": "2099-01-01", "horizons": {"t+30": {"target_date": "2099-01-31", "change_m": -0.8,
+                                                                         "change_q10_m": -1.4, "change_q90_m": -0.2}}},
            "rain": {"season": {"pct_of_usual": 100}},
            "extraction": {"stage_pct": 50.0, "category": "Safe"},
            "reliability": {"t+30": {"label": "good"}}}
@@ -26,6 +27,16 @@ def test_forecast_direction():
 def test_falling_advice_and_contact():
     keys = [t["key"] for t in advisories(synthetic_district())]
     assert keys[0] == "advice.falling" and keys[-1] == "advice.contact_local"
+
+
+def test_past_forecast_gives_no_next_month_advice():
+    from datetime import date
+    rec = synthetic_district(groundwater={"vs_usual": "deeper", "vs_usual_m": -1.2, "depth_m": 6.0, "last_reading": "2099-01-01"})
+    tips = advisories(rec, today=date(2099, 6, 1))
+    keys = [t["key"] for t in tips]
+    assert "advice.forecast_outdated" in keys and "advice.falling" not in keys
+    deeper = next(t for t in tips if t["key"] == "advice.deeper_than_usual")
+    assert deeper["params"]["date"] == "2099-01-01"
 
 
 def test_no_forecast_and_deficit():

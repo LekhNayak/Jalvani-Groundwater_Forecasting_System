@@ -82,3 +82,38 @@ def test_chat_action_allowlist():
 
 def test_speech_not_configured():
     assert client.post("/api/speech/tts", json={"text": "hello", "lang": "en"}).status_code == 501
+
+
+def test_latest_forecast_matches_the_model_export():
+    m = client.get("/api/meta").json()
+    if not m["model"]["operational_forecast"]:
+        pytest.skip("no v4.3 export yet")
+    f = pd.read_csv(ROOT / "04_results/tft_v4_3/dashboard_export/forecast_latest.csv")
+    row = f[(f.district == "Nagpur") & (f.model == "Ensemble") & (f.horizon == "t+30")].iloc[0]
+    d = client.get("/api/districts/nagpur").json()
+    h = d["forecast"]["horizons"]["t+30"]
+    assert d["forecast"]["issue_date"] == row.issue_date[:10] and h["target_date"] == row.target_date[:10]
+    assert (h["q10"], h["q50"], h["q90"]) == (round(row.q10, 2), round(row.q50, 2), round(row.q90, 2))
+    assert h["change_m"] == round(row.q50 - row.level_now, 2) and h["interval"] == row.interval
+    nanded = client.get("/api/districts/nanded").json()
+    assert nanded["forecast"] is None and nanded["forecast_unavailable"]["code"] == "too_few_readings"
+
+
+def test_most_likely_range_is_median_past_error():
+    """'Most likely' = q50 -/+ the median |actual - q50| of all back-tests for that district and horizon,
+    clipped to the 80% range."""
+    m = client.get("/api/meta").json()
+    if not m["model"]["operational_forecast"]:
+        pytest.skip("no v4.3 export yet")
+    bt = pd.read_csv(ROOT / "04_results/tft_v4_3/dashboard_export/backtest_ensemble.csv")
+    for slug, district in (("akola", "Akola"), ("pune", "Pune"), ("gondia", "Gondia")):
+        d = client.get(f"/api/districts/{slug}").json()
+        for hz, h in d["forecast"]["horizons"].items():
+            b = bt[(bt.district == district) & (bt.horizon == hz)]
+            margin = (b.actual - b.q50).abs().median()
+            assert h["likely_margin_m"] == round(margin, 2)
+            assert abs(h["likely_lo"] - max(h["q50"] - margin, h["q10"])) <= 0.011
+            assert abs(h["likely_hi"] - min(h["q50"] + margin, h["q90"])) <= 0.011
+            assert h["q10"] <= h["likely_lo"] <= h["q50"] <= h["likely_hi"] <= h["q90"] + 1e-9
+    check = json.loads((settings.data_dir / "manifest.json").read_text(encoding="utf-8"))["most_likely"]["check_coverage_pct"]
+    assert all(40 <= v <= 75 for v in check.values())

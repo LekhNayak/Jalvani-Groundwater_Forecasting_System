@@ -37,6 +37,8 @@ HORIZONS = ["t+7", "t+14", "t+30"]
 USUAL_WINDOW_DAYS = 15          # "compared with usual": same day of year +/- this many days, in other years
 CGWB_CATEGORY_ORDER = ["Safe", "Semi-Critical", "Critical", "Over-Exploited"]
 MH_GW_NAME_FIX = {"Yawatmal": "Yavatmal", "Mumbai": "Mumbai City", "Mumbai Sub": "Mumbai Suburban"}
+LOCKED_FOLDS = ["fold5_postmonsoon2025", "fold6_dry2026"]
+HEADLINE_EXCLUDE = ["Beed", "Latur", "Nanded", "Raigad", "Thane"]   # as in 03_models/tft/tft_v4.py
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
@@ -211,6 +213,26 @@ def load_model_outputs():
             "skipped": {}}
 
 
+def likely_margins(bt):
+    """'Most likely' range = the median forecast +/- the median absolute error of past forecasts, per district and
+    horizon, over all evaluated folds. By construction it held the real level about half the time in those tests."""
+    return bt.assign(err=(bt.actual - bt.q50).abs()).groupby(["district", "horizon"]).err.median()
+
+
+def likely_check(bt):
+    """Honest check of the 'most likely' range: margins from folds 1-4 only, coverage measured on folds 5-6
+    (21 headline districts). Target about 50%."""
+    dev, lck = bt[~bt.fold.isin(LOCKED_FOLDS)], bt[bt.fold.isin(LOCKED_FOLDS) & ~bt.district.isin(HEADLINE_EXCLUDE)]
+    m = likely_margins(dev)
+    out = {}
+    for h in HORIZONS:
+        L = lck[lck.horizon == h]
+        mm = L.set_index(["district", "horizon"]).index.map(m)
+        ok = np.isfinite(mm)
+        out[h] = r(100 * ((L.actual - L.q50).abs().values[ok] <= mm[ok]).mean(), 1)
+    return out
+
+
 def reliability(mase, coverage, tier, single_well):
     """Good: MASE <= 0.85, coverage 70-90%, data tier A/B, more than one well. Fair: MASE < 1 and more than one
     well. Limited: otherwise (incl. single-well districts). Thresholds are documented in dev/docs/DATA_CONTRACT.md."""
@@ -279,6 +301,7 @@ def main():
 
     q = dq.set_index("district")
     bt = model["backtest"]
+    margins = likely_margins(bt)
     met = model["metrics"]
     fc = model["forecast"]
     out_districts, last_dates = [], []
@@ -325,7 +348,12 @@ def main():
                 "horizons": {row.horizon: {"target_date": dstr(row.target_date), "q10": r(row.q10, 2), "q50": r(row.q50, 2),
                                            "q90": r(row.q90, 2), "change_m": r(row.q50 - row.level_now, 2),
                                            "change_q10_m": r(row.q10 - row.level_now, 2),
-                                           "change_q90_m": r(row.q90 - row.level_now, 2), "interval": row.interval}
+                                           "change_q90_m": r(row.q90 - row.level_now, 2), "interval": row.interval,
+                                           # 'most likely' (about 1 in 2): median +/- the median past error
+                                           "likely_margin_m": r(margins.get((d, row.horizon)), 2),
+                                           # clipped to the 80% range: "most likely" is never wider than "could be"
+                                           "likely_lo": r(max(row.q50 - margins.get((d, row.horizon), np.nan), row.q10), 2),
+                                           "likely_hi": r(min(row.q50 + margins.get((d, row.horizon), np.nan), row.q90), 2)}
                              for row in f.itertuples()}}
         else:
             rec["forecast"] = None
@@ -381,6 +409,9 @@ def main():
         "counts": {"districts": len(districts), "with_forecast": sum(x["status"] == "forecast" for x in out_districts),
                    "insufficient_data": sum(x["status"] == "insufficient_data" for x in out_districts),
                    "no_data": sum(x["status"] == "no_data" for x in out_districts), "wells_used": int(st.stationCode.nunique())},
+        "most_likely": {"definition": "median forecast +/- the median absolute error of past (back-tested) forecasts, per district and horizon, clipped to the 80% range",
+                        "level_pct": 50, "check": "margins from folds 1-4, coverage on locked folds 5-6 (21 headline districts)",
+                        "check_coverage_pct": likely_check(bt)},
         "sources": SOURCES, "warnings": ([f"mh_gw_2025 names not matched: {unmatched_mh}"] if unmatched_mh else []),
     }
     write_json(OUT / "manifest.json", manifest)
