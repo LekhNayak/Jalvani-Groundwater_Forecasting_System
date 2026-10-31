@@ -1,0 +1,5 @@
+fold,train,es,cal,test,refit
+fold1_monsoon2024,5936,900,713,2821,0
+fold2_postmonsoon2024,7940,959,777,2821,0
+fold3_dry2025,10113,1003,752,3905,0
+fold4_monsoon2025,13629,923,655,3242,0

@@ -1,0 +1,7 @@
+fold,best_epochs,refit_epochs,refit_used
+fold1_monsoon2024,"[2, 4, 7, 3, 3, 9, 5, 5, 7, 4]",[],False
+fold2_postmonsoon2024,"[5, 5, 5, 7, 5, 5, 5, 5, 3, 5]",[],False
+fold3_dry2025,"[7, 11, 9, 2, 8, 9, 7, 6, 7, 10]",[],False
+fold4_monsoon2025,"[10, 15, 23, 13, 8, 11, 10, 7, 10, 13]",[],False
+fold5_postmonsoon2025,"[6, 9, 8, 16, 7, 10, 11, 6, 6, 16]",[],False
+fold6_dry2026,"[4, 4, 7, 6, 12, 7, 8, 16, 5, 4]",[],False

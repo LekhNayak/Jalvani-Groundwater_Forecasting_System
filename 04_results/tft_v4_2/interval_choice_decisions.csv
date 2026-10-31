@@ -1,0 +1,7 @@
+model,horizon,raw cov,cal cov,raw score,cal score,pick,reason
+TFT,t+7,79.6082,71.9063,2.8178,2.9286,raw,only one in 75-85% coverage
+TFT,t+14,76.5844,73.5061,3.9779,4.5369,raw,only one in 75-85% coverage
+TFT,t+30,70.8787,70.9015,5.7166,6.8375,raw,neither in 75-85%: lower interval score (or within 1%: simpler)
+Ensemble,t+7,80.4977,76.1513,2.7688,2.7666,raw,both in 75-85%: lower interval score (or within 1%: simpler)
+Ensemble,t+14,78.4065,76.1544,3.831,4.0438,raw,both in 75-85%: lower interval score (or within 1%: simpler)
+Ensemble,t+30,73.7057,76.124,5.4407,6.2597,calibrated,only one in 75-85% coverage
