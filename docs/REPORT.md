@@ -12,10 +12,10 @@
 
 **Districts:** 36 in the state; 24 have usable groundwater data and are modelled; 21 form the headline set.
 
-**Status (2026-10-29):**
+**Status (2026-10-30):**
 - Phase 1 (baselines) is complete.
 - Phase 2 (TFT) is complete through production version **v4.1**, the best result so far.
-- A v4.2 post-processing fix is planned.
+- **v4.2** (post-processing only: interval calibration fix and a per-district stack guard for Pune) is built and checked locally. Its Colab run is pending (§12.4).
 
 > **Headline result (v4.1 Ensemble, locked test = Oct 2025 – Jun 2026, never used for tuning in v4.1):**
 >
@@ -299,6 +299,7 @@ Fitting the calibration on the same data it is applied to makes the coverage cla
 | **3 Oct** | **Production v4** | Groundwater target rebuilt (placeholders, stuck loggers, two-sided Hampel filter, step and regime detection, factor-model aggregation, no fills); evaluation fixed (issue-date windows); seasonal-naive baseline; residual-on-seasonal target; pooled adaptive calibration; stacked ensemble; locked folds 5–6 | Locked Ensemble 0.865 / 0.788 / 0.664 vs persistence, 0.967 / 0.952 / 0.945 vs seasonal |
 | **26 Oct** | v4.1 built | Shrinkage toward seasonal-naive; stronger LightGBM; refit pass; stride-1 sampling; sweeps; 10 seeds; simple per-district outputs; results guide | Pipeline 4.5, notebook `09_tft_colab_production_v4_1.ipynb` |
 | **29 Oct** | **Production v4.1 run** | Colab T4, 54 min, pre-registered selection on dev folds 1–4 | **Locked Ensemble 0.839 / 0.763 / 0.616 vs persistence, 0.938 / 0.922 / 0.877 vs seasonal (best so far).** Interval-calibration issue found for the TFT alone |
+| **30 Oct** | v4.2 built | Post-processing only: ACI fed one outcome per issue date and band, symmetric α range, raw-or-calibrated interval per model and horizon, per-district stack guard (Pune); three rules fixed in advance on development folds | Pipeline 4.6, notebook `09_tft_colab_production_v4_2.ipynb`; defaults reproduce v4.1 exactly; **Colab run pending** |
 
 > **Naming note.** The repository has two unrelated "v1/v2" lines.
 > - The **prototype** TFT runs of May–June are described in `docs/PROJECT_STATUS.md` §9.
@@ -792,9 +793,9 @@ This motivated horizon-dependent feature weighting, which the TFT's VSN provides
 
 - **Network:** `03_models/tft/tft_model_v3.py`, written from scratch in PyTorch.
 - **Pipeline:**
-  - `03_models/tft/tft_v4.py` (version 4.5): data, windows, training, baselines, post-processing, metrics, significance, exports;
+  - `03_models/tft/tft_v4.py` (version 4.6 = v4.2; v4.1 ran on 4.5): data, windows, training, baselines, post-processing, metrics, significance, exports;
   - `run_v4.py`: command-line interface.
-- **Notebook:** `03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb`, run on a Colab T4.
+- **Notebook:** `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb` (current; v4.1's is in `notebooks/archive/`), run on a Colab T4.
 
 ### 8.2 One Run, Step by Step — What Happens, When, and Why
 
@@ -970,24 +971,27 @@ After the networks and LightGBM have predicted, `postprocess_fold` does the foll
 | | – each district's λ is pulled toward the band's overall λ, with a strength of 200 pool rows | A district with little data cannot pick an extreme λ |
 | | – the interval keeps the TFT's spread around the new median | |
 | 4 | **Stacking** (`fit_stack`): for t+7, t+14 and t+30, search every weight combination over {no change, SN, TFT median, LightGBM median} in steps of 0.1, with weights ≥ 0 that sum to 1, for the lowest weighted MAE on the pool. This is done globally, then per district, with each district pulled toward the global weights (prior 500 rows) | Each district learns how much to trust each forecaster. The simple baselines act as a safety net |
+| | – *v4.2 option* `stack_guard`: if a district's shrunk weights are worse on its own pool (at least 50 weighted rows) than both SN alone and the TFT alone, that district uses the better of the two | The pull toward the global weights kept Pune on LightGBM, which is poor there (§12.4) |
 | 5 | **Interval calibration** (`conformal_v4_online`): | Turns the intervals into ones with honest out-of-sample coverage, adapting as errors arrive in deployment order |
 | | – on the pool, measure how far each actual fell below q10 and above q90, in units of the interval half-width (at least 0.25 × the change scale) | |
 | | – for each (district, band, side), take a weighted quantile of those scores, pulled toward the district's tier with a pseudo-count of 100 | |
 | | – walk through the test period in issue-date order and widen or narrow each side by that quantile × the half-width | |
 | | – adaptive conformal inference (ACI): once a forecast's target date has passed, feed back whether it missed, and adjust the target miss rate by `α ← clip(α + 0.01·(0.10 − miss), 0.01, 0.30)` | |
+| | – *v4.2 options*: feed back **one** outcome per (issue date, district, band) instead of one per cell (`aci_feedback='anchor'`); a symmetric α range such as 0–0.20; γ = 0 (no adaptation) | v4.1 fed the TFT about 10 correlated outcomes per issue date but the Ensemble only 1, and its α range left more room to narrow than to widen (§12.4) |
 | 6 | **Write the scored rows**: TFT (raw network), TFT (after shrinkage), TFT (calibrated), Ensemble (stack), Ensemble (calibrated), plus SN, ridge and LightGBM | Every stage can be judged separately. That is how the calibration problem in §10.9 was found |
+| 7 | *v4.2*: **choose the reported interval** per model and horizon (`interval_choice`): the network's own interval or the calibrated one, decided on the development folds by a rule fixed in advance (§12.4) | Calibration helps some model–horizon pairs and hurts others; the choice is made once, never on the locked test |
 
 How each step changed across versions:
 
-| Step | v1 | v2 | v3 | v4 | v4.1 |
-|---|---|---|---|---|---|
-| **Shrinkage** `mid = c + λ(mid_TFT − c)`, λ per district and horizon band, fitted out of sample | – | – | toward persistence (c = 0), fitted on the calibration block | toward persistence, fitted on the pool | **toward seasonal-naive** (c = SN) |
-| **Interval calibration** | in-sample | fitted on the test rows (invalid) | split conformal on the held-out calibration block | season-weighted pool, per-district normalised scores, each tail separately, ACI with delayed feedback (γ = 0.01, α clipped to [0.01, 0.3]) | same; **found to hurt the TFT's own intervals** (§10.9) |
-| **Combination** | – | – | 3-seed average | **stack**: simplex weights over {no change, SN, TFT, LightGBM} per district and horizon, fitted on the pool, pulled toward global weights (prior 500) | same, with the stronger LightGBM |
+| Step | v1 | v2 | v3 | v4 | v4.1 | v4.2 (built, run pending) |
+|---|---|---|---|---|---|---|
+| **Shrinkage** `mid = c + λ(mid_TFT − c)`, λ per district and horizon band, fitted out of sample | – | – | toward persistence (c = 0), fitted on the calibration block | toward persistence, fitted on the pool | **toward seasonal-naive** (c = SN) | same |
+| **Interval calibration** | in-sample | fitted on the test rows (invalid) | split conformal on the held-out calibration block | season-weighted pool, per-district normalised scores, each tail separately, ACI with delayed feedback (γ = 0.01, α clipped to [0.01, 0.3]) | same; **found to hurt the TFT's own intervals** (§10.9) | ACI fed one outcome per issue date and band, and a symmetric α range, as candidates; then **calibrated or raw chosen per model and horizon** on the development folds |
+| **Combination** | – | – | 3-seed average | **stack**: simplex weights over {no change, SN, TFT, LightGBM} per district and horizon, fitted on the pool, pulled toward global weights (prior 500) | same, with the stronger LightGBM | same + optional per-district **stack guard** (fall back to SN or TFT) |
 
 **The Ensemble** is the final forecaster.
 - Its median is the stacked blend.
-- Its interval is the TFT's q10–q90 spread placed around that median, then calibrated.
+- Its interval is the TFT's q10–q90 spread placed around that median, then calibrated (from v4.2: calibrated or not, per horizon, as chosen on the development folds).
 - Both "TFT alone" and "Ensemble" are reported everywhere.
 
 ### 8.9 Changes to the Network Code, v1 → v3, and Why
@@ -1023,6 +1027,8 @@ The pipeline caches its work in three stages.
 | 2 | Post-processing: shrinkage, stacking, conformal, scoring | never cached; cheap to re-run |
 
 This made it possible to screen 7 set-ups with only 3 network trainings, and to sweep post-processing settings for free.
+
+**v4.2 uses the same caching more strictly.** The notebook trains development folds 1–4 once. Every post-processing variant is then a cache hit, and folds 5–6 are trained only after all choices are made. The v4.1 post-processing is re-run on the same networks as a reference, because GPU training is not bit-for-bit repeatable between Colab sessions.
 
 ### 8.11 Proposed but Not Built (and why)
 
@@ -1213,6 +1219,8 @@ In date order. "Kept" means the change is part of the current system. Negative r
 | 23 | 29 Oct | v4.1 | 10 seeds in the final run | Less seed noise | Locked Ensemble 0.865 / 0.788 / 0.664 → **0.839 / 0.763 / 0.616** (with #19–21) | yes |
 | 24 | 26–29 Oct | v4.1 | Simple per-district outputs for both models; results guide | Results in the familiar v1 format | 24 districts plus 2 "no usable data" | yes |
 | 25 | 29 Oct | analysis | Calibrated vs uncalibrated intervals compared on development folds | Check whether the calibration step earns its place | **It hurts the TFT's intervals** (coverage 80/77/71 → 72/68/64% on development folds) | to be fixed in v4.2 |
+| 26 | 30 Oct | v4.2 | ACI fed one outcome per issue date and band; symmetric α range; static conformal; calibrated or raw interval chosen per model × horizon (rules C, D) | v4.1 fed the TFT ~10 correlated outcomes per issue date (the Ensemble 1), and the α range 0.01–0.30 around 0.10 favoured narrowing | defaults reproduce v4.1 exactly (local check); results: Colab run pending | run pending |
+| 27 | 30 Oct | v4.2 | Per-district stack guard (rule G) | Pune's weights were ≈ global, which leaned on LightGBM (MASE 1.30 at t+30 in Pune, vs 0.87 for SN and TFT) | results: Colab run pending | run pending |
 
 ---
 
@@ -1549,8 +1557,8 @@ The first full TFT run was worse than doing nothing. The current system is signi
 
 | Priority | Item | Why / expected effect |
 |---|---|---|
-| 1 | **v4.2: fix interval calibration.** Make calibration on/off a choice per model and horizon, selected on development folds by interval score. Feed ACI one outcome per issue date and horizon band. Revisit the α floor | Post-processing only, no retraining. Should restore the TFT's own 77–80% coverage and tighten the Ensemble's t+30 intervals |
-| 2 | **Look into Pune** (Ensemble loses to no-change while the TFT alone does not) | Per-district stacking weights; possibly a stronger prior toward the TFT or SN where the pool is small |
+| 1 | **v4.2: fix interval calibration** (built, Colab run pending). Calibration on/off chosen per model and horizon on development folds; ACI fed one outcome per issue date and band; symmetric α range | Post-processing only. Should restore the TFT's own 77–80% coverage and tighten the Ensemble's t+30 intervals |
+| 2 | **v4.2: Pune** (built, Colab run pending). Per-district stack guard: fall back to SN or TFT where the stack loses to both on the district's own past errors | Pune's weights were already ≈ global; the problem is LightGBM in Pune (§12.4) |
 | 3 | **Rainfall forecasts as known-future inputs** (IMD or ECMWF extended range) | Targets the largest remaining error source (t+30, monsoon) |
 | 4 | **Re-run as data arrives:** new CGWB readings after 2026-06-04 (a monsoon-2026 test fold); final CHIRPS for September 2026 | A locked monsoon test; removes the provisional rainfall |
 | 5 | **Reservoir storage** (`cwc_reservoir.py`, needs a data.gov.in key) | The main uncollected physical driver, especially for Marathwada |
@@ -1575,21 +1583,33 @@ results -> find a specific weakness -> diagnose it with a check or probe -> chan
 | v3 | v2 tied at t+7; 7 failing districts | parameter count, covariate reality table, ridge probe, conformal audit | ERA5-Land, causal Sentinel, vectorised network, per-horizon scale, shrinkage, honest calibration |
 | v4 | v3 worse than the seasonal forecast; false jumps in the target | seasonal-naive baseline; target audit | target rebuild, issue-date windows, residual-on-SN target, pooled calibration, ensemble |
 | v4.1 | TFT only tied SN; LightGBM could not see the season | stacking weights, feature review | shrink toward SN, LightGBM v2, stride-1 sampling |
-| v4.2 (next) | calibration hurts the TFT's intervals; Pune | calibrated vs uncalibrated comparison on development folds | below |
+| v4.2 (built, run pending) | calibration hurts the TFT's intervals; Pune | calibrated vs uncalibrated comparison on development folds; reading the ACI code; Pune's stack weights and component errors | ACI fed one outcome per issue date, symmetric α range, raw/calibrated chosen per model and horizon, per-district stack guard (§12.4) |
 
 ### 12.4 What We Are Doing Next — the v4.2 Plan, Step by Step
 
-v4.2 changes **post-processing only** (§8.8). The networks and LightGBM are unchanged, so the forecast medians cannot get worse.
+v4.2 changes **post-processing only** (§8.8). The networks and LightGBM keep the v4.1 settings, so the forecast medians cannot get worse except where the Pune guard acts.
+
+The code is built (`tft_v4.py` 4.6, notebook `09_tft_colab_production_v4_2.ipynb`). Every new switch defaults to v4.1 behaviour: on cached smoke networks the default output is identical to v4.1's. The Colab run is pending.
+
+**What reading the code and the v4.1 outputs found:**
+1. **The ACI update counts unequally.**
+   - Every scored TFT cell fed back its own outcome. That is about 10 strongly correlated outcomes per issue date and band, so the TFT adapted about 10× faster than intended.
+   - The Ensemble, scored only at t+7, t+14 and t+30, fed back one.
+   - This fits the TFT's intervals being hurt much more, and coverage falling as the ACI speed rose.
+2. **The α range is lopsided.** It is 0.01–0.30 around a target of 0.10. That allows the intervals to narrow far more than to widen.
+3. **Pune's stack weights were already almost the global ones** (fold 3, t+30: LightGBM 0.77).
+   - The problem is LightGBM in Pune: MASE 1.30 at t+30 (2.66 in fold 3), while seasonal-naive and the TFT are 0.87.
+   - So "a stronger pull toward the global weights", the earlier idea, would not help.
+   - The failure is visible in development folds 1 and 3, not only in the locked test.
 
 | Step | What | Why | How success is measured |
 |---|---|---|---|
-| 1 | Add a "no calibration" option for each model (TFT, Ensemble) | The TFT's own intervals already cover 77–80% on the locked test; calibration lowers that to 66–74% | Option available; it reproduces the uncalibrated rows exactly |
-| 2 | Feed the adaptive (ACI) update **one outcome per issue date and horizon band**, not one per day | About 10 highly correlated daily outcomes per issue date over-react the update. Faster adaptation lowered coverage in the sweep | Coverage no longer falls as the adaptation speed rises |
-| 3 | Revisit the α limits (currently 0.01 to 0.30) | The floor may stop the intervals widening after a run of misses | Tails within 5–15% each |
-| 4 | **Choose calibrated or uncalibrated per model and horizon on development folds 1–4**, by the lowest interval score, with coverage 75–85% | A rule fixed in advance, not chosen on the locked test | TFT coverage 75–85%. Ensemble interval score lower at t+14 and t+30 on development folds |
-| 5 | **Pune:** a stronger pull toward the global stacking weights where a district's pool is small, or a fallback to the TFT or SN when the stack does worse than both on the pool | The Ensemble loses to "no change" in Pune (1.050 / 1.128 at t+14 / t+30) while the TFT alone does not (0.955 / 0.871) | Pune's Ensemble MASE below 1, with no other district worse by more than 0.01 |
-| 6 | Re-run on Colab: screening of the post-processing options, then a 10-seed final | Networks are re-trained because Colab caches do not persist, about 1 h | Same procedure as §6.10 |
-| 7 | Report against v4.1 on identical folds; update the documents | – | `v4_1_vs_v4_2.csv`; locked folds reported once |
+| 1 | **Train development folds 1–4 once** (v4.1 settings, 10 seeds). Every variant below reuses these networks; folds 5–6 are not computed until step 5 | Choices are made without touching the locked test | – |
+| 2 | **Rule G, stack guard**: per district and horizon, if the stack's error on the district's own past errors (≥ 50 weighted rows) is worse than both SN alone and the TFT alone, use the better of the two | Fixes Pune without tuning on Pune | Adopted only if the development mean Ensemble error ÷ SN error does not get worse and no district's MASE rises by more than 0.02 |
+| 3 | **Rule C, calibration variant**:<br>V0 = v4.1;<br>V1 = one ACI outcome per issue date and band;<br>V2 = V1 + symmetric α 0–0.20;<br>V3 = V2 with γ 0.03;<br>V4 = no adaptation | Tests both causes found above | Lowest mean (calibrated ÷ raw interval score) over TFT and Ensemble × 3 horizons; V0 kept unless beaten by more than 0.01 |
+| 4 | **Rule D, report raw or calibrated** per model and horizon | Calibration may help one model or horizon and hurt another | If exactly one has development coverage within 75–85%, take it; otherwise the lower interval score; within 1%, the simpler raw interval |
+| 5 | **Final run** (trains folds 5–6). Report all folds and locked folds 5–6, plus **the v4.1 post-processing on the same networks** | GPU training is not bit-for-bit repeatable, so only a same-network reference isolates the post-processing change | `v4_1_vs_v4_2.csv`: interval score lower and coverage closer to 80% for both models; Pune's Ensemble MASE below 1 |
+| 6 | Update every document with the results | – | – |
 
 **After v4.2, in order:**
 1. **Rainfall forecasts as a known-future input** (IMD or ECMWF extended-range).
@@ -1629,7 +1649,7 @@ v4.2 changes **post-processing only** (§8.8). The networks and LightGBM are unc
 | 20 | Rainfall zero-filled where CHIRPS was not yet published | Oct extension | False dry days from 2026-06-01 | re-fetched |
 | 21 | Cached fold results not tied to the code version | v4 development | Risk of silently reusing stale results | `PIPELINE_VERSION` in cache keys |
 | 22 | Conformal width blow-up: non-scored steps counted as misses; α unclipped | v4 development | Exploding intervals | v4 (NaN medians skipped, α clipped, asymmetric) |
-| 23 | Calibration step hurts the TFT's own intervals | v4.1 analysis | TFT coverage 66–74% instead of 77–80% | **open: v4.2** |
+| 23 | Calibration step hurts the TFT's own intervals | v4.1 analysis | TFT coverage 66–74% instead of 77–80% | **v4.2 fix built; Colab run pending** |
 
 ## Appendix B — Repository Map
 
@@ -1643,8 +1663,8 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 | `data/raw/` · `data/clean/` · `data/audit/` | collector outputs · preprocessing outputs · target-audit plots and tables |
 | `data/master/` | frozen training sets: `master_dataset_v4target.csv` (current), `master_dataset_v3target.csv` (old target) |
 | `03_models/baselines_phase1/` | Phase 1 ARIMA / XGBoost / LSTM notebooks and scripts |
-| `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline v4.5), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_1.ipynb` (current); `notebooks/archive/` (production v1–v4, prototypes); `legacy/tft_model.py` (v1/v2 network) |
-| `04_results/` | `tft_v4_1/` (current, read with `docs/RESULTS_GUIDE.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
+| `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline 4.6 = v4.2), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_2.ipynb` (current); `notebooks/archive/` (production v1–v4.1, prototypes); `legacy/tft_model.py` (v1/v2 network) |
+| `04_results/` | `tft_v4_1/` (best results so far; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_2/` (after the v4.2 run; read with `docs/RESULTS_GUIDE.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
 | `docs/` | this report, `PROJECT_STATUS.md`, `RESULTS_GUIDE.md`, `STRUCTURE.md`, `history/` (`TFT_VERSION_HISTORY.md` with §0 = scores of every version, `V3_PLAN.md`, `TFT_IMPROVEMENT_PLAN.md`) |
 | `archive/` | backups and byte-identical duplicates, with `MANIFEST.csv`; not used by the pipeline |
 
@@ -1692,6 +1712,6 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 
 ---
 
-*End of Report — last updated 2026-10-29.*
-*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.1; v4.2 (interval calibration fix) planned.*
+*End of Report — last updated 2026-10-30.*
+*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.1; v4.2 (interval calibration fix + Pune guard) built, Colab run pending.*
 *Detailed version history and every number: `docs/history/TFT_VERSION_HISTORY.md`. How to read the results files: `docs/RESULTS_GUIDE.md`.*

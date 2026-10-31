@@ -55,6 +55,12 @@ Each stage's scripts find their files relative to their own location, so they ca
 | `result zips/tft_v4_1_outputs.zip` | `04_results/zips/` |
 | `.ipynb_checkpoints/` (Jupyter autosaves) | `archive/notebook_checkpoints/` |
 
+**After the restructure (2026-10-30, v4.2):**
+- `09_tft_colab_production_v4_1.ipynb` moved to `03_models/tft/notebooks/archive/`.
+- The current notebook is `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb`.
+- Its results zip goes to `04_results/zips/` and is extracted to `04_results/tft_v4_2/`.
+- `docs/RESULTS_GUIDE.md` now describes the v4.2 zip. The v4.1 zip keeps the guide it shipped with (`04_results/tft_v4_1/RESULTS_GUIDE_as_shipped.md`).
+
 ## Duplicates and same-named files
 
 **Byte-identical extra copies** went to `archive/duplicates/`, renamed with a `__dup_<where it was>` suffix:

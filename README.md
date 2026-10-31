@@ -4,7 +4,7 @@
 **Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `docs/PROJECT_STATUS.md` §1 for per-source ranges.
 **Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
 
-> ## Current status (2026-10-29) — v4.1
+> ## Current status (2026-10-30): v4.1 results; v4.2 built, Colab run pending
 > The Temporal Fusion Transformer (§4.2) is implemented, trained and evaluated, so this is no longer a
 > proposal. **For current results, go straight to `docs/history/TFT_VERSION_HISTORY.md`: §0 has the scores, and the
 > v4.1 section is at the end.**
@@ -25,8 +25,14 @@
 > - Most of the v4.1 gain comes from the improved LightGBM, which is about as accurate as the Ensemble but has
 >   intervals that are too narrow (61–75% coverage).
 >
-> **Run it:** `03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb` with `master_dataset_v4target.csv`. Results
-> are in `04_results/tft_v4_1/`, and `docs/RESULTS_GUIDE.md` explains every file.
+> **v4.2 (built, run pending)** changes post-processing only.
+> - The interval-calibration fix: ACI fed one outcome per issue date, and a raw or calibrated interval chosen per model and horizon.
+> - A per-district stack guard for Pune.
+> - Everything is chosen by rules fixed in advance, on development folds only (`docs/REPORT.md` §12.4).
+>
+> **Run it:** `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb` with `master_dataset_v4target.csv` (about 45 min on a T4).
+> - v4.1 results are in `04_results/tft_v4_1/`; the v4.2 results go to `04_results/tft_v4_2/`.
+> - `docs/RESULTS_GUIDE.md` explains every file of the v4.2 zip.
 >
 > **Superseded:**
 > - v4.0: locked 0.865 / 0.788 / 0.664;
@@ -698,14 +704,15 @@ Major Project/
 ├── 03_models/
 │   ├── baselines_phase1/             Phase 1 ARIMA / XGBoost / LSTM: notebooks/ + scripts/
 │   └── tft/                          tft_model_v3.py (network), tft_v4.py (pipeline), run_v4.py, tune_snaive.py
-│       ├── notebooks/                09_tft_colab_production_v4_1.ipynb  <- CURRENT notebook
-│       │   └── archive/              production v1, v2, v3, v4 notebooks + early prototypes
+│       ├── notebooks/                09_tft_colab_production_v4_2.ipynb  <- CURRENT notebook
+│       │   └── archive/              production v1, v2, v3, v4, v4.1 notebooks + early prototypes
 │       └── legacy/                   tft_model.py (v1/v2 network)
 ├── 04_results/                       ALL results, one folder per run
 │   ├── phase1_baselines/             Phase 1 outputs and plots
 │   ├── tft_prod_v1/                  first full TFT run (worse than "no change"; kept for comparison)
 │   ├── tft_v4_0_dev/                 v4.0 development runs, ablations, seasonal-naive tuning, caches
-│   ├── tft_v4_1/                     v4.1 results  <- CURRENT (read with docs/RESULTS_GUIDE.md)
+│   ├── tft_v4_1/                     v4.1 results  <- best so far (its own guide: RESULTS_GUIDE_as_shipped.md)
+│   ├── tft_v4_2/                     v4.2 results, after its Colab run (read with docs/RESULTS_GUIDE.md)
 │   ├── tft_runs/                     where new local runs of run_v4.py are written
 │   └── zips/                         the original results zip(s)
 └── archive/                          nothing here is used by the pipeline
@@ -742,7 +749,7 @@ python 02_preprocessing/merge_master.py             # last: writes data/clean/ma
 #   to freeze a new training set, copy it to data/master/ under a versioned name
 
 # ── Step 3: train + evaluate the TFT (Colab, T4 GPU) ─────────────────────────────
-# Open 03_models/tft/notebooks/09_tft_colab_production_v4_1.ipynb in Colab and upload
+# Open 03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb in Colab and upload
 # 03_models/tft/tft_model_v3.py, 03_models/tft/tft_v4.py, data/master/master_dataset_v4target.csv
 # and docs/RESULTS_GUIDE.md. Unzip the downloaded results into 04_results/<run name>/.
 # Locally: python 03_models/tft/run_v4.py --help   (writes to 04_results/tft_runs/)

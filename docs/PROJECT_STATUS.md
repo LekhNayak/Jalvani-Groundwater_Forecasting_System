@@ -1,6 +1,6 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-08-15 (see notice below — several sections are now superseded)
+**Last updated:** 2026-10-30. The current status is at the end of §10 (v4.1 results, v4.2 built and its run pending). Several older sections are superseded; see the notices below.
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2026-06-04 (raw groundwater/rainfall) — see §1 for per-source ranges
 **Geography:** All 36 districts of Maharashtra (24–26 usable for training, see district gate in §4.5)
@@ -761,9 +761,18 @@ Open issues:
 - the best-vs-worst district gap widened again;
 - Pune still loses to persistence at t+14 and t+30;
 - folds 5–6 contain no monsoon;
-- the conformal + ACI step makes the TFT's intervals worse: its own quantiles cover 77–80% on the locked test, the calibrated ones only 66–74%. The fix is post-processing only, planned for v4.2.
+- the conformal + ACI step makes the TFT's intervals worse: its own quantiles cover 77–80% on the locked test, the calibrated ones only 66–74%. The fix is post-processing only: v4.2, below.
 
 Full numbers: `docs/history/TFT_VERSION_HISTORY.md` (§0 and the v4.1 section).
+
+**v4.2 (built 2026-10-30, Colab run pending).** Post-processing only. Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb`, pipeline `tft_v4.py` 4.6.
+- **Calibration fixes.** ACI is fed one outcome per issue date and band; v4.1 fed the TFT about 10 correlated outcomes per issue date. A symmetric α range is also tried.
+- **Reported interval.** Raw or calibrated is chosen per model and horizon on the development folds.
+- **Pune guard.** A per-district stack guard. Pune's stack weights were already almost global; the problem is LightGBM in Pune (MASE 1.30 at t+30, vs 0.87 for seasonal-naive and the TFT).
+- **Selection.** Three rules fixed in advance (G, C, D) on development folds 1–4 only. Folds 5–6 are trained only after the choices are made. The v4.1 post-processing is re-run on the same networks as the reference.
+- **Checked locally.** With default settings the new code reproduces v4.1's output exactly.
+- **Run.** About 45 min on a T4. Put the zip in `04_results/zips/`; it is extracted to `04_results/tft_v4_2/`.
+- Design and rules: `docs/history/TFT_VERSION_HISTORY.md` (v4.2 section), `docs/REPORT.md` §12.4.
 
 Superseded:
 - v4.0: locked 0.865 / 0.788 / 0.664;
@@ -771,5 +780,5 @@ Superseded:
 
 **v4 pipeline files:** `02_preprocessing/preprocess_groundwater.py` (rebuilt target),
 `audit_groundwater_target.py`, `03_models/tft/tft_v4.py`, `run_v4.py`, `tune_snaive.py`,
-`09_tft_colab_production_v4.ipynb`, `09_tft_colab_production_v4_1.ipynb` (current), `RESULTS_GUIDE.md`,
+`09_tft_colab_production_v4.ipynb`, `09_tft_colab_production_v4_1.ipynb` (both in `notebooks/archive/`), `09_tft_colab_production_v4_2.ipynb` (current), `RESULTS_GUIDE.md`,
 dataset `master_dataset_v4target.csv`.

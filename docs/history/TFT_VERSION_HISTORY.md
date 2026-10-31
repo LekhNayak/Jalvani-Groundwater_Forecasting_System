@@ -4,7 +4,8 @@
 **v2** = `09_tft_colab_production_v2.ipynb` — rebuilt 2026-08-15 after the v1 post-mortem; full 6-fold T4 run completed
 **v3** = `09_tft_colab_production_v3.ipynb` — rebuilt 2026-08-15 after a full audit of v2; full 6-fold, 3-seed T4 run completed in **6.5 minutes**
 **v4** = `09_tft_colab_production_v4.ipynb` + `tft_v4.py` — rebuilt target, fixed evaluation, seasonal-naive baseline, TFT-led ensemble; Colab T4 run 2026-10-03 (v4 section near the end)
-**v4.1** = `09_tft_colab_production_v4_1.ipynb` — improvement run + simple per-district results; Colab T4 run 2026-10-29 (54 min), **best version so far** (v4.1 section at the end; results in `04_results/tft_v4_1/`)
+**v4.1** = `09_tft_colab_production_v4_1.ipynb` (now in `notebooks/archive/`) — improvement run + simple per-district results; Colab T4 run 2026-10-29 (54 min), **best version so far** (v4.1 section; results in `04_results/tft_v4_1/`)
+**v4.2** = `09_tft_colab_production_v4_2.ipynb` + `tft_v4.py` 4.6 — post-processing only: honest intervals (ACI fixes + raw/calibrated choice per model and horizon) and a per-district stack guard (Pune); built 2026-10-30, **Colab run pending** (v4.2 section at the end)
 
 *v1 and v2 ran on different master datasets (v2's groundwater layer was rebuilt), so raw RMSE is not
 directly comparable between them. v2 and v3 ran on the **same district set and the same headline
@@ -982,3 +983,81 @@ So **the TFT-alone's "65-74% coverage" reported since v4 is caused by the calibr
 6. The refit pass and the d_model-48 network did not help. Both are recorded as negative results.
 
 *v4.1 results section written 2026-10-29 from `RUN_SUMMARY.md`, `RESULTS_TO_QUOTE.csv`, `v4_vs_v4_1.csv`, `dev_screening_summary.csv`, `post_sweep_summary.csv`, `FINAL_s1_tab2*/` and `simple/`.*
+
+---
+
+# v4.2 (built 2026-10-30, Colab run pending): honest intervals + Pune guard (post-processing only)
+
+Notebook `09_tft_colab_production_v4_2.ipynb`, pipeline `tft_v4.py` **4.6**, guide `RESULTS_GUIDE.md` (rewritten for the v4.2 zip). The v4.1 notebook moved to `03_models/tft/notebooks/archive/`.
+
+**v4.2 changes nothing before the models predict.** The TFT networks and LightGBM use the exact v4.1 final set-up (`s1_tab2`, 10 seeds). Only the post-processing changes, behind switches whose defaults reproduce v4.1.
+
+This was checked locally: on cached smoke networks, the new code with default settings gives a `predictions_daily` table identical to the v4.1 code's, all 63,630 rows.
+
+## Why: two weaknesses left by v4.1
+
+1. **The calibration step made the TFT's intervals worse** (see "Interval calibration hurts the TFT" above):
+   - coverage 80 / 78 / 77% before the step, 74 / 70 / 66% after it, on the locked test;
+   - a worse interval score in every fold;
+   - for the Ensemble it helped coverage at t+30, but at the cost of much wider intervals.
+2. **Pune:** the Ensemble lost to no-change at t+14 and t+30 (1.050 / 1.128, all folds), while the TFT alone did not (0.955 / 0.871).
+
+## What reading the code and the v4.1 outputs showed
+
+**The ACI update counts unequally.**
+- `conformal_v4_online` fed back the outcome of every scored cell.
+- The TFT frame holds all 30 decoder steps, so each (district, horizon band) received about 10 strongly correlated outcomes per issue date. That makes the effective adaptation speed about 10× the nominal γ = 0.01.
+- The Ensemble is scored only at t+7, t+14 and t+30, so it received one outcome per issue date and band.
+- This fits what was seen: the TFT's intervals were hurt far more than the Ensemble's, and in the v4.1 sweep, faster adaptation lowered coverage.
+
+**The α limits are lopsided.**
+- α (the target miss rate per side) was clipped to 0.01–0.30 around a target of 0.10.
+- That leaves +0.20 of room to narrow the interval but only −0.09 to widen it.
+- After a run of misses, the interval cannot widen enough, while calm spells can narrow it a lot. The bias is toward intervals that are too narrow.
+
+**Pune's stack was not the problem; LightGBM in Pune was** (from `FINAL_s1_tab2/stack_weights.csv` and the predictions).
+- Pune's weights were already almost the global ones. In fold 3 at t+30: LightGBM 0.77, TFT 0.18, no-change 0.05.
+- LightGBM is poor in Pune: MASE 1.30 at t+30 over all folds, 2.66 in fold 3 (dry 2025). Seasonal-naive and the TFT are both 0.87.
+- The Ensemble's worst Pune folds are fold 1 (1.46 at t+14) and fold 3 (2.22 at t+30), both development folds.
+- So the earlier plan, "a stronger pull toward the global weights", would not help. The weights already are the global ones.
+
+## The changes (all post-processing; new `Config` switches)
+
+| Switch | v4.1 value (default) | v4.2 option | What it does |
+|---|---|---|---|
+| `aci_feedback` | `'cell'` | `'anchor'` | One outcome per (issue date, district, band): the mean miss of its cells. It is fed back once the last of them is observed |
+| `aci_alpha_min` / `aci_alpha_max` | 0.01 / 0.30 | e.g. 0.00 / 0.20 | A symmetric α range around the 0.10 target |
+| `stack_guard` (+ `stack_guard_min_n` = 50) | off | on | Per district and horizon: if the shrunk stack's error on the district's own pool is worse than **both** seasonal-naive alone and the TFT alone, use the better of the two. It needs at least 50 weighted pool rows, which it reaches from about fold 3 |
+| `interval_choice` | `{}` (= calibrated everywhere) | per model × horizon `'raw'` / `'calibrated'` | Which interval is **reported**. Both are always computed |
+
+**Reporting.**
+- Every summary now uses the reported interval: `RESULTS_TO_QUOTE.csv` (new `interval` and `interval score (m)` columns), `simple/`, and `coverage_reported*.csv`.
+- `coverage_calibrated*.csv` now always holds the conformal interval, as a diagnostic, so no file name misdescribes what is in it.
+- Guarded cases are written to `stack_guard.csv`.
+
+## How v4.2 is chosen (rules fixed before the run; dev folds 1–4 only)
+
+The notebook trains dev folds 1–4 once (10 seeds, v4.1 settings). Every variant then reuses those networks and LightGBM models from the cache. **Folds 5–6 are not computed until all three rules have been applied.**
+
+| Rule | Decision |
+|---|---|
+| **G**: stack guard | Adopt it if the dev mean Ensemble rMAE vs seasonal-naive (21 headline districts, 3 horizons) does not get worse **and** no district's dev Ensemble MASE rises by more than 0.02 at any horizon |
+| **C**: calibration variant | Candidates:<br>V0 = v4.1;<br>V1 = one outcome per anchor;<br>V2 = V1 + α 0–0.20;<br>V3 = V2 with γ 0.03;<br>V4 = static conformal (γ = 0).<br>Score = mean over TFT / Ensemble × 3 horizons of (calibrated ÷ raw interval score). The lowest wins; V0 is kept unless beaten by more than 0.01 |
+| **D**: raw or calibrated, per model × horizon | If exactly one has dev coverage in 75–85%, take it. Otherwise take the lower interval score. Within 1%, take raw |
+
+The final run then trains folds 5–6 and reports:
+- **v4.2** (the chosen post-processing);
+- **the v4.1 post-processing on the same networks** (`REF_v4_1_postproc`), so the comparison isolates the post-processing;
+- the published v4.1 numbers (`v4_1_vs_v4_2.csv`).
+
+**Why a same-network reference is needed.** The networks are re-trained, because Colab keeps no cache between sessions. GPU training is not bit-for-bit repeatable (only the seeds are fixed, not cuDNN determinism), so the medians will differ slightly from the published v4.1 run.
+
+## Local smoke checks (2 folds, 1 seed, 2 epochs; not real results)
+- Defaults reproduce v4.1 exactly (above).
+- Every calibration switch leaves all medians and all un-calibrated intervals unchanged. Only the guard changes medians, and only for the Ensemble.
+- `anchor` feedback raised the TFT's calibrated coverage and left the Ensemble's unchanged, as expected, since the Ensemble already got one outcome per anchor.
+- γ = 0 (no adaptation) gave much lower coverage. So the adaptation is useful in itself; the problem was how it was fed.
+- With `stack_guard_min_n = 0`, the guard changed only the guarded districts' Ensemble rows.
+- Rule D was unit-tested on a hand-made table covering every branch.
+
+*Results: to be added after the Colab run.*
