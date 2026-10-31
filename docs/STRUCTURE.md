@@ -58,7 +58,7 @@ Each stage's scripts find their files relative to their own location, so they ca
 
 **2026-10-31 (v4.3 and the dashboards):**
 - `09_tft_colab_production_v4_2.ipynb` moved to `03_models/tft/notebooks/archive/`.
-- The current notebook is `09_tft_colab_production_v4_3.ipynb`. Its zip is extracted to `04_results/tft_v4_3/`; the dashboards read its `dashboard_export/`.
+- The current notebook is `09_tft_colab_production_v4_3.ipynb`. Its zip (`04_results/zips/tft_v4_3_outputs.zip`) was extracted on 2026-11-01 to `04_results/tft_v4_3/` (237 files; the guide copy shipped in the zip was renamed `RESULTS_GUIDE_as_shipped.md`). The dashboards read its `dashboard_export/`.
 - `dev/` was added.
 
 **After the restructure (2026-10-30, v4.2):**

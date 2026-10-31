@@ -1,6 +1,6 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-10-31. The current status is at the end of §10: v4.2 run done; v4.3 and the dashboards built. Several older sections are superseded; see the notices below.
+**Last updated:** 2026-11-01. The current status is at the end of §10: v4.3 run done (final model); the dashboards show its forecast. Several older sections are superseded; see the notices below.
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2026-06-04 (raw groundwater/rainfall) — see §1 for per-source ranges
 **Geography:** All 36 districts of Maharashtra (24–26 usable for training, see district gate in §4.5)
@@ -786,14 +786,22 @@ Full numbers: `docs/history/TFT_VERSION_HISTORY.md` (§0 and the v4.1 section).
   - then dashboards, rainfall forecasts, and a monsoon-2026 fold when CGWB publishes.
 - Design, rules and full results: `docs/history/TFT_VERSION_HISTORY.md` (v4.2 section), `docs/REPORT.md` §9.8, §10.12, §12.4.
 
-**v4.3 (built 2026-10-31, Colab run pending).** Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_3.ipynb`, pipeline 4.7.
+**v4.3 (built 2026-10-31, Colab T4 run 2026-11-01, 39 min): the final model.** Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_3.ipynb`, pipeline 4.7.
 - **Post-processing:**
   - a Pune LightGBM-only guard (rule G2);
   - an interval width cap of 3 ×;
   - the evenness-aware interval rule D2.
 - **Operational forecast** from the latest reading (`forecast_latest`) and `dashboard_export/` for the dashboards.
 - **Checked locally:** v4.2 is reproduced exactly with the switches off, and the latest-forecast smoke test passes. 23 of 24 districts are issued; Nanded is skipped because only 40% of its last 60 days have readings.
-- **Run on Colab:** about 40 min. Unzip to `04_results/tft_v4_3/`, then run `dev\scripts\build_data.ps1`.
+- **Results** (`04_results/tft_v4_3/`):
+  - **Reproduced bit-for-bit;** only Pune's and Raigad's Ensemble medians changed (the guard).
+  - **Locked:** 0.841 / 0.766 / 0.620 vs no-change, 0.940 / 0.926 / 0.882 vs seasonal, p = 0.003, coverage 78–80%.
+  - **7-day Ensemble intervals** are honest in 100% of districts over all folds (was 86%).
+  - **Intervals over 20 m:** 332 → 105 (widest 94 → 34 m).
+  - **The Pune guard was adopted on the dev folds but made Pune worse on the locked folds** (t+30 0.77 → 0.92). This is reported, not reversed.
+  - **Latest forecast:** issued 4 Jun 2026 for 23 districts; by 4 July 15 rising, none falling; Nanded skipped.
+- **Dashboard data rebuilt from it.** The site says the last reading is 150 days old and that the forecast dates have passed.
+- **Next:** re-run when CGWB publishes newer readings.
 
 **Dashboards (built 2026-10-31), in `dev/`.**
 - Farmer and government views in English, Marathi and Hindi.

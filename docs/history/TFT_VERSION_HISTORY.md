@@ -6,7 +6,7 @@
 **v4** = `09_tft_colab_production_v4.ipynb` + `tft_v4.py` — rebuilt target, fixed evaluation, seasonal-naive baseline, TFT-led ensemble; Colab T4 run 2026-10-03 (v4 section near the end)
 **v4.1** = `09_tft_colab_production_v4_1.ipynb` (now in `notebooks/archive/`) — improvement run + simple per-district results; Colab T4 run 2026-10-29 (54 min); its forecasts are the final ones (v4.2 changed only the intervals) (v4.1 section; results in `04_results/tft_v4_1/`)
 **v4.2** = `09_tft_colab_production_v4_2.ipynb` + `tft_v4.py` 4.6 — post-processing only: honest intervals (ACI fixes + raw/calibrated choice per model and horizon) and a per-district stack guard (Pune); Colab T4 run 2026-10-30 (31 min). **The TFT's intervals are fixed; accuracy is unchanged (the guard was rejected)** (v4.2 section; results in `04_results/tft_v4_2/`)
-**v4.3** = `09_tft_colab_production_v4_3.ipynb` + `tft_v4.py` 4.7 — post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule) and the **operational forecast + dashboard export**; built 2026-10-31, **Colab run pending** (v4.3 section at the end)
+**v4.3** = `09_tft_colab_production_v4_3.ipynb` + `tft_v4.py` 4.7 — post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule) and the **operational forecast + dashboard export**; Colab T4 run 2026-11-01 (39 min). **Current final model** (v4.3 section at the end; results in `04_results/tft_v4_3/`)
 
 *v1 and v2 ran on different master datasets (v2's groundwater layer was rebuilt), so raw RMSE is not
 directly comparable between them. v2 and v3 ran on the **same district set and the same headline
@@ -14,7 +14,7 @@ directly comparable between them. v2 and v3 ran on the **same district set and t
 
 ---
 
-## 0. Scores by version (summary, updated 2026-10-31)
+## 0. Scores by version (summary, updated 2026-11-01)
 
 **How to read.** MASE is model error ÷ the error of "no change" (persistence). "vs seasonal" is model
 error ÷ the error of the seasonal-naive forecast (today's level + the district's usual change for this
@@ -48,7 +48,10 @@ comparison.
 | **v4.2** | **TFT alone** (raw intervals) | all 6 folds | 0.935 / 0.876 / 0.764 | 1.000 / 1.002 / 0.976 | 0.44 / 0.63 / 0.92 | 6.2 / 8.7 / 13.0 | **80 / 77 / 73** |
 | **v4.2** | **Ensemble** (raw / raw / calibrated) | all 6 folds | **0.903 / 0.830 / 0.712** | **0.967 / 0.949 / 0.909** | **0.43 / 0.60 / 0.86** | **6.0 / 8.4 / 12.4** | **81 / 79 / 77** |
 | **v4.2, locked test** | TFT alone (raw intervals) | folds 5-6 only | 0.872 / 0.803 / 0.675 | 0.976 / 0.971 / 0.960 | 0.33 / 0.43 / 0.60 | 4.4 / 5.8 / 7.6 | **80 / 78 / 77** |
-| **v4.2, locked test** | **Ensemble (final)** | folds 5-6 only | **0.839 / 0.763 / 0.616** | **0.938 / 0.922 / 0.877** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.1** | **82 / 81 / 79** |
+| **v4.2, locked test** | **Ensemble** | folds 5-6 only | **0.839 / 0.763 / 0.616** | **0.938 / 0.922 / 0.877** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.1** | **82 / 81 / 79** |
+| **v4.3** | **Ensemble** (calibrated / raw / calibrated) | all 6 folds | 0.903 / 0.829 / 0.712 | 0.967 / 0.948 / 0.909 | 0.43 / 0.60 / 0.86 | 6.0 / 8.4 / 12.3 | 77 / 79 / 77 |
+| **v4.3, locked test** | **Ensemble (final)** | folds 5-6 only | **0.841 / 0.766 / 0.620** | **0.940 / 0.926 / 0.882** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.2** | **80 / 80 / 78** |
+| v4.3 | TFT alone | – | identical to v4.2 (same networks and intervals) | | | | |
 
 Notes on Table A:
 - **v1** was scored on the old, noisy groundwater series. Its MASE was computed afterwards from the `04_results/tft_prod_v1/` predictions. §1 below quotes ~2.96 / 2.15 / 1.56 from a slightly different post-hoc calculation; both say v1 lost to "no change".
@@ -92,6 +95,7 @@ Notes on Table A:
   - The TFT's coverage rose from 66-74% to 77-80% on the locked test, at an 11-19% better interval score.
   - The Ensemble's intervals stayed about the same on average, but became less even across districts.
   - Details are in the v4.2 section.
+- **v4.2 to v4.3:** the 7-day Ensemble intervals became honest in every district (86 → 100% over all folds), and intervals over 20 m fell from 332 to 105. The Pune guard helped on the development folds but not on the locked folds, so the locked headline moved by +0.002 to +0.004 (details in the v4.3 section).
 - **Quote MASE (and "vs seasonal"), not MAPE,** when comparing versions.
 
 ---
@@ -1173,7 +1177,7 @@ Unchanged: Ensemble MASE 1.000 / 1.050 / 1.128 over all folds, while the TFT alo
 
 ---
 
-# v4.3 (built 2026-10-31, Colab run pending): Pune fix, even intervals, width cap, and the latest forecast
+# v4.3 (built 2026-10-31, Colab T4 run 2026-11-01, 39 min): Pune fix, even intervals, width cap, and the latest forecast
 
 Notebook `09_tft_colab_production_v4_3.ipynb`, pipeline `tft_v4.py` **4.7**. The v4.2 notebook moved to `notebooks/archive/`. All the new switches default off, and with them off the new code gives the same `predictions_daily` as v4.2, all 63,630 rows. This was checked locally both with default settings and with v4.2's final settings.
 
@@ -1212,5 +1216,46 @@ v4.2 left three post-processing issues and one missing capability:
   - Nanded skipped, with the reason "readings on 40% of the last 60 days (at least 70% needed)", which is the same gate every evaluated window uses.
 - **The dashboard build script reads the export.** It was tested on the smoke export into a temporary folder; smoke numbers never enter `dev/backend/data`.
 
-*Results: to be added after the Colab run.*
+## v4.3 results (Colab T4, 10 seeds, 39 min; `04_results/tft_v4_3/`)
+
+**Reproducible again.** Every TFT, LightGBM, ridge and seasonal-naive row (220,215) is identical to v4.2. The Ensemble medians changed only in Pune and Raigad, where the guard acted.
+
+**Rule G2 (LightGBM-only guard): adopted.**
+- The dev mean Ensemble error ÷ SN error went 0.9501 → 0.9486, and no district got worse.
+- On the development folds it fired 6 times: Pune at t+14 in fold 3, and at all three horizons in fold 4; Raigad at t+7 in folds 3 and 4.
+- In the final run it also fired for Pune in folds 5 (t+14, t+30) and 6 (all horizons).
+
+**Rule D2:** the Ensemble at 7 days switched to calibrated. Both options were in band, with equal scores (2.766 vs 2.769), and calibrated was far more even (95% vs 81% of districts). The rest is as in v4.2.
+
+**Results, v4.2 → v4.3 (21 headline districts):**
+
+| | v4.2 | v4.3 |
+|---|---|---|
+| Locked Ensemble, error ÷ no-change | 0.839 / 0.763 / 0.616 | 0.841 / 0.766 / 0.620 (p = 0.003 for all) |
+| Locked Ensemble, error ÷ seasonal | 0.938 / 0.922 / 0.877 | 0.940 / 0.926 / 0.882 |
+| Locked Ensemble, interval score (m) | 1.731 / 2.122 / 3.109 | **1.681** / 2.123 / **3.086** |
+| All folds Ensemble, interval score (m) | 2.443 / 3.293 / 5.211 | 2.425 / 3.287 / **5.022** |
+| Ensemble t+7, districts covered 65–90% | 86% all folds, 57% locked | **100% all folds, 76% locked** |
+| Intervals wider than 20 m / widest | 332 / 94 m | **105 / 34 m** |
+| Pune, all folds | 1.000 / 1.050 / 1.128 | 1.012 / 1.004 / 1.121 |
+| Pune, locked folds | 0.891 / 0.792 / 0.768 | 0.942 / 0.905 / 0.922 |
+
+**Reading:**
+- **The interval changes worked as designed.**
+- **The Pune guard did not generalise.**
+  - It helped in development folds 3 and 4.
+  - It hurt in locked folds 5–6, where LightGBM happened to forecast Pune well.
+  - A district's past component errors are a weak guide to the next season.
+- **The rule's choice is kept.** Reversing it because of the locked folds would make them a selection set. The cost to the headline is +0.002 to +0.004.
+- **The decline bias remains** (locked t+30: 17.4% below q10, 4.4% above q90).
+
+**Operational forecast.**
+- Issued from 4 Jun 2026 for 23 districts. Nanded was skipped: readings on 40% of the last 60 days, 70% needed.
+- At t+30 (4 Jul 2026): 15 districts rising, 1 steady, 7 uncertain, none falling. This is the monsoon-onset rise.
+- The largest median rises: Thane +6.8 m (single well, range 3–13 m), Nandurbar +5.0 m, Dhule +4.4 m, Kolhapur +2.6 m.
+- The target dates have passed, but there are no CGWB readings yet to check them.
+- The dashboards show this forecast with notes that it is past and how old the last reading is.
+
+**Decision.** v4.3 is the final model for the write-up. Next: re-run when CGWB publishes newer readings (same notebook).
+
 

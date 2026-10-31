@@ -4,7 +4,7 @@
 **Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `docs/PROJECT_STATUS.md` §1 for per-source ranges.
 **Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
 
-> ## Current status (2026-10-31): v4.2 done; v4.3 and the dashboards built
+> ## Current status (2026-11-01): v4.3 done (final model); dashboards built and showing its forecast
 > The Temporal Fusion Transformer (§4.2) is implemented, trained and evaluated, so this is no longer a
 > proposal. **For current results, go straight to `docs/history/TFT_VERSION_HISTORY.md`: §0 has the scores, and the
 > v4.1 and v4.2 sections are at the end. The full write-up is `docs/REPORT.md`.**
@@ -33,9 +33,11 @@
 > - **The Pune stack guard was rejected:** it fixed Pune but hurt 22 other district-horizons. Pune is still open.
 > - Details: `docs/REPORT.md` §9.8, §10.12, §12.4.
 >
-> **v4.3 (built, Colab run pending)** changes post-processing and adds the forecast the dashboards need:
-> - a Pune fix and evenly honest intervals;
-> - a forecast issued from the latest reading.
+> **v4.3 (run 1 Nov 2026) is the final model.**
+> - Locked test: 0.841 / 0.766 / 0.620 vs no-change, 0.940 / 0.926 / 0.882 vs seasonal (p = 0.003).
+> - 7-day intervals are honest in every district.
+> - It issues the forecast from the latest reading (4 Jun 2026), which the dashboards show.
+> - Its Pune fix did not hold on the locked folds (`docs/REPORT.md` §9.9).
 >
 > **Dashboards (`dev/`)** are built and run locally: farmer and government views in English, Marathi and Hindi, with a site-guide chatbot.
 > - Start with `dev\scripts\setup.ps1`, then `dev\scripts\run_local.ps1`.

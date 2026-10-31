@@ -59,7 +59,11 @@ The build script turns those files into the dashboard data. The backend only *re
 4. Unzip `tft_v4_3_outputs.zip` into `04_results/tft_v4_3/`.
 5. Run `dev\scripts\build_data.ps1` and restart the backend.
 
-Until a v4.3 run exists, the site shows the v4.2 backtests and accuracy, and says honestly that the latest forecast has not been produced yet. It never shows placeholder numbers.
+The v4.3 run of 1 Nov 2026 is built in. Its forecast was issued from the last CGWB reading, 4 Jun 2026, so the site says plainly:
+- that the reading is old (a banner when it is more than 30 days old);
+- that the forecast dates have passed.
+
+Tips name the date of the reading they come from. Without a model export the site shows the v4.2 backtests and "not yet produced"; it never shows placeholder numbers.
 
 **Hosting later (not needed for the project demo):**
 - one small Linux VM, or a platform such as Render or Railway;

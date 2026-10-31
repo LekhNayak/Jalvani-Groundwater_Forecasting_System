@@ -12,24 +12,22 @@
 
 **Districts:** 36 in the state; 24 have usable groundwater data and are modelled; 21 form the headline set.
 
-**Status (2026-10-31):**
+**Status (2026-11-01):**
 - Phase 1 (baselines) is complete.
-- Phase 2 (TFT) is complete through production version **v4.2** (Colab run of 30 Oct 2026).
-- v4.2 changed post-processing only. It reproduced v4.1's forecasts bit-for-bit, so the accuracy below is unchanged, and it fixed the TFT's prediction intervals (§9.8, §10.12).
-- The modelling is now frozen for the write-up. The open items are in §12.4.
-- **v4.3** (built 31 Oct, Colab run pending) adds three things:
-  - the LightGBM-only guard for Pune;
-  - an interval width cap and an evenness-aware interval rule;
-  - an **operational forecast** from the latest reading, with a **dashboard export**.
-- The **farmer and government dashboards** are built in `dev/`: English, Marathi and Hindi, with a site-guide chatbot (§13).
+- Phase 2 (TFT) is complete through production version **v4.3** (Colab run of 31 Oct – 1 Nov 2026). This is the final model, chosen by the rules fixed in advance.
+- v4.2 and v4.3 changed only post-processing. The networks and LightGBM re-trained bit-for-bit identically to v4.1 both times.
+  - v4.2 fixed the TFT's intervals.
+  - v4.3 made the Ensemble's 7-day intervals even across districts, removed most extreme intervals, and added a Pune-only fix (with mixed results, §9.9) and the **operational forecast** (§9.8–§9.9, §10.12–§10.13).
+- The **farmer and government dashboards** in `dev/` now show that forecast. They are in English, Marathi and Hindi, with a site-guide chatbot (§13).
+- The modelling is frozen for the write-up. The open items are in §12.4.
 
-> **Headline result (final Ensemble = v4.1 forecasts with v4.2 intervals; locked test = Oct 2025 – Jun 2026, never used for any choice in v4.1 or v4.2):**
+> **Headline result (final Ensemble = v4.3; locked test = Oct 2025 – Jun 2026, never used for any choice since v4.0):**
 >
 > | Comparison | t+7 / t+14 / t+30 |
 > |---|---|
-> | Error ÷ error of the "no change" forecast (MASE) | **0.839 / 0.763 / 0.616** (16–38% less error) |
-> | Error ÷ error of the seasonal forecast | **0.938 / 0.922 / 0.877** (6–12% less error) |
-> | 80% intervals contain the true level | 79–82% of the time |
+> | Error ÷ error of the "no change" forecast (MASE) | **0.841 / 0.766 / 0.620** (16–38% less error) |
+> | Error ÷ error of the seasonal forecast | **0.940 / 0.926 / 0.882** (6–12% less error) |
+> | 80% intervals contain the true level | 78–80% of the time |
 > | TFT alone: 80% intervals contain the true level | 77–80% of the time (v4.1: 66–74%) |
 >
 > All six comparisons are statistically significant (p = 0.003, Holm-adjusted).
@@ -48,7 +46,7 @@
 6. [Evaluation Methodology and How It Changed](#6-evaluation-methodology-and-how-it-changed)
 7. [Phase 1 — Baseline Models (historical)](#7-phase-1--baseline-models-historical)
 8. [Phase 2 — The Temporal Fusion Transformer as Built](#8-phase-2--the-temporal-fusion-transformer-as-built)
-9. [Model Pipeline Versions v1 → v4.2 — What Changed in Each](#9-model-pipeline-versions-v1--v42--what-changed-in-each)
+9. [Model Pipeline Versions v1 → v4.3 — What Changed in Each](#9-model-pipeline-versions-v1--v43--what-changed-in-each)
 10. [Results](#10-results)
 11. [Discussion](#11-discussion)
 12. [Conclusion and Future Work](#12-conclusion-and-future-work)
@@ -309,7 +307,8 @@ Fitting the calibration on the same data it is applied to makes the coverage cla
 | **29 Oct** | **Production v4.1 run** | Colab T4, 54 min, pre-registered selection on dev folds 1–4 | **Locked Ensemble 0.839 / 0.763 / 0.616 vs persistence, 0.938 / 0.922 / 0.877 vs seasonal (still the final forecasts).** Interval-calibration issue found for the TFT alone |
 | **30 Oct** | v4.2 built | Post-processing only: ACI fed one outcome per issue date and band, symmetric α range, raw-or-calibrated interval per model and horizon, per-district stack guard (Pune); three rules fixed in advance on development folds | Pipeline 4.6, notebook `09_tft_colab_production_v4_2.ipynb`; defaults reproduce v4.1 exactly |
 | **30 Oct** | **Production v4.2 run** | Colab T4, 31 min, 10 seeds; three rules fixed in advance, applied on development folds 1–4 | Forecasts bit-for-bit identical to v4.1. **TFT intervals fixed:** locked coverage 66–74% → 77–80%, interval score 11–19% better. Ensemble intervals about the same. Pune guard rejected by its rule |
-| **31 Oct** | v4.3 built; dashboards built | Post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule), operational forecast + dashboard export; farmer and government dashboards in `dev/` (en / mr / hi, site guide) | Pipeline 4.7, notebook `09_tft_colab_production_v4_3.ipynb`; v4.3 **Colab run pending** |
+| **31 Oct** | v4.3 built; dashboards built | Post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule), operational forecast + dashboard export; farmer and government dashboards in `dev/` (en / mr / hi, site guide) | Pipeline 4.7, notebook `09_tft_colab_production_v4_3.ipynb` |
+| **1 Nov** | **Production v4.3 run** | Colab T4, 39 min, 10 seeds; rules G2 and D2 on development folds | Guard adopted (Pune and Raigad only); 7-day Ensemble intervals even in all districts; intervals > 20 m 332 → 105; latest forecast issued from 4 Jun 2026 for 23 districts; locked headline 0.841 / 0.766 / 0.620 (Pune worse on the locked folds) |
 
 > **Naming note.** The repository has two unrelated "v1/v2" lines.
 > - The **prototype** TFT runs of May–June are described in `docs/PROJECT_STATUS.md` §9.
@@ -803,9 +802,9 @@ This motivated horizon-dependent feature weighting, which the TFT's VSN provides
 
 - **Network:** `03_models/tft/tft_model_v3.py`, written from scratch in PyTorch.
 - **Pipeline:**
-  - `03_models/tft/tft_v4.py` (version 4.6 = v4.2; v4.1 ran on 4.5): data, windows, training, baselines, post-processing, metrics, significance, exports;
+  - `03_models/tft/tft_v4.py` (version 4.7 = v4.3; v4.2 ran on 4.6, v4.1 on 4.5): data, windows, training, baselines, post-processing, metrics, significance, exports;
   - `run_v4.py`: command-line interface.
-- **Notebook:** `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb` (current; v4.1's is in `notebooks/archive/`), run on a Colab T4.
+- **Notebook:** `03_models/tft/notebooks/09_tft_colab_production_v4_3.ipynb` (current; earlier ones are in `notebooks/archive/`), run on a Colab T4. It also issues the operational forecast and the dashboard export.
 
 ### 8.2 One Run, Step by Step — What Happens, When, and Why
 
@@ -993,11 +992,11 @@ After the networks and LightGBM have predicted, `postprocess_fold` does the foll
 
 How each step changed across versions:
 
-| Step | v1 | v2 | v3 | v4 | v4.1 | v4.2 |
-|---|---|---|---|---|---|---|
-| **Shrinkage** `mid = c + λ(mid_TFT − c)`, λ per district and horizon band, fitted out of sample | – | – | toward persistence (c = 0), fitted on the calibration block | toward persistence, fitted on the pool | **toward seasonal-naive** (c = SN) | same |
-| **Interval calibration** | in-sample | fitted on the test rows (invalid) | split conformal on the held-out calibration block | season-weighted pool, per-district normalised scores, each tail separately, ACI with delayed feedback (γ = 0.01, α clipped to [0.01, 0.3]) | same; **found to hurt the TFT's own intervals** (§10.9) | five variants compared on the development folds; **static conformal (γ = 0) chosen**; then **raw or calibrated chosen per model and horizon**: raw for the TFT and for the Ensemble at t+7 / t+14, calibrated for the Ensemble at t+30 |
-| **Combination** | – | – | 3-seed average | **stack**: simplex weights over {no change, SN, TFT, LightGBM} per district and horizon, fitted on the pool, pulled toward global weights (prior 500) | same, with the stronger LightGBM | same (a per-district **stack guard** was tested and rejected) |
+| Step | v1 | v2 | v3 | v4 | v4.1 | v4.2 | v4.3 |
+|---|---|---|---|---|---|---|---|
+| **Shrinkage** `mid = c + λ(mid_TFT − c)`, λ per district and horizon band, fitted out of sample | – | – | toward persistence (c = 0), fitted on the calibration block | toward persistence, fitted on the pool | **toward seasonal-naive** (c = SN) | same | same |
+| **Interval calibration** | in-sample | fitted on the test rows (invalid) | split conformal on the held-out calibration block | season-weighted pool, per-district normalised scores, each tail separately, ACI with delayed feedback (γ = 0.01, α clipped to [0.01, 0.3]) | same; **found to hurt the TFT's own intervals** (§10.9) | five variants compared on the development folds; **static conformal (γ = 0) chosen**; then **raw or calibrated chosen per model and horizon**: raw for the TFT and for the Ensemble at t+7 / t+14, calibrated for the Ensemble at t+30 | v4.2's + a **width cap** (3 × the raw distance); Ensemble 7-day now calibrated (evenness-aware rule D2) |
+| **Combination** | – | – | 3-seed average | **stack**: simplex weights over {no change, SN, TFT, LightGBM} per district and horizon, fitted on the pool, pulled toward global weights (prior 500) | same, with the stronger LightGBM | same (a per-district **stack guard** was tested and rejected) | same + **LightGBM-only guard** (adopted; acted for Pune and Raigad; did not hold on the locked folds) |
 
 **The Ensemble** is the final forecaster.
 - Its median is the stacked blend.
@@ -1056,7 +1055,7 @@ This made it possible to screen 7 set-ups with only 3 network trainings, and to 
 
 ---
 
-## 9. Model Pipeline Versions v1 → v4.2 — What Changed in Each
+## 9. Model Pipeline Versions v1 → v4.3 — What Changed in Each
 
 ### 9.1 Production v1 (14 Aug 2026) — "looked fine, was worse than doing nothing"
 
@@ -1180,23 +1179,23 @@ Results are in §10.
 
 ### 9.6 Everything That Changed, in One Table
 
-| Area | v1 | v2 | v3 | v4 | v4.1 | v4.2 |
-|---|---|---|---|---|---|---|
-| Groundwater series | all stations, raw median | telemetric panel, anomaly aggregation, drift filter | same | **rebuilt**: placeholders, stuck runs, two-sided Hampel, steps and regimes, factor model, no fills | same | same |
-| ET and soil moisture | NRSC (fabricated after 2025-06) | same | **ERA5-Land, 4 layers** | same | same | same |
-| Sentinel | interpolated (future leak) | same | **causal** | same | same | same |
-| Target | absolute level | Δ from anchor | Δ with per-horizon scale | **residual on SN** | same | same |
-| Parameters | 11.6M | 1.23M (reported as 205k) | ~222k | ~222k | ~222k | ~222k |
-| Training windows | stride 1 | stride 7 | stride 7 | stride 7 | **stride 1, 1/7 per epoch** | same |
-| Seeds | 1 | 1 | 3 | 5 | **10** | 10 |
-| Window keying | decoder end | decoder end | decoder end | **issue date** | issue date | issue date |
-| Baselines | none | persistence | + climatology, ridge, LightGBM | **+ seasonal-naive** | + stronger LightGBM | same |
-| Shrinkage | – | – | toward persistence | toward persistence | **toward SN** | same |
-| Calibration | in-sample | on test (invalid) | held-out block | **pooled, asymmetric, ACI** | same | **raw or static conformal, chosen per model × horizon** (TFT raw; Ensemble raw at t+7 / t+14, calibrated at t+30) |
-| Combination | – | – | seed average | **stacked ensemble** | same | same (per-district guard tested, rejected) |
-| Significance | – | – | DM + bootstrap | cluster bootstrap + DM + Holm | same | same |
-| Selection protocol | – | – | – | development folds 1–4, locked 5–6 | pre-registered rule | three rules fixed in advance; folds 5–6 computed only after them |
-| Time per full run (T4) | ~3 h | ~3 h | 6.5 min | – | 54 min (screening, sweeps and a 10-seed final) | 31 min (one training; post-processing variants free) |
+| Area | v1 | v2 | v3 | v4 | v4.1 | v4.2 | v4.3 |
+|---|---|---|---|---|---|---|---|
+| Groundwater series | all stations, raw median | telemetric panel, anomaly aggregation, drift filter | same | **rebuilt**: placeholders, stuck runs, two-sided Hampel, steps and regimes, factor model, no fills | same | same | same |
+| ET and soil moisture | NRSC (fabricated after 2025-06) | same | **ERA5-Land, 4 layers** | same | same | same | same |
+| Sentinel | interpolated (future leak) | same | **causal** | same | same | same | same |
+| Target | absolute level | Δ from anchor | Δ with per-horizon scale | **residual on SN** | same | same | same |
+| Parameters | 11.6M | 1.23M (reported as 205k) | ~222k | ~222k | ~222k | ~222k | same |
+| Training windows | stride 1 | stride 7 | stride 7 | stride 7 | **stride 1, 1/7 per epoch** | same | same |
+| Seeds | 1 | 1 | 3 | 5 | **10** | 10 | same |
+| Window keying | decoder end | decoder end | decoder end | **issue date** | issue date | issue date | same |
+| Baselines | none | persistence | + climatology, ridge, LightGBM | **+ seasonal-naive** | + stronger LightGBM | same | same |
+| Shrinkage | – | – | toward persistence | toward persistence | **toward SN** | same | same |
+| Calibration | in-sample | on test (invalid) | held-out block | **pooled, asymmetric, ACI** | same | **raw or static conformal, chosen per model × horizon** (TFT raw; Ensemble raw at t+7 / t+14, calibrated at t+30) | as v4.2 + **width cap 3 ×**; Ensemble 7-day now calibrated (evenness-aware rule D2) |
+| Combination | – | – | seed average | **stacked ensemble** | same | same (per-district guard tested, rejected) | same + **LightGBM-only guard** (acted for Pune and Raigad) |
+| Significance | – | – | DM + bootstrap | cluster bootstrap + DM + Holm | same | same | same |
+| Selection protocol | – | – | – | development folds 1–4, locked 5–6 | pre-registered rule | three rules fixed in advance; folds 5–6 computed only after them | rules G2, D2 fixed in advance; folds 5–6 computed only after them |
+| Time per full run (T4) | ~3 h | ~3 h | 6.5 min | – | 54 min (screening, sweeps and a 10-seed final) | 31 min (one training; post-processing variants free) | 39 min (one training) + operational forecast |
 
 ### 9.7 Change Log — Every Change, When, Why, and Its Measured Effect
 
@@ -1235,9 +1234,9 @@ In date order. "Kept" means the change is part of the current system. Negative r
 | 25 | 29 Oct | analysis | Calibrated vs uncalibrated intervals compared on development folds | Check whether the calibration step earns its place | **It hurts the TFT's intervals** (coverage 80/77/71 → 72/68/64% on development folds) | to be fixed in v4.2 |
 | 26 | 30 Oct | v4.2 | ACI fed one outcome per issue date and band; symmetric α range; static conformal; calibrated or raw interval chosen per model × horizon (rules C, D) | v4.1 fed the TFT ~10 correlated outcomes per issue date (the Ensemble 1), and the α range 0.01–0.30 around 0.10 favoured narrowing | **TFT:** locked coverage 74/70/66 → 80/78/77%, interval score −12/−11/−19%. **Ensemble:** +3/+3/+2% locked, +2/−9/−3% all folds. Static conformal (γ = 0) chosen; raw intervals reported except Ensemble t+30 | **yes** (TFT intervals fixed) |
 | 27 | 30 Oct | v4.2 | Per-district stack guard (rule G) | Pune's weights were ≈ global, which leaned on LightGBM (MASE 1.30 at t+30 in Pune, vs 0.87 for SN and TFT) | Fixed Pune on development folds (t+30 1.27 → 0.87), but fired in 53 cases and made 22 district-horizons worse (Dhule +0.13); development mean vs SN 0.950 → 0.969 | **no** (rejected by rule G) |
-| 28 | 31 Oct | v4.3 | LightGBM-only guard (rule G2): refit a district's stack without LightGBM where LightGBM alone is > 20% worse than SN on its pool | v4.2's whole-blend guard fixed Pune but hurt 22 district-horizons; a dev-only check showed this version fires for Pune and Raigad only | Colab run pending | run pending |
-| 29 | 31 Oct | v4.3 | Calibrated interval width cap (3 × the raw distance from the median) and the evenness-aware interval rule D2 | 90–108 m intervals (Thane, Dhule); raw intervals uneven across districts. Designed after seeing v4.2's locked results | Colab run pending | run pending |
-| 30 | 31 Oct | v4.3 | Operational forecast from the latest reading (`forecast_latest`, `fold7_latest`) + `dashboard_export` | The dashboards need a forward forecast made exactly like an evaluated fold | Local smoke test: 23 of 24 districts issued on 4 Jun 2026; Nanded skipped (40% of the last 60 days observed) | yes |
+| 28 | 31 Oct | v4.3 | LightGBM-only guard (rule G2): refit a district's stack without LightGBM where LightGBM alone is > 20% worse than SN on its pool | v4.2's whole-blend guard hurt 22 district-horizons | Adopted on development folds (mean vs SN 0.9501 → 0.9486; no district worse; acted only for Pune and Raigad). **On the locked folds Pune got worse** (0.89 / 0.79 / 0.77 → 0.94 / 0.91 / 0.92), moving the headline by +0.002 to +0.004 | yes (rule G2), mixed |
+| 29 | 31 Oct | v4.3 | Width cap (3 ×) and the evenness-aware interval rule D2 | 90–108 m intervals; raw intervals uneven across districts. Designed after seeing v4.2's locked results | Ensemble 7-day now calibrated: districts covered 65–90% 86 → 100% (all folds), 57 → 76% (locked); intervals > 20 m 332 → 105 (max 34 m); interval score all folds −0.7 / −0.2 / −3.6% | yes |
+| 30 | 31 Oct | v4.3 | Operational forecast from the latest reading (`forecast_latest`, `fold7_latest`) + `dashboard_export` | The dashboards need a forward forecast made exactly like an evaluated fold | Issued 4 Jun 2026 for 23 of 24 districts (Nanded skipped: 40% of the last 60 days observed). At t+30: 15 rising, 1 steady, 7 uncertain, 0 falling | yes |
 | 31 | 31 Oct | dashboards | Farmer and government dashboards (`dev/`), en / mr / hi, site-guide chatbot, Gnani speech plan | The project's operational goal | 14 backend + 13 frontend tests; browser run with 0 console errors | yes |
 
 ### 9.8 Production v4.2 (built and run 30 Oct 2026)
@@ -1258,6 +1257,29 @@ In date order. "Kept" means the change is part of the current system. Negative r
 - **The TFT's intervals are fixed:** locked coverage 74 / 70 / 66% → 80 / 78 / 77%, interval score 11–19% better.
 - **The Ensemble's intervals are about the same on average** (locked +1.5–3.3%, all folds +1.7 / −8.7 / −3.3%), but less even across districts.
 - **Pune is still open.**
+
+### 9.9 Production v4.3 (built 31 Oct, run 1 Nov 2026)
+
+**Post-processing only, plus the operational forecast.**
+- The networks and LightGBM again re-trained **bit-for-bit identical** to v4.1 and v4.2: TFT, LightGBM, ridge and seasonal-naive rows all identical.
+- The Ensemble medians changed **only in Pune and Raigad**, where the new guard acted.
+- 39 min on a T4.
+
+| Rule | Outcome on development folds 1–4 | Decision |
+|---|---|---|
+| **G2**: refit a district's stack without LightGBM where LightGBM alone was > 20% worse than SN on its pool | The mean error ÷ SN error improved slightly (0.9501 → 0.9486); no district got worse. It acted only for Pune (folds 3–4) and Raigad (single well). Pune's dev MASE: 1.044 / 1.155 / 1.271 → 1.041 / 1.045 / 1.200 | **adopted** |
+| **C**: calibration | Fixed in advance: v4.2's static conformal plus a width cap of 3 × the raw distance | – |
+| **D2**: raw or calibrated, counting district evenness | Ensemble 7-day: both options were in 75–85% coverage with equal interval scores (2.766 vs 2.769), and calibrated was far more even (95% vs 81% of districts), so calibrated was chosen. The other choices stayed as in v4.2: TFT raw at every horizon; Ensemble raw at t+14 and calibrated at t+30 | Ensemble 7-day → calibrated |
+
+**Results** (§10.13):
+- **The intervals improved where intended.**
+  - The 7-day Ensemble is now honest in **every** headline district over all folds (100%, from 86%), and in 76% on the locked test (from 57%).
+  - Intervals wider than 20 m fell from 332 to 105; the widest is now 34 m, down from 94 m.
+- **The Pune guard did not generalise.** Over all folds Pune improved at 14 days (1.050 → 1.004), but on the locked folds 5–6 it got worse at every horizon (t+30: 0.77 → 0.92). In those folds LightGBM happened to forecast Pune well, and the guard had removed it.
+- **The locked headline moved by +0.002 to +0.004** (0.841 / 0.766 / 0.620), still significant at p = 0.003.
+- **The rule's choice is kept and reported as is.** Reversing it because of the locked folds would turn the locked test into a selection set.
+
+**The operational forecast** was issued from the last reading, 4 Jun 2026, for 23 of 24 districts. Nanded was skipped: its wells reported on 40% of the last 60 days, and 70% is needed. This is now what the dashboards show.
 
 ---
 
@@ -1288,11 +1310,14 @@ All v4.1 numbers come from `04_results/tft_v4_1/` (`RESULTS_TO_QUOTE.csv`, `FINA
 | v4.2 | TFT alone (raw intervals) | 6 folds | 0.935 / 0.876 / 0.764 | 1.000 / 1.002 / 0.976 | 0.44 / 0.63 / 0.92 | 6.2 / 8.7 / 13.0 | **80 / 77 / 73** |
 | v4.2 | Ensemble | 6 folds | 0.903 / 0.830 / 0.712 | 0.967 / 0.949 / 0.909 | 0.43 / 0.60 / 0.86 | 6.0 / 8.4 / 12.4 | 81 / 79 / 77 |
 | v4.2 | TFT alone (raw intervals) | **locked 5–6** | 0.872 / 0.803 / 0.675 | 0.976 / 0.971 / 0.960 | 0.33 / 0.43 / 0.60 | 4.4 / 5.8 / 7.6 | **80 / 78 / 77** |
-| **v4.2** | **Ensemble (final)** | **locked 5–6** | **0.839 / 0.763 / 0.616** | **0.938 / 0.922 / 0.877** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.1** | **82 / 81 / 79** |
+| v4.2 | Ensemble | locked 5–6 | 0.839 / 0.763 / 0.616 | 0.938 / 0.922 / 0.877 | 0.31 / 0.41 / 0.55 | 4.3 / 5.6 / 7.1 | 82 / 81 / 79 |
+| v4.3 | Ensemble | 6 folds | 0.903 / 0.829 / 0.712 | 0.967 / 0.948 / 0.909 | 0.43 / 0.60 / 0.86 | 6.0 / 8.4 / 12.3 | 77 / 79 / 77 |
+| **v4.3** | **Ensemble (final)** | **locked 5–6** | **0.841 / 0.766 / 0.620** | **0.940 / 0.926 / 0.882** | **0.31 / 0.41 / 0.55** | **4.3 / 5.6 / 7.2** | **80 / 80 / 78** |
 
 > **The versions were not all scored the same way.** The target data, folds and scoring changed between them, so treat Table 10.1 as history and §10.2 as the fair comparison.
 > - v1 MASE was computed afterwards from its predictions.
 > - Phase 1 used the old data and a different test period.
+> - The v4.3 TFT alone is identical to v4.2 (same networks and intervals).
 > - MAPE is not comparable across versions.
 
 ### 10.2 Like-for-Like Comparison (development folds 1–4, identical windows, scoring and baseline)
@@ -1438,7 +1463,11 @@ The persistence-vs-SN ratios are computed from the ladder MAEs: persistence MAE 
 **The gap between districts:**
 - **Best at t+30:** Nagpur (0.527), Nandurbar, Amravati, Yavatmal, Wardha.
 - **Weakest at t+30:** Pune, Nashik, Parbhani, Aurangabad, Dhule.
-- **Pune** is the only headline district where the Ensemble loses to no-change (t+14 and t+30). Interestingly, the TFT alone does better there (0.871 at t+30). Pune's stack weights are almost the global ones, which lean on LightGBM, and LightGBM is poor in Pune (MASE 1.30 at t+30). v4.2's stack guard fixed Pune on the development folds (t+30 1.27 → 0.87), but it made 22 other district-horizons worse, so its rule rejected it. **Pune is still open** (§9.8, §12.4).
+- **Pune** is the only headline district where the Ensemble loses to no-change over all folds.
+  - LightGBM is poor there (MASE 1.30 at t+30), while the TFT alone does better (0.871 at t+30).
+  - v4.2's whole-blend guard was rejected.
+  - v4.3's LightGBM-only guard was adopted on the development folds and improved Pune at 14 days over all folds (1.050 → 1.004). But it made Pune worse on the locked folds (t+30: 0.77 → 0.92), where LightGBM happened to forecast Pune well.
+  - **Pune remains the weakest district** (all folds: 1.012 / 1.004 / 1.121); §9.9.
 - The worst-5 minus best-5 MASE gap **widened** from v4 to v4.1, because the best districts improved the most:
   - all folds: 0.144 / 0.236 / 0.343 → 0.175 / 0.290 / 0.368;
   - locked test: 0.237 / 0.308 / 0.390 → 0.264 / 0.336 / 0.457.
@@ -1563,6 +1592,59 @@ Same forecasts (bit-for-bit), different reported intervals. 21 headline district
   - 332 Ensemble t+30 rows are wider than 20 m (Dhule, Nandurbar, Thane), against a median width of 2.35 m.
   - These enter the reported Ensemble t+30 interval for those districts (Appendix A #24).
 
+### 10.13 v4.2 → v4.3: Even Intervals, the Width Cap and the Pune Guard
+
+Same networks (bit-for-bit). The Ensemble medians differ only in Pune and Raigad. 21 headline districts, t+7 / t+14 / t+30.
+
+| Test set | Ensemble | v4.2 | v4.3 |
+|---|---|---|---|
+| locked 5–6 | error ÷ no-change | 0.839 / 0.763 / 0.616 | 0.841 / 0.766 / 0.620 |
+| locked 5–6 | coverage (%) | 81.6 / 80.6 / 79.1 | 80.1 / 80.3 / 78.2 |
+| locked 5–6 | interval score (m) | 1.731 / 2.122 / 3.109 | **1.681** / 2.123 / **3.086** |
+| all 6 folds | error ÷ no-change | 0.903 / 0.830 / 0.712 | 0.903 / 0.829 / 0.712 |
+| all 6 folds | coverage (%) | 80.9 / 79.1 / 77.1 | 77.4 / 79.2 / 77.0 |
+| all 6 folds | interval score (m) | 2.443 / 3.293 / 5.211 | 2.425 / 3.287 / **5.022** |
+
+| Districts with coverage 65–90% (% of 21) | v4.2 all folds | v4.3 all folds | v4.2 locked | v4.3 locked |
+|---|---|---|---|---|
+| Ensemble t+7 | 86 | **100** | 57 | **76** |
+| Ensemble t+14 | 81 | 81 | 52 | 57 |
+| Ensemble t+30 | 86 | 86 | 57 | 52 |
+
+| | v4.2 | v4.3 |
+|---|---|---|
+| Reported intervals wider than 20 m (all districts) | 332 | 105 (Dhule 59, Thane 43, Nandurbar 3) |
+| Widest Ensemble t+30 interval | 94 m | 34 m |
+
+**Pune, Ensemble error ÷ no-change, by fold:**
+
+| Version | Horizon | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Fold 5 | Fold 6 |
+|---|---|---|---|---|---|---|---|
+| v4.2 | t+14 | 1.460 | 0.690 | 1.350 | 0.898 | 0.959 | 0.717 |
+| v4.3 | t+14 | 1.460 | 0.690 | **1.004** | 0.938 | 1.009 | 0.857 |
+| v4.2 | t+30 | 0.852 | 0.798 | 2.220 | 1.028 | 0.878 | 0.722 |
+| v4.3 | t+30 | 0.852 | 0.798 | 2.220 | **0.683** | 0.968 | 0.902 |
+
+**Reading:**
+- **The interval changes worked as designed.** 7-day evenness reached 100% of districts over all folds, the width cap removed two-thirds of the extreme intervals, and interval scores improved slightly.
+- **The coverage trade-off.** The Ensemble's 7-day coverage over all folds fell to 77.4%. That is still within 75–85%, and the calibrated interval is honest *in each district* instead of only on average.
+- **The Pune guard did not generalise.**
+  - It helped in fold 3 (t+14) and fold 4 (t+30), both development folds.
+  - It hurt in folds 5–6, where LightGBM did well for Pune.
+  - A district's past component errors are a weak guide to the next season.
+- **The decline bias remains** at t+30 on the locked test: 17.4% of outcomes fall below q10 and 4.4% above q90.
+
+**The operational forecast** was issued on 4 Jun 2026 for 23 districts (Nanded skipped).
+
+| Horizon | rising | steady | uncertain | falling |
+|---|---|---|---|---|
+| t+7 | 1 | 14 | 8 | 0 |
+| t+14 | 2 | 6 | 15 | 0 |
+| t+30 | 15 | 1 | 7 | 0 |
+
+- **This is the expected monsoon-onset rise.** The largest median rises by 4 July are Thane +6.8 m, Nandurbar +5.0 m, Dhule +4.4 m and Kolhapur +2.6 m. Thane is single-well, with a 3–13 m range.
+- **These target dates have passed, but there are no readings yet to check them,** because CGWB has published nothing after 4 Jun 2026. The forecasts will be scored when it does.
+
 ---
 
 ## 11. Discussion
@@ -1596,6 +1678,9 @@ Same forecasts (bit-for-bit), different reported intervals. 21 headline district
 8. **A rule fixed in advance can reject a fix that works where it was aimed.**
    - The v4.2 stack guard repaired Pune but harmed 22 other district-horizons, so the rule rejected it.
    - Without the rule, a Pune-only success could have been reported.
+9. **A rule fixed in advance can also adopt a fix that does not generalise, and that must be reported too.**
+   - v4.3's narrower guard passed its development-fold rule but made Pune worse on the locked folds.
+   - Past per-district component errors are a weak guide to the next season, and the locked test is what shows it.
 
 ### 11.2 Is the Transformer Worth It?
 
@@ -1612,14 +1697,15 @@ Answered honestly:
 1. Only three monsoons. The locked test (folds 5–6) contains no monsoon, so monsoon skill comes from folds 1 and 4, which were used for tuning.
 2. Folds 5–6 were seen once before, in the v4.0 run. v4.1 and v4.2 were selected on folds 1–4 only.
 3. No input knows future rain. This is the main remaining error source at t+30 in the monsoon.
-4. Five weak districts remain (Pune, Nashik, Parbhani, Aurangabad, Dhule), and the gap between best and worst widened in v4.1. Pune still loses to no-change at t+14 and t+30; the v4.2 guard was rejected.
+4. Five weak districts remain (Pune, Nashik, Parbhani, Aurangabad, Dhule), and the gap between best and worst widened in v4.1. Pune still loses to no-change over all folds. Neither guard fixed it: v4.2's was rejected, and v4.3's did not hold on the locked folds.
 5. The intervals are honest on average: on the locked test the Ensemble covers 79–82% and the TFT 77–80%. But they are uneven:
    - across districts, only 52–57% of districts are within 65–90% on the locked test;
    - by fold, the Ensemble at t+30 ranges from 62% to 88%;
    - they miss low more often than high at long horizons (§10.12).
 6. 12 of 36 districts cannot be forecast for lack of data. Single-well districts are reported but are not true district signals.
 7. District-level only. No well-level or sub-district forecasts.
-8. A few calibrated intervals are extremely wide, up to about 100 m, in Thane, Dhule and Nandurbar (§10.12).
+8. A few calibrated intervals are still wide. After v4.3's cap the widest is 34 m (it was 94 m), and 105 rows are wider than 20 m (Dhule, Thane, Nandurbar).
+9. Forecasts can only be issued from a groundwater reading. The latest CGWB reading is 4 Jun 2026, so the latest forecast covers dates that have already passed (§13).
 
 ---
 
@@ -1630,9 +1716,9 @@ Answered honestly:
 JalVaani now produces 7, 14 and 30-day groundwater forecasts with 80% prediction intervals for 24 Maharashtra districts.
 
 **On the locked test (October 2025 – June 2026), the final Ensemble:**
-- **beats "no change" by 16–38%** and **the seasonal forecast by 6–12%**;
+- **beats "no change" by 16–38%** and **the seasonal forecast by 6–12%** (0.841 / 0.766 / 0.620 and 0.940 / 0.926 / 0.882; v4.3);
 - has errors of 0.31 / 0.41 / 0.55 m;
-- has intervals that contain the true level 79–82% of the time (the TFT alone: 77–80%);
+- has intervals that contain the true level 78–80% of the time (the TFT alone: 77–80%), and its 7-day intervals are honest in every district over all folds;
 - beats "no change" in all 21 headline districts at every horizon.
 
 **Getting there involved:**
@@ -1644,7 +1730,8 @@ JalVaani now produces 7, 14 and 30-day groundwater forecasts with 80% prediction
 - adding a seasonal baseline, a stacked ensemble and out-of-sample calibration;
 - in v4.2, testing the calibration itself, which showed that the network's own intervals are the better choice in most cases.
 
-The pipeline is reproducible: v4.2 re-trained every model on Colab and matched v4.1 bit-for-bit.
+The pipeline is reproducible: v4.2 and v4.3 re-trained every model on Colab and matched v4.1 bit-for-bit.
+It also issues the operational forecast that the dashboards show (§13).
 
 The first full TFT run was worse than doing nothing. The current system is significantly better than both naive benchmarks, and every number is reported against them.
 
@@ -1654,7 +1741,7 @@ v4.2 completed the interval fix (priority 1 of the previous list). Its Pune guar
 
 | Priority | Item | Why / expected effect |
 |---|---|---|
-| 1 | **Optional v4.3, post-processing only** (one ~30-min Colab run):<br>(a) drop **only LightGBM**, and only where LightGBM alone loses to SN on the district's pool by a clear margin;<br>(b) restore per-district evenness of the raw intervals with a static per-district width scale, or add evenness to rule D;<br>(c) cap calibrated widths | (a) Pune, without the side effects of the v4.2 guard. (b) Fixes the evenness lost in v4.2. (c) Removes the 90–108 m intervals |
+| 1 | **Re-run when CGWB publishes readings after 2026-06-04**: collectors → preprocessing → the v4.3 notebook → `dev\scripts\build_data.ps1` | It gives current forecasts, scores the June–July 2026 forecast, and adds a monsoon-2026 locked fold. v4.3 itself is done (§9.9); Pune is still open |
 | 2 | **Rainfall forecasts as known-future inputs** (IMD or ECMWF extended range) | Targets the largest remaining error source (t+30, monsoon) |
 | 3 | **Re-run as data arrives:** new CGWB readings after 2026-06-04 (a monsoon-2026 test fold); final CHIRPS for September 2026 | A locked monsoon test; removes the provisional rainfall |
 | 4 | **Reservoir storage** (`cwc_reservoir.py`, needs a data.gov.in key) | The main uncollected physical driver, especially for Marathwada |
@@ -1680,49 +1767,41 @@ results -> find a specific weakness -> diagnose it with a check or probe -> chan
 | v4 | v3 worse than the seasonal forecast; false jumps in the target | seasonal-naive baseline; target audit | target rebuild, issue-date windows, residual-on-SN target, pooled calibration, ensemble |
 | v4.1 | TFT only tied SN; LightGBM could not see the season | stacking weights, feature review | shrink toward SN, LightGBM v2, stride-1 sampling |
 | v4.2 | calibration hurts the TFT's intervals; Pune | calibrated vs uncalibrated comparison on development folds; reading the ACI code; Pune's stack weights and component errors | raw or calibrated interval per model and horizon (kept: TFT intervals fixed); static conformal; per-district stack guard (rejected) (§9.8) |
+| v4.3 | Ensemble intervals uneven across districts; 90–108 m intervals; Pune; no forecast from the latest reading | per-district coverage spread; the v4.2 guard's side effects | evenness-aware interval rule (kept), width cap (kept), LightGBM-only guard (adopted, mixed), operational forecast (§9.9) |
 
 ### 12.4 Where the Project Stands, and What We Do Next
 
-**Where we are (31 Oct 2026).**
-- **The forecasting model is complete and frozen for the write-up:** v4.1's forecasts with v4.2's reported intervals.
+**Where we are (1 Nov 2026).**
+- **The forecasting model is complete and frozen: v4.3.**
   - On the locked test it beats "no change" by 16–38% and the seasonal forecast by 6–12%, with p = 0.003.
-  - Its 80% intervals cover 79–82%.
-  - The TFT alone now has honest intervals (77–80%).
-- **v4.2 changed no forecast.** That is a sign that post-processing has reached diminishing returns.
-- **What limits accuracy now is information the model does not have:**
-  - future rain;
-  - a monsoon test season after June 2026;
-  - reservoir levels;
-  - better data for the weak districts.
+  - Its 80% intervals cover 78–80%; the TFT alone covers 77–80%.
+  - Its 7-day intervals are honest in every district over all folds.
+- **It runs end to end.** Collected data → model on Colab → `dashboard_export` → farmer and government dashboards in three languages.
+- **The whole pipeline is reproducible:** two Colab re-runs matched bit-for-bit.
 
-**What v4.2 did and found** (§9.8, §10.12):
-1. **The calibration diagnosis was right, but the cure was simpler than planned.**
-   - Feeding ACI one outcome per issue date restored 4–9 points of the TFT's calibrated coverage.
-   - But the network's own intervals still scored better, so they are now reported for the TFT, and for the Ensemble at t+7 and t+14.
-2. **The Ensemble's intervals stayed about as good on average, but became less even across districts.**
-3. **The Pune guard fixed Pune but harmed 22 other district-horizons,** so the pre-registered rule rejected it.
-4. **The whole pipeline is reproducible:** the Colab re-run matched v4.1 bit-for-bit.
+**What v4.2 and v4.3 found** (§9.8–§9.9, §10.12–§10.13):
+1. **The network's own intervals beat every calibration variant for the TFT.** For the Ensemble, the evenness-aware rule and the width cap made the intervals honest district by district.
+2. **Two attempts to fix Pune failed in different ways.** v4.2's guard harmed other districts. v4.3's guard did not hold on the locked folds. Pune's problem is real, but per-district post-processing cannot predict it.
+3. **Post-processing has reached its limit.** The remaining errors need information the model does not have.
 
 **What we do next, in order:**
-1. **Write-up and viva on the frozen model.** Use this report, `docs/history/TFT_VERSION_HISTORY.md` and `04_results/tft_v4_2/` with `docs/RESULTS_GUIDE.md`.
-2. **v4.3: built (31 Oct), Colab run pending.** Notebook `09_tft_colab_production_v4_3.ipynb`, pipeline 4.7.
-   - **Post-processing:**
-     - a LightGBM-only guard for Pune (rule G2);
-     - an interval width cap of 3 × the raw distance from the median;
-     - the evenness-aware raw-or-calibrated rule (D2).
-   - **The operational forecast** from the latest reading, plus `dashboard_export/`.
-   - Each change is behind a switch, and with all switches off v4.2 is reproduced exactly (local check).
-   - **Honesty note:** the cap and rule D2 were designed after seeing v4.2's locked-fold results.
-3. **Dashboards:** built (§13). They show the v4.2 backtests now, and the v4.3 latest forecast once the run is unzipped and `dev\scripts\build_data.ps1` is run.
-4. **Rainfall forecasts as a known-future input** (IMD or ECMWF extended-range).
-   - **Why:** the largest remaining error is unknown future rain (monsoon, t+30).
-   - **How:** use the forecast *as it was issued* on each anchor day, never the rain that later fell. Using observed future rain would leak the answer.
-   - **Measure:** monsoon-fold MASE and the seasonal-naive ratio, compared with and without the forecast on identical windows.
-5. **Re-run when CGWB publishes readings after 2026-06-04.** This gives a locked monsoon-2026 fold, which no version has been tested on yet.
-6. **Reservoir storage, then district clustering.**
-   - Reservoir storage (`cwc_reservoir.py`, once an API key is available), tested as an input ablation.
-   - Then clustering districts by similar dynamics, measured by the worst-5 minus best-5 district gap.
-   - Only after that, a GAT.
+1. **Write-up and viva** on the frozen model: this report, `docs/history/TFT_VERSION_HISTORY.md`, `04_results/tft_v4_3/` with `docs/RESULTS_GUIDE.md`, and the dashboards.
+2. **Re-run when CGWB publishes readings after 2026-06-04.** This gives:
+   - current forecasts on the dashboards;
+   - the first check of the June–July 2026 forecast;
+   - a locked monsoon-2026 fold.
+
+   It uses the same notebook: collectors → preprocessing → v4.3 notebook → `dev\scripts\build_data.ps1`.
+3. **Dashboards:**
+   - a native-speaker review of the Marathi and Hindi text;
+   - choosing a Gnani Marathi voice;
+   - short usability sessions with farmers and officials;
+   - then hosting, with a scheduled data refresh.
+4. **Possible research extensions:**
+   - rainfall forecasts as an input (decided against for this project; future work);
+   - a model that estimates *today's* level from rain since the last reading;
+   - reservoir storage;
+   - district clustering, then a GAT.
 
 ---
 
@@ -1753,18 +1832,24 @@ Both are built in `dev/` and run locally. They work in **English, Marathi and Hi
     - the latest forecast is "not yet produced" until the v4.3 run;
     - ten districts have no usable well data;
     - September 2026 rainfall is provisional.
-- **The latest forecast** comes from v4.3's `forecast_latest`. It is issued from each district's last reading, exactly like an evaluated fold. A district with too few recent readings gets no forecast, and the site shows the reason (Nanded: readings on 40% of the last 60 days, 70% needed).
+- **The latest forecast** comes from v4.3's `forecast_latest`, issued on 4 Jun 2026 for 23 districts (§10.13). It is made exactly like an evaluated fold. A district with too few recent readings gets no forecast, and the site shows the reason (Nanded: readings on 40% of the last 60 days, 70% needed).
+- **The site is honest about time.**
+  - The last reading is 150 days old, so the farmer view shows a banner saying so.
+  - The forecast card says its dates have passed.
+  - Tips name the date of the reading they come from ("At the last reading (4 Jun 2026)…"), and give no "next month" advice from an expired forecast.
+- **Two ranges from one forecast.** The 80% range answers "how bad could it be", but it is wide (for Akola at 14 days, 6.7–7.9 m). Next to it the site shows a "most likely" range: the same median ± the median size of that district's past errors at that horizon (Akola at 14 days: 7.0–7.6 m). It is not a new model and does not narrow the honest 80% range. Checked the honest way, with margins from the development folds only, it covered 63 / 65 / 68% of the locked-fold outcomes at 7 / 14 / 30 days, a little more than the 50% it aims for.
 
 ### 13.3 Human–machine interface
 The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principles and WCAG 2.1 AA. `dev/docs/HMI_CHECKLIST.md` maps each one to the screen that applies it. In particular:
 - **Status is always visible.** A freshness bar on every page shows the date of every kind of data.
 - **Units are real-world.** Depth is in metres below ground, on a reversed axis so that up = water nearer the surface.
-- **Uncertainty is shown as words and ranges,** never a bare number.
+- **Uncertainty is shown as words and ranges,** never a bare number: a darker "most likely" band inside a lighter "could be" band, with the numbers printed beside them.
 - **Colour is never alone.** Every colour comes with an icon and a word; the palette is colour-blind safe.
-- **Disclosure is progressive.** Three cards come first; details sit behind a button.
+- **Disclosure is progressive, in a bento grid.** The page uses the full screen width; tile size follows importance (water now and the forecast first, context tiles smaller); on phones the chart sits behind a button.
+- **One visual language.** One icon set, no emoji, skeleton loading in the shape of each page, and short fades that switch off under reduced motion.
 - **Recognition over recall.** Language, role and district are remembered.
 - **The user stays in control.** The chatbot never navigates by itself; it offers a "Go there" button.
-- **Built for slow connections.** The farmer page loads about 95 kB of gzipped JavaScript; the map and charts load only when opened.
+- **Built for slow connections.** The farmer page loads about 105 kB of gzipped JavaScript; the map and charts load only when opened.
 
 ### 13.4 Languages, chatbot and voice
 - **Languages.** Every text is in `dev/frontend/src/i18n/{en,mr,hi}.json`. A test fails if a key or `{{placeholder}}` is missing in any language. The Marathi and Hindi text is drafted and awaits a native speaker's review (`dev/docs/I18N_REVIEW.md`). District names appear in all three scripts, with the official new names.
@@ -1777,7 +1862,7 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
 
 ### 13.5 Verification
 - **Backend tests (pytest):**
-  - API values checked against the source files;
+  - API values checked against the source files, including the "most likely" range against the back-test file;
   - the rules;
   - the chat guide in three languages and the action allowlist;
   - speech returning 501 while not configured;
@@ -1796,7 +1881,7 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
 ### 13.6 Limits and next steps
 - District level only.
 - Groundwater readings end on 4 Jun 2026, until CGWB publishes newer ones.
-- The latest forecast appears after the v4.3 Colab run.
+- The latest forecast (4 Jun 2026) covers dates that have passed. Current forecasts need newer CGWB readings.
 - **Still to do:** a native-language review, usability sessions with farmers and officials, the Gnani integration, and deployment with a scheduled data refresh.
 
 ---
@@ -1828,7 +1913,7 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
 | 21 | Cached fold results not tied to the code version | v4 development | Risk of silently reusing stale results | `PIPELINE_VERSION` in cache keys |
 | 22 | Conformal width blow-up: non-scored steps counted as misses; α unclipped | v4 development | Exploding intervals | v4 (NaN medians skipped, α clipped, asymmetric) |
 | 23 | Calibration step hurts the TFT's own intervals (ACI fed ~10 correlated outcomes per issue date; lopsided α range) | v4.1 analysis | TFT coverage 66–74% instead of 77–80% | **v4.2**: the TFT is reported with its own intervals (77–80% locked). The conformal step still does not beat raw intervals on average |
-| 24 | Occasional very wide calibrated intervals (90–108 m) | v4.2 analysis | Thane (single well), Dhule fold 1, Nandurbar: 332 Ensemble t+30 rows wider than 20 m | **open** (a width cap, v4.3) |
+| 24 | Occasional very wide calibrated intervals (90–108 m) | v4.2 analysis | Thane (single well), Dhule fold 1, Nandurbar | **reduced in v4.3** by the width cap: widest 94 → 34 m, rows > 20 m 332 → 105. The rest is still open (Dhule, Thane, Nandurbar) |
 
 ## Appendix B — Repository Map
 
@@ -1844,7 +1929,7 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 | `03_models/baselines_phase1/` | Phase 1 ARIMA / XGBoost / LSTM notebooks and scripts |
 | `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline 4.7 = v4.3), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_3.ipynb` (current); `notebooks/archive/` (production v1–v4.2, prototypes); `legacy/tft_model.py` (v1/v2 network) |
 | `dev/` | the farmer and government dashboards (§13): `pipeline/` (data build), `backend/` (FastAPI, chat, speech), `frontend/` (React, en / mr / hi), `docs/` |
-| `04_results/` | `tft_v4_2/` (**final results**; `docs/RESULTS_GUIDE.md` now describes the v4.3 zip, and v4.2's version is in git history), `tft_v4_1/` (the v4.1 run: identical forecasts, v4.1 intervals; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
+| `04_results/` | `tft_v4_3/` (**final results**, including `dashboard_export/`; read with `docs/RESULTS_GUIDE.md`), `tft_v4_2/` (v4.2 run), `tft_v4_1/` (the v4.1 run: identical forecasts, v4.1 intervals; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
 | `docs/` | this report, `PROJECT_STATUS.md`, `RESULTS_GUIDE.md`, `STRUCTURE.md`, `history/` (`TFT_VERSION_HISTORY.md` with §0 = scores of every version, `V3_PLAN.md`, `TFT_IMPROVEMENT_PLAN.md`) |
 | `archive/` | backups and byte-identical duplicates, with `MANIFEST.csv`; not used by the pipeline |
 
@@ -1892,6 +1977,6 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 
 ---
 
-*End of Report — last updated 2026-10-31.*
-*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.2 (run 30 Oct 2026); v4.3 (post-processing + operational forecast) built, Colab run pending; dashboards built in `dev/` (§13).*
+*End of Report — last updated 2026-11-01.*
+*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.3 (run 1 Nov 2026, final model); dashboards built in `dev/` and showing the v4.3 forecast (§13).*
 *Detailed version history and every number: `docs/history/TFT_VERSION_HISTORY.md`. How to read the results files: `docs/RESULTS_GUIDE.md`.*

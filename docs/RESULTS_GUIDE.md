@@ -96,3 +96,5 @@ tft_v4_3_outputs.zip
 - **Single-well and limited data.** Single-well districts (Nanded, Raigad, Thane) are reported but kept out of the headline. Beed and Latur have no usable data.
 - **A district can miss the latest forecast.** It does so if its wells reported on fewer than 70% of the last 60 days. The same rule applies to every evaluated window.
 - **LightGBM carries most of the Ensemble's accuracy;** the TFT supplies most of its interval spread.
+- **(Found in the 2026-11-01 run.) The Pune guard (rule G2) was adopted on the dev folds but made Pune worse on the locked folds** (t+30: 0.77 → 0.92). The rule's choice is kept and reported; the headline moved by +0.002 to +0.004.
+- **(Found in the 2026-11-01 run.) The latest forecast was issued on 4 Jun 2026** (the last CGWB reading), so its target dates (11 Jun – 4 Jul 2026) have passed without readings to check them.
