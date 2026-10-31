@@ -4,10 +4,10 @@
 **Time range:** 2023-01-01 onward — groundwater/rainfall through 2026-06-04, ET/soil moisture through present (ERA5-Land, ~5-day latency). See `docs/PROJECT_STATUS.md` §1 for per-source ranges.
 **Type:** Research project — Temporal Fusion Transformer for hydrological forecasting, evaluated against a persistence baseline with statistical significance testing.
 
-> ## Current status (2026-10-30): v4.1 results; v4.2 built, Colab run pending
+> ## Current status (2026-10-31): v4.2 done, model frozen for the write-up
 > The Temporal Fusion Transformer (§4.2) is implemented, trained and evaluated, so this is no longer a
 > proposal. **For current results, go straight to `docs/history/TFT_VERSION_HISTORY.md`: §0 has the scores, and the
-> v4.1 section is at the end.**
+> v4.1 and v4.2 sections are at the end. The full write-up is `docs/REPORT.md`.**
 >
 > **What v4.1 is:** the rebuilt groundwater target, corrected evaluation and seasonal-naive baseline, plus an
 > ensemble of TFT + LightGBM + seasonal-naive + no-change.
@@ -15,7 +15,8 @@
 > **Headline (locked test, folds 5–6, Oct 2025 → Jun 2026, Ensemble), at t+7 / t+14 / t+30, < 1 = better:**
 > - error ÷ "nothing changes" error: **0.839 / 0.763 / 0.616**;
 > - error ÷ seasonal-naive error: **0.938 / 0.922 / 0.877**;
-> - all six comparisons significant (p = 0.003); 80% intervals cover 80–81%.
+> - all six comparisons significant (p = 0.003); 80% intervals cover 79–82%;
+> - the TFT alone: 80% intervals cover 77–80% (v4.2; v4.1 66–74%).
 >
 > **Over all 6 folds:** 0.903 / 0.830 / 0.712.
 >
@@ -25,21 +26,23 @@
 > - Most of the v4.1 gain comes from the improved LightGBM, which is about as accurate as the Ensemble but has
 >   intervals that are too narrow (61–75% coverage).
 >
-> **v4.2 (built, run pending)** changes post-processing only.
-> - The interval-calibration fix: ACI fed one outcome per issue date, and a raw or calibrated interval chosen per model and horizon.
-> - A per-district stack guard for Pune.
-> - Everything is chosen by rules fixed in advance, on development folds only (`docs/REPORT.md` §12.4).
+> **v4.2 (Colab run 2026-10-30, 31 min)** changed post-processing only. Every choice was made by rules fixed in advance, on development folds only.
+> - It reproduced v4.1's forecasts bit-for-bit, so the accuracy above is unchanged.
+> - **It fixed the TFT's intervals.** The network's own quantiles beat every calibration variant, so they are now reported.
+> - **The Ensemble's intervals are about the same on average,** but less even across districts.
+> - **The Pune stack guard was rejected:** it fixed Pune but hurt 22 other district-horizons. Pune is still open.
+> - Details: `docs/REPORT.md` §9.8, §10.12, §12.4.
 >
-> **Run it:** `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb` with `master_dataset_v4target.csv` (about 45 min on a T4).
-> - v4.1 results are in `04_results/tft_v4_1/`; the v4.2 results go to `04_results/tft_v4_2/`.
-> - `docs/RESULTS_GUIDE.md` explains every file of the v4.2 zip.
+> **Run it:** `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb` with `master_dataset_v4target.csv` (about 30–45 min on a T4).
+> - The final results are in `04_results/tft_v4_2/`, and `docs/RESULTS_GUIDE.md` explains every file.
+> - v4.1's run is in `04_results/tft_v4_1/`.
 >
 > **Superseded:**
 > - v4.0: locked 0.865 / 0.788 / 0.664;
 > - v3: MASE 0.958 / 0.909 / 0.834;
 > - `04_results/tft_prod_v1/` is the v1 run.
 >
-> **Scores of every version (v1 → v4.1) in one place: `docs/history/TFT_VERSION_HISTORY.md` §0.**
+> **Scores of every version (v1 → v4.2) in one place: `docs/history/TFT_VERSION_HISTORY.md` §0.**
 >
 > §4.2 below describes the **actual implemented architecture** (delta-target framing, data tiers,
 > shrinkage toward persistence, vectorised variable-selection networks). §4.3 (spatial GAT layer) and
@@ -711,8 +714,8 @@ Major Project/
 │   ├── phase1_baselines/             Phase 1 outputs and plots
 │   ├── tft_prod_v1/                  first full TFT run (worse than "no change"; kept for comparison)
 │   ├── tft_v4_0_dev/                 v4.0 development runs, ablations, seasonal-naive tuning, caches
-│   ├── tft_v4_1/                     v4.1 results  <- best so far (its own guide: RESULTS_GUIDE_as_shipped.md)
-│   ├── tft_v4_2/                     v4.2 results, after its Colab run (read with docs/RESULTS_GUIDE.md)
+│   ├── tft_v4_1/                     v4.1 run (same forecasts; its own guide: RESULTS_GUIDE_as_shipped.md)
+│   ├── tft_v4_2/                     v4.2 results  <- FINAL (read with docs/RESULTS_GUIDE.md)
 │   ├── tft_runs/                     where new local runs of run_v4.py are written
 │   └── zips/                         the original results zip(s)
 └── archive/                          nothing here is used by the pipeline

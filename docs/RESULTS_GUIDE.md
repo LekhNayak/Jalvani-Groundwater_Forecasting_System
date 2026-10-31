@@ -9,7 +9,9 @@ This guide comes with `tft_v4_2_outputs.zip`, produced by `09_tft_colab_producti
 - which interval is reported for each model;
 - a guard against a district's ensemble leaning on a model that is poor there (Pune).
 
-The TFT networks and LightGBM use the v4.1 settings. They were re-trained on Colab, so the medians differ from v4.1 only by small GPU run-to-run noise. **For a like-for-like comparison, use the "same-net" columns** (see §3).
+The TFT networks and LightGBM use the v4.1 settings. They were re-trained on Colab, and in the run of 2026-10-30 they reproduced v4.1 **bit-for-bit**. So the forecasts (q50) are identical to v4.1's, and the `same-net v4.1-post` columns of `v4_1_vs_v4_2.csv` equal the published v4.1 numbers exactly (see §3).
+
+The extracted run is in `04_results/tft_v4_2/`. This guide was not uploaded to that Colab run, so the zip does not contain a copy; this file is its guide.
 
 ## 1. The words used everywhere
 
@@ -150,10 +152,13 @@ tft_v4_2_outputs.zip
 - The groundwater record starts in 2023, so the walk-forward test covers only three monsoons.
 - Folds 5-6 contain no monsoon, so the locked test covers post-monsoon and dry seasons only. Monsoon skill comes from folds 1 and 4, which are development folds.
 - Folds 5-6 have been seen in earlier versions' results, but nothing in v4.1 or v4.2 was chosen on them.
-- The networks were re-trained, and GPU training is not bit-for-bit repeatable, so the medians move slightly between runs. That is why v4.2 is compared with v4.1's post-processing on the *same* networks.
+- The networks were re-trained. GPU training was not guaranteed to be repeatable, so v4.2 also reports v4.1's post-processing on the *same* networks. In the 2026-10-30 run the re-training matched v4.1 bit-for-bit, so both comparisons agree.
+- **The reported intervals are honest on average but uneven across districts.** On the locked test only 52–57% of headline districts have coverage within 65–90%; v4.1's calibrated intervals reached 76–100%. Look at the coverage heat maps before quoting a single district's interval.
+- **Rule D chose the calibrated interval for the Ensemble at t+30** (raw covered only 73.7% on the dev folds). On the locked test the raw one would have scored better (2.74 vs 3.11). The choice was fixed beforehand and is kept; say so if asked.
+- **A few calibrated intervals are extremely wide** (90–108 m), in Thane (single well) and Dhule fold 1. 332 Ensemble t+30 rows in Dhule, Nandurbar and Thane are wider than 20 m. Treat those districts' t+30 intervals with care.
 - **No input knows future rain.** That is the main remaining source of error, especially at t+30 in the monsoon.
 - The single-well districts (Nanded, Raigad, Thane) are reported but kept out of the headline. Beed and Latur have no usable data.
 - The VSN plot shows what the network weights. It is not proof of physical causation.
 - Most of the Ensemble's accuracy comes from LightGBM: on its own it is about as accurate, but its intervals are too narrow. Check `baseline_ladder.csv`.
-- **Pune was identified as a problem from v4.1's all-fold results.** Its failure is visible in dev folds 1 and 3 alone, and the guard rule uses only each district's own past errors. It is not tuned to Pune.
+- **Pune was identified as a problem from v4.1's all-fold results.** Its failure is visible in dev folds 1 and 3 alone, and the guard rule uses only each district's own past errors, so it is not tuned to Pune. In the run the guard was **rejected** by rule G: it fixed Pune but hurt 22 other district-horizons. So `stack_guard.csv` is absent and Pune is unchanged.
 - The v1 comparison file (if present) is **not like-for-like**: v1 used the old, noisier groundwater series and a different scoring protocol.

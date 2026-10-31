@@ -1,6 +1,6 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-10-30. The current status is at the end of §10 (v4.1 results, v4.2 built and its run pending). Several older sections are superseded; see the notices below.
+**Last updated:** 2026-10-31. The current status is at the end of §10: v4.2 run done, model frozen for the write-up. Several older sections are superseded; see the notices below.
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2026-06-04 (raw groundwater/rainfall) — see §1 for per-source ranges
 **Geography:** All 36 districts of Maharashtra (24–26 usable for training, see district gate in §4.5)
@@ -739,12 +739,12 @@ capacity the data can't support yet. Revisit after more stations are collected f
 or after a cheaper first step — partitioning districts by dynamic similarity (correlation of their
 Δ-series) rather than pure geographic adjacency. Full citation: `docs/history/V3_PLAN.md` §1 (M13).
 
-**Current baseline to beat: production v4.1, Colab T4, 2026-10-29.** Results are in `04_results/tft_v4_1/`.
+**Current model: production v4.2 (Colab T4, 2026-10-30)** = v4.1's forecasts with v4.2's reported intervals. Results are in `04_results/tft_v4_2/`; v4.1's run is in `04_results/tft_v4_1/`.
 
 Locked test (folds 5–6), Ensemble, at t+7 / t+14 / t+30:
 - error ÷ persistence error: 0.839 / 0.763 / 0.616;
 - error ÷ seasonal-naive error: 0.938 / 0.922 / 0.877;
-- 80% interval coverage 80–81%;
+- 80% interval coverage 79–82% (v4.2 reported intervals); the TFT alone covers 77–80%;
 - all significant (district-cluster bootstrap and Diebold–Mariano, Holm-adjusted, p = 0.003).
 
 All 6 folds: 0.903 / 0.830 / 0.712.
@@ -761,18 +761,30 @@ Open issues:
 - the best-vs-worst district gap widened again;
 - Pune still loses to persistence at t+14 and t+30;
 - folds 5–6 contain no monsoon;
-- the conformal + ACI step makes the TFT's intervals worse: its own quantiles cover 77–80% on the locked test, the calibrated ones only 66–74%. The fix is post-processing only: v4.2, below.
+- intervals are honest on average but uneven across districts (v4.2, below);
+- a few calibrated intervals are extremely wide (90–108 m: Thane, Dhule, Nandurbar).
 
 Full numbers: `docs/history/TFT_VERSION_HISTORY.md` (§0 and the v4.1 section).
 
-**v4.2 (built 2026-10-30, Colab run pending).** Post-processing only. Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb`, pipeline `tft_v4.py` 4.6.
+**v4.2 (built and run 2026-10-30, Colab T4, 31 min).** Post-processing only. Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_2.ipynb`, pipeline `tft_v4.py` 4.6.
 - **Calibration fixes.** ACI is fed one outcome per issue date and band; v4.1 fed the TFT about 10 correlated outcomes per issue date. A symmetric α range is also tried.
 - **Reported interval.** Raw or calibrated is chosen per model and horizon on the development folds.
 - **Pune guard.** A per-district stack guard. Pune's stack weights were already almost global; the problem is LightGBM in Pune (MASE 1.30 at t+30, vs 0.87 for seasonal-naive and the TFT).
 - **Selection.** Three rules fixed in advance (G, C, D) on development folds 1–4 only. Folds 5–6 are trained only after the choices are made. The v4.1 post-processing is re-run on the same networks as the reference.
 - **Checked locally.** With default settings the new code reproduces v4.1's output exactly.
-- **Run.** About 45 min on a T4. Put the zip in `04_results/zips/`; it is extracted to `04_results/tft_v4_2/`.
-- Design and rules: `docs/history/TFT_VERSION_HISTORY.md` (v4.2 section), `docs/REPORT.md` §12.4.
+- **Results** (`04_results/tft_v4_2/`):
+  - **Reproduced v4.1 bit-for-bit.** The re-trained networks and LightGBM match v4.1 on all 220,215 forecast rows, so accuracy is unchanged.
+  - **Rule G (Pune guard): rejected.** It fixed Pune on development folds (t+30 1.27 → 0.87), but made 22 other district-horizons worse.
+  - **Rule C: static conformal (γ = 0).** One ACI outcome per issue date restored 4–9 points of the TFT's calibrated coverage, but no variant beat the raw intervals.
+  - **Rule D: raw intervals** for the TFT, and for the Ensemble at t+7 / t+14; calibrated for the Ensemble at t+30.
+  - **TFT intervals fixed.** Locked coverage 74/70/66 → 80/78/77%, interval score 11–19% better.
+  - **Ensemble intervals about the same on average:** locked +1.5–3.3%, all folds +1.7 / −8.7 / −3.3%. But only 52–57% of districts are within 65–90% coverage on the locked test (v4.1: 76–100%).
+  - **Pune is still open:** 1.000 / 1.050 / 1.128.
+- **Next:**
+  - freeze the model for the write-up;
+  - optional v4.3 (post-processing only): a LightGBM-only guard for Pune, per-district interval evenness, a width cap;
+  - then dashboards, rainfall forecasts, and a monsoon-2026 fold when CGWB publishes.
+- Design, rules and full results: `docs/history/TFT_VERSION_HISTORY.md` (v4.2 section), `docs/REPORT.md` §9.8, §10.12, §12.4.
 
 Superseded:
 - v4.0: locked 0.865 / 0.788 / 0.664;
