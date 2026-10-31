@@ -1,0 +1,48 @@
+{
+  "run_tag": "FINAL_v4_3",
+  "pipeline_version": "4.7",
+  "data_file": "master_dataset_v4target.csv",
+  "data_md5": "e035dc2613f830a59365f1f695f1296d",
+  "created": "2026-10-31T19:05:54",
+  "seeds": [
+    42,
+    1337,
+    2026,
+    7,
+    99,
+    123,
+    555,
+    777,
+    2024,
+    31337
+  ],
+  "latest_fold": {
+    "name": "fold7_latest",
+    "test_start": "2026-06-05",
+    "test_end": "2026-07-04"
+  },
+  "last_issue_date": "2026-06-04",
+  "no_forecast": [
+    {
+      "district": "Nanded",
+      "last_reading": "2026-06-04 00:00:00",
+      "observed_share_last_window": 0.4,
+      "reason": "readings on 40% of the last 60 days (at least 70% needed)"
+    }
+  ],
+  "interval_choice": {
+    "TFT": {
+      "t+7": "raw",
+      "t+14": "raw",
+      "t+30": "raw"
+    },
+    "Ensemble": {
+      "t+7": "calibrated",
+      "t+14": "raw",
+      "t+30": "calibrated"
+    }
+  },
+  "lgbm_guard": true,
+  "interval_width_cap": 3.0,
+  "aci_gamma": 0.0
+}
