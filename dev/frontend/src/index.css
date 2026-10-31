@@ -5,67 +5,107 @@
 /* Colour roles (reference palette of the dataviz method). Light and dark are both selected, not flipped. */
 :root {
   color-scheme: light;
-  --page-plane: #f9f9f7;
-  --surface-1: #fcfcfb;
-  --text-primary: #0b0b0b;
-  --text-secondary: #52514e;
+  --page-plane: #f3f3ef;
+  --surface-1: #ffffff;
+  --surface-2: #f7f7f4;
+  --text-primary: #111110;
+  --text-secondary: #4d4c48;
   --text-muted: #6f6d68;
-  --gridline: #e1e0d9;
+  --gridline: #e6e5df;
   --axis: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.12);
+  --border: rgba(17, 17, 16, 0.09);
+  --shadow: 0 1px 2px rgba(17, 17, 16, 0.04), 0 1px 1px rgba(17, 17, 16, 0.02);
   --series-1: #2a78d6;          /* water / forecast */
-  --band-1: #b7d3f6;            /* forecast range */
-  --fall: #c4462f;              /* deeper / falling (text-safe red-orange) */
+  --band-1: #cde2fb;            /* 80% range ("could be") */
+  --band-2: #86b6ef;            /* 50% range ("most likely") */
+  --fall: #c4462f;              /* deeper / falling */
   --rise: #1c5cab;              /* shallower / rising */
   --status-good: #0ca30c;
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
-  --nodata: #d9d8d3;
+  --nodata: #dcdbd5;
   --focus: #1c5cab;
+  --accent-soft: #eaf2fd;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
     --page-plane: #0d0d0d;
     --surface-1: #1a1a19;
+    --surface-2: #222220;
     --text-primary: #f0efec;
     --text-secondary: #c3c2b7;
     --text-muted: #9a9890;
     --gridline: #2c2c2a;
     --axis: #383835;
-    --border: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.10);
+    --shadow: none;
     --series-1: #3987e5;
     --band-1: #1c3b63;
+    --band-2: #2e62a3;
     --fall: #e66767;
     --rise: #86b6ef;
     --nodata: #3a3a37;
     --focus: #86b6ef;
+    --accent-soft: #16263b;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page-plane: #0d0d0d;
   --surface-1: #1a1a19;
+  --surface-2: #222220;
   --text-primary: #f0efec;
   --text-secondary: #c3c2b7;
   --text-muted: #9a9890;
   --gridline: #2c2c2a;
   --axis: #383835;
-  --border: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.10);
+  --shadow: none;
   --series-1: #3987e5;
   --band-1: #1c3b63;
+  --band-2: #2e62a3;
   --fall: #e66767;
   --rise: #86b6ef;
   --nodata: #3a3a37;
   --focus: #86b6ef;
+  --accent-soft: #16263b;
 }
 
 html, body { background: var(--page-plane); color: var(--text-primary); }
-body { font-size: 1rem; line-height: 1.5; }
-:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
-.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; }
+body { font-size: 1rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+
+@layer components {
+  /* bento tile */
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  .eyebrow { font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.01em; color: var(--text-secondary); }
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0 0.9rem; border-radius: 10px;
+         border: 1px solid var(--border); background: var(--surface-1); font-size: 0.9375rem;
+         transition: background-color 150ms ease, border-color 150ms ease; }
+  .btn:hover { background: var(--surface-2); }
+  .btn-primary { background: var(--series-1); color: #fff; border-color: transparent; }
+  .btn-primary:hover { background: var(--rise); }
+  .seg { position: relative; display: inline-flex; padding: 3px; gap: 2px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
+  .seg > button, .seg > label { position: relative; min-height: 38px; padding: 0 0.85rem; border-radius: 9px; font-size: 0.9rem;
+         display: inline-flex; align-items: center; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+  .seg > [aria-pressed="true"], .seg > [aria-checked="true"], .seg > .on { background: var(--surface-1); color: var(--text-primary);
+         box-shadow: 0 1px 2px rgba(0,0,0,0.08); font-weight: 600; }
+  .seg > label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .data-table thead th { position: sticky; top: 0; background: var(--surface-1); z-index: 1; }
+  .chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; padding: 0.15rem 0.6rem;
+         font-size: 0.8125rem; background: var(--surface-2); border: 1px solid var(--border); }
+}
+
 .tabnum { font-variant-numeric: tabular-nums; }
-.tour-highlight { position: relative; z-index: 60; box-shadow: 0 0 0 4px var(--focus), 0 0 0 9999px rgba(0,0,0,0.35); border-radius: 14px; }
-.leaflet-container { background: var(--surface-1); font-family: inherit; }
+.skeleton { background: linear-gradient(90deg, var(--surface-2) 25%, var(--gridline) 37%, var(--surface-2) 63%);
+            background-size: 400% 100%; animation: shimmer 1.4s ease infinite; border-radius: 18px; }
+@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.fade-in { animation: fadein 180ms ease-out both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.tour-highlight { z-index: 60; box-shadow: 0 0 0 4px var(--focus), 0 0 0 9999px rgba(0,0,0,0.35); border-radius: 18px; }
+.tour-highlight:not(.fixed) { position: relative; } /* the floating chat button must stay fixed */
+.leaflet-container { background: var(--surface-2); font-family: inherit; }
+.leaflet-tooltip { font-family: inherit; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }

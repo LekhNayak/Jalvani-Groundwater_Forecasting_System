@@ -55,10 +55,10 @@ export function MapLegend({ layer }: { layer: MapLayer }) {
     ? [[WELLS[0], `1 ${t("gov.legend.wells")}`], [WELLS[1], `2–4`], [WELLS[2], `5–9`], [WELLS[3], `10+`]]
     : (["good", "fair", "limited"] as const).map((c) => [STATUS[c], t(`farmer.rel.${c}`)] as [string, string]);
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink2" aria-label={t(`gov.layer.${layer}`)}>
+    <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[0.8125rem] text-ink2" aria-label={t(`gov.layer.${layer}`)}>
       {[...items, [NODATA, t("gov.legend.no_data")] as [string, string]].map(([c, label]) => (
         <li key={label} className="flex items-center gap-1.5">
-          <span className="inline-block w-4 h-4 rounded-sm border border-[var(--border)]" style={{ background: c }} />{label}
+          <span className="inline-block w-3.5 h-3.5 rounded-[4px] border border-[var(--border)]" style={{ background: c }} />{label}
         </li>
       ))}
     </ul>
@@ -77,28 +77,34 @@ function valueText(d: DistrictLite, layer: MapLayer, t: TFunction, lang: Lang): 
   }
 }
 
-export default function MapView({ geo, districts, layer }: { geo: GeoJSON.FeatureCollection; districts: DistrictLite[]; layer: MapLayer }) {
+/** Choropleth. With `onSelect`, a tap selects the district (shown in the panel beside the map); without it, a tap opens
+ *  the district page. The selected district gets a dark outline. */
+export default function MapView({ geo, districts, layer, selected, onSelect, className = "h-[420px] sm:h-[480px]" }:
+  { geo: GeoJSON.FeatureCollection; districts: DistrictLite[]; layer: MapLayer; selected?: string | null;
+    onSelect?: (slug: string) => void; className?: string }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language as Lang;
   const nav = useNavigate();
   const byName = useMemo(() => Object.fromEntries(districts.map((d) => [d.district, d])), [districts]);
   const style = (f?: GeoJSON.Feature): PathOptions => {
     const d = f ? byName[f.properties?.district] : undefined;
-    return { fillColor: d ? layerColour(d, layer) : NODATA, fillOpacity: 0.92, color: "#ffffff", weight: 1.2 };
+    const sel = !!d && d.slug === selected;
+    return { fillColor: d ? layerColour(d, layer) : NODATA, fillOpacity: 0.92, color: sel ? "#111110" : "#ffffff", weight: sel ? 3 : 1.2 };
   };
   const onEach = (f: GeoJSON.Feature, l: Layer) => {
     const d = byName[f.properties?.district];
     if (!d) return;
     l.bindTooltip(`<strong>${districtName(d.district, lang, false)}</strong><br/>${valueText(d, layer, t, lang)}`, { sticky: true });
-    l.on({ click: () => nav(`/gov/district/${d.slug}`),
-           mouseover: (e) => e.target.setStyle({ weight: 3, color: "#0b0b0b" }),
-           mouseout: (e) => e.target.setStyle({ weight: 1.2, color: "#ffffff" }) });
+    l.on({ click: () => (onSelect ? onSelect(d.slug) : nav(`/gov/district/${d.slug}`)),
+           mouseover: (e) => e.target.setStyle({ weight: 3, color: "#111110" }),
+           mouseout: (e) => e.target.setStyle(style(f)) });
   };
   return (
-    <div data-tour="map" className="h-[420px] sm:h-[480px] rounded-xl overflow-hidden border border-[var(--border)]">
-      <MapContainer bounds={[[15.6, 72.6], [22.1, 80.9]]} scrollWheelZoom={false} attributionControl={false} style={{ height: "100%" }}>
-        {/* key forces a restyle and fresh tooltips when the layer or language changes */}
-        <GeoJSON key={`${layer}-${lang}`} data={geo} style={style} onEachFeature={onEach} />
+    <div data-tour="map" className={`${className} rounded-xl overflow-hidden border border-[var(--border)]`}>
+      <MapContainer bounds={[[15.6, 72.6], [22.1, 80.9]]} boundsOptions={{ padding: [12, 12] }} zoomSnap={0.25} zoomDelta={0.5}
+        scrollWheelZoom={false} attributionControl={false} style={{ height: "100%" }}>
+        {/* key forces a restyle and fresh tooltips when the layer, language or selection changes */}
+        <GeoJSON key={`${layer}-${lang}-${selected ?? ""}`} data={geo} style={style} onEachFeature={onEach} />
       </MapContainer>
     </div>
   );

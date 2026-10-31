@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useApp } from "../context";
 import { api } from "../lib/api";
+import { Square, Volume2 } from "lucide-react";
 
 const BCP47: Record<string, string> = { en: "en-IN", mr: "mr-IN", hi: "hi-IN" };
 
@@ -51,8 +52,8 @@ export default function ListenButton({ text }: { text: string }) {
 
   return (
     <button onClick={toggle} data-tour="listen-button" aria-pressed={speaking}
-      className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-[var(--border)] px-2.5 py-1.5 min-h-[40px] text-sm hover:bg-plane">
-      <span aria-hidden="true">{speaking ? "■" : "🔊"}</span>{speaking ? t("common.stop") : t("common.listen")}
+      className="btn !min-h-[36px] !px-2.5 text-sm shrink-0">
+      {speaking ? <Square size={14} aria-hidden="true" /> : <Volume2 size={15} aria-hidden="true" />}{speaking ? t("common.stop") : t("common.listen")}
     </button>
   );
 }

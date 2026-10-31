@@ -8,7 +8,7 @@ const DISTRICT_KEY = "jalvaani.district";
 export const TOURS: Record<"farmer" | "government", string[]> = {
   farmer: ["lang-switch", "district-picker", "card-water-now", "card-forecast", "reliability-badge", "card-rain-soil",
            "advice-list", "chat-button"],
-  government: ["freshness-bar", "kpi-row", "map-layers", "map", "priority-table", "needs-panel", "download-csv", "chat-button"],
+  government: ["freshness-bar", "kpi-row", "map-layers", "map", "glance-panel", "priority-table", "needs-panel", "download-csv", "chat-button"],
 };
 
 function read(key: string): string | null {

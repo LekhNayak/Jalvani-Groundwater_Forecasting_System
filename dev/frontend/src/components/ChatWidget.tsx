@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useApp } from "../context";
 import { api } from "../lib/api";
 import { toWav16k } from "../lib/wav";
+import { ArrowRight, MessageCircle, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import type { ChatAction } from "../lib/types";
 
 interface Msg { role: "user" | "assistant"; content: string; actions?: ChatAction[] }
@@ -93,32 +94,36 @@ export default function ChatWidget() {
   return (
     <>
       <button data-tour="chat-button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="chat-panel"
-        aria-label={t("chat.open")}
-        className="fixed bottom-4 right-4 z-50 rounded-full bg-water text-white shadow-lg px-4 sm:px-5 py-3 min-h-[52px] min-w-[52px] text-base font-semibold">
-        <span aria-hidden="true">💬</span><span className="sr-only sm:not-sr-only sm:ml-1">{t("chat.open")}</span>
+        aria-label={open ? t("common.close") : t("chat.open")}
+        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-water text-white shadow-lg px-4 sm:px-5 min-h-[52px] min-w-[52px] text-[0.95rem] font-semibold transition-transform hover:-translate-y-0.5">
+        {open ? <X size={20} aria-hidden="true" /> : <MessageCircle size={20} aria-hidden="true" />}
+        <span className="sr-only sm:not-sr-only">{open ? t("common.close") : t("chat.open")}</span>
       </button>
       {open && (
         <section id="chat-panel" role="dialog" aria-label={t("chat.title")}
-          className="fixed z-50 bottom-20 right-4 left-4 sm:left-auto sm:w-[380px] h-[70vh] max-h-[560px] card shadow-2xl flex flex-col">
+          className="fixed z-50 bottom-24 right-5 left-4 sm:left-auto sm:w-[400px] h-[72vh] max-h-[600px] tile shadow-2xl flex flex-col fade-in">
           <header className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-            <div>
-              <h2 className="font-semibold">{t("chat.title")}</h2>
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-water" aria-hidden="true"><Sparkles size={16} /></span>
+              <div>
+              <h2 className="font-semibold leading-tight">{t("chat.title")}</h2>
               <p className="text-xs text-muted">{meta?.features.chat === "groq" ? t("chat.mode_groq") : t("chat.mode_guide")}</p>
+              </div>
             </div>
-            <button onClick={() => setOpen(false)} className="px-3 py-2 min-h-[44px] rounded-lg hover:bg-plane" aria-label={t("common.close")}>✕</button>
+            <button onClick={() => setOpen(false)} className="btn !border-transparent" aria-label={t("common.close")}><X size={18} aria-hidden="true" /></button>
           </header>
           <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" aria-live="polite">
             <p className="text-ink2">{t("chat.hello")}</p>
             {msgs.map((m, i) => (
               <div key={i} className={m.role === "user" ? "text-right" : ""}>
-                <div className={`inline-block max-w-[90%] rounded-2xl px-3 py-2 text-left ${m.role === "user" ? "bg-water text-white" : "bg-plane"}`}>
+                <div className={`inline-block max-w-[90%] rounded-2xl px-3.5 py-2 text-left ${m.role === "user" ? "bg-water text-white rounded-br-md" : "bg-[var(--surface-2)] rounded-bl-md"}`}>
                   {m.content}
                 </div>
                 {m.actions?.filter((a) => a.type === "navigate").map((a, j) => (
                   <div key={j}>
-                    <button className="mt-1 px-3 py-2 min-h-[44px] rounded-lg border border-[var(--border)] text-sm"
+                    <button className="btn mt-1.5 text-sm"
                       onClick={() => { if (a.type === "navigate") nav(a.route); run(m.actions?.filter((x) => x.type !== "navigate")); }}>
-                      {t("chat.go")} →
+                      {t("chat.go")}<ArrowRight size={15} aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -128,7 +133,7 @@ export default function ChatWidget() {
           </div>
           <div className="px-4 pb-2 flex flex-wrap gap-2">
             {suggestions.map((k) => (
-              <button key={k} onClick={() => send(t(`chat.${k}`))} className="text-sm rounded-full border border-[var(--border)] px-3 py-1.5 min-h-[36px] hover:bg-plane">
+              <button key={k} onClick={() => send(t(`chat.${k}`))} className="chip !py-1.5 min-h-[36px] hover:bg-[var(--accent-soft)] transition-colors">
                 {t(`chat.${k}`)}
               </button>
             ))}
@@ -136,13 +141,13 @@ export default function ChatWidget() {
           <form className="flex gap-2 p-3 border-t border-[var(--border)]" onSubmit={(e) => { e.preventDefault(); send(text); }}>
             <label htmlFor="chat-input" className="sr-only">{t("chat.placeholder")}</label>
             <input id="chat-input" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("chat.placeholder")}
-              className="flex-1 rounded-lg border border-[var(--border)] bg-surface px-3 py-2 min-h-[44px]" maxLength={500} />
+              className="flex-1 rounded-xl border border-[var(--border)] bg-surface px-3 py-2 min-h-[44px]" maxLength={500} />
             {meta?.features.speech && (
               <button type="button" onClick={toggleMic} aria-pressed={recording}
-                className={`px-3 py-2 min-h-[44px] rounded-lg border border-[var(--border)] ${recording ? "bg-[var(--status-serious)]" : ""}`}
-                aria-label={recording ? t("chat.listening") : t("chat.mic")} title={recording ? t("chat.listening") : t("chat.mic")}>🎤</button>
+                className={`btn ${recording ? "!bg-[var(--status-serious)]" : ""}`}
+                aria-label={recording ? t("chat.listening") : t("chat.mic")} title={recording ? t("chat.listening") : t("chat.mic")}><Mic size={18} aria-hidden="true" /></button>
             )}
-            <button type="submit" disabled={busy} className="px-4 py-2 min-h-[44px] rounded-lg bg-water text-white disabled:opacity-50">{t("chat.send")}</button>
+            <button type="submit" disabled={busy} className="btn btn-primary disabled:opacity-50" aria-label={t("chat.send")}><SendHorizontal size={18} aria-hidden="true" /></button>
           </form>
         </section>
       )}

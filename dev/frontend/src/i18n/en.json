@@ -47,7 +47,9 @@
     "choose_language": "Choose your language",
     "choose_role": "Who are you?",
     "farmer_desc": "See the water in your district and what the next month may bring.",
-    "government_desc": "See all districts, what needs attention, and what data is missing."
+    "government_desc": "See all districts, what needs attention, and what data is missing.",
+    "stats_title": "What is inside",
+    "open": "Open"
   },
   "farmer": {
     "pick_title": "Choose your district",
@@ -116,14 +118,37 @@
     "details_title": "Water level over time",
     "chart_observed": "Measured level (weekly average)",
     "chart_forecast": "Forecast",
-    "chart_range": "Likely range",
+    "chart_range": "Could be (wide range)",
     "chart_axis": "m below ground",
     "chart_hint": "Higher on the chart = water closer to the surface.",
     "no_groundwater_title": "No groundwater readings for this district",
     "no_groundwater_text": "CGWB does not publish usable well readings for {{district}}, so there is no level or forecast. Rain and groundwater use are shown below.",
     "insufficient_text": "{{district}} has too few reliable well readings for a level or forecast.",
     "extraction_title": "Groundwater use (CGWB {{year}})",
-    "extraction_text": "{{pct}}% of the usable groundwater is extracted each year"
+    "extraction_text": "{{pct}}% of the usable groundwater is extracted each year",
+    "stale_note": "The latest groundwater reading is from {{date}} ({{days}} days ago). CGWB has not published newer readings, so today's level may be different.",
+    "forecast_past": "These dates have already passed. The forecast will be checked when CGWB publishes newer readings.",
+    "most_likely": "most likely {{lo}}–{{hi}} m",
+    "could_be": "could be {{lo}}–{{hi}} m",
+    "shallower": "shallower",
+    "deeper": "deeper",
+    "legend_likely": "Most likely (about 1 in 2)",
+    "legend_could": "Could be (8 in 10)",
+    "legend_expected": "Expected level",
+    "legend_now": "Last reading {{v}} m",
+    "week_avg": "Average of the week to {{date}}",
+    "spark_caption": "Last 6 months (weekly)",
+    "range_note": "The two ranges share the same expected level. The narrow one is right about half the time, the wide one about 8 times in 10.",
+    "chart_likely": "Most likely range",
+    "chart_note": "Forecast lines join the 7, 14 and 30-day values.",
+    "use_of": "of the usable groundwater is extracted each year",
+    "rain_since": "Since {{date}}",
+    "last_30d": "Last 30 days",
+    "soil_title": "Soil moisture ({{date}})",
+    "of_usual_rain": "of the usual rain since {{date}}",
+    "pct_of_usual": "{{pct}}% of usual",
+    "forecast_start": "Starts from the reading of {{date}}: {{v}} m below ground",
+    "last_day": "On {{date}} alone: {{v}} m. The forecast starts from this reading."
   },
   "cat": {
     "Safe": "Safe",
@@ -135,13 +160,14 @@
     "falling": "Water is likely to go about {{fall_m}} m deeper over the next month. Plan watering for the dry weeks and avoid running pumps longer than needed.",
     "rising": "Water is likely to come up about {{rise_m}} m over the next month. A good time to help it recharge: keep farm ponds and recharge pits clear.",
     "uncertain": "The forecast could go either way this month. Keep an eye on your own well and plan carefully.",
-    "deeper_than_usual": "Water is {{diff_m}} m deeper than usual for this time of year. Use water carefully; drip or sprinkler irrigation saves water.",
+    "deeper_than_usual": "At the last reading ({{date}}), water was {{diff_m}} m deeper than usual for that time of year. Use water carefully; drip or sprinkler irrigation saves water.",
     "rain_deficit": "Rain this season is only {{pct}}% of the usual, so less water will soak into the ground. Save stored water.",
     "rain_surplus": "Rain this season is {{pct}}% of the usual. Help it soak in with recharge pits, bunds and farm ponds.",
     "extraction_high": "In this district {{stage_pct}}% of the usable groundwater is already used each year. Saving and sharing water matters here.",
     "reliability_limited": "Forecasts for this district are less reliable. Check your own well too.",
     "no_groundwater_data": "There are no groundwater readings for this district. The rain and soil figures can still help you plan.",
-    "contact_local": "For borewell, crop or scheme decisions, talk to your local agriculture office or the GSDA."
+    "contact_local": "For borewell, crop or scheme decisions, talk to your local agriculture office or the GSDA.",
+    "forecast_outdated": "The latest forecast covered {{issue}} to {{end}}, which has now passed. A new forecast needs newer CGWB readings."
   },
   "gov": {
     "title": "State overview",
@@ -173,7 +199,7 @@
       "wells": "wells",
       "m": "m"
     },
-    "map_hint": "Tap a district to open it. Grey = no data.",
+    "map_hint": "Tap a district to see it in the panel. Grey = no data.",
     "map_no_forecast": "The 30-day forecast layer appears after the next model run.",
     "table_title": "Districts needing attention",
     "table_hint": "Ranked by simple rules; each row says why.",
@@ -224,7 +250,12 @@
       "limited": "Better forecasts where reliability is limited: {{list}}",
       "operational": "The forecast from the latest reading (next model run)"
     },
-    "method_note": "Score = sum of the flag weights listed in Help."
+    "method_note": "Score = sum of the flag weights listed in Help.",
+    "glance_title": "District at a glance",
+    "glance_hint": "Tap a district on the map to see it here.",
+    "open_district": "Open district page",
+    "subtitle": "All 36 districts: water levels, the next month, groundwater use and data gaps.",
+    "rows": "{{n}} districts"
   },
   "govd": {
     "back": "Back to the overview",
@@ -277,13 +308,13 @@
     "farmer_title": "The farmer view",
     "farmer_items": {
       "water": "Water in the wells now: how many metres below the ground the water is, from the latest CGWB reading, and how that compares with the same weeks in earlier years.",
-      "forecast": "Next 7, 14 and 30 days: the most likely level and a range. About 8 times out of 10 the real level falls inside the range.",
+      "forecast": "Next 7, 14 and 30 days: the expected level, a narrow 'most likely' range (right about half the time) and a wide 'could be' range (about 8 times out of 10).",
       "rain": "Rain and soil: rain since 1 June compared with the same period in earlier years, and whether the soil is wetter or drier than usual."
     },
     "gov_title": "The government view",
     "gov_items": {
       "kpi": "The top row counts districts, wells and the main warning signs.",
-      "map": "The map can be coloured by level vs usual, forecast change, extraction, wells or reliability. Tap a district to open it.",
+      "map": "The map can be coloured by level vs usual, forecast change, extraction, wells or reliability. Tap a district to see it in the panel beside the map, then open its page.",
       "table": "The table ranks districts with simple rules; each row lists the reasons. It can be downloaded as CSV.",
       "needs": "'What we have and what we need' lists the data that exists and the gaps."
     },
@@ -291,10 +322,11 @@
     "glossary": {
       "depth": "m below ground: how deep the water is in the wells. A bigger number means deeper water.",
       "usual": "Usual: the same weeks of the year in 2023–2025. The records start in 2023, so 'usual' covers only these years.",
-      "range": "Likely range: about 8 times out of 10 the real level falls inside it.",
+      "range": "Could be (wide range): about 8 times out of 10 the real level falls inside it.",
       "reliability": "Reliability: how well past forecasts did here, compared with assuming no change.",
       "extraction": "Stage of extraction: groundwater used ÷ groundwater that can be used each year. Safe < 70%, semi-critical 70–90%, critical 90–100%, over-exploited > 100%.",
-      "provisional": "Provisional: recent data that will be corrected when final data is published."
+      "provisional": "Provisional: recent data that will be corrected when final data is published.",
+      "most_likely": "Most likely (narrow range): the darker band around the expected level. It is the typical size of past errors here, so about half the time the real level falls inside it. Same forecast, shown more tightly."
     },
     "limits_title": "Limits",
     "limits": {
@@ -338,7 +370,7 @@
       "lang-switch": "Change the language here. Everything on the site switches.",
       "district-picker": "Choose your district. The site remembers it.",
       "card-water-now": "How deep the water is now, and whether that is usual for this time of year.",
-      "card-forecast": "What the next 7, 14 and 30 days may bring, with a likely range.",
+      "card-forecast": "What the next 7, 14 and 30 days may bring: the expected level, the most likely range and the wider range it could be in.",
       "reliability-badge": "How far you can trust the forecast in this district.",
       "card-rain-soil": "Rain this season and soil moisture, compared with earlier years.",
       "advice-list": "General tips that follow from these numbers.",
@@ -348,11 +380,12 @@
       "freshness-bar": "When each kind of data was last updated.",
       "kpi-row": "The main counts for the state.",
       "map-layers": "Choose what the map shows.",
-      "map": "Tap a district to open its page.",
+      "map": "Tap a district to see it in the panel; open its page from there.",
       "priority-table": "Districts ranked by simple rules, with the reasons.",
       "needs-panel": "What data exists and what is missing.",
       "download-csv": "Download the table as a CSV file.",
-      "chat-button": "Ask the guide about anything on this page."
+      "chat-button": "Ask the guide about anything on this page.",
+      "glance-panel": "The selected district's key numbers and reasons, with a link to its page."
     }
   }
 }

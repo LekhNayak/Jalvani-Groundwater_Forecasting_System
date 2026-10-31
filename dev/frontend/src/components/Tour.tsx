@@ -43,15 +43,15 @@ export default function Tour() {
   const single = tour.steps.length === 1;
   return (
     <div role="dialog" aria-modal="false" aria-live="polite" aria-label={text}
-      className="fixed z-[70] w-[320px] max-w-[calc(100vw-24px)] card p-4 shadow-xl" style={{ top, left }}>
+      className="fixed z-[70] w-[320px] max-w-[calc(100vw-24px)] tile p-4 shadow-xl fade-in" style={{ top, left }}>
       <p className="mb-3">{text}</p>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm text-muted">{single ? "" : `${tour.i + 1} / ${tour.steps.length}`}</span>
+        <span className="text-sm text-muted tabnum">{single ? "" : `${tour.i + 1} / ${tour.steps.length}`}</span>
         <div className="flex gap-2">
-          {!single && tour.i > 0 && <button className="px-3 py-2 min-h-[44px] rounded-lg border border-[var(--border)]" onClick={() => stepTour(-1)}>{t("common.back")}</button>}
+          {!single && tour.i > 0 && <button className="btn" onClick={() => stepTour(-1)}>{t("common.back")}</button>}
           {!single && tour.i < tour.steps.length - 1
-            ? <button autoFocus className="px-3 py-2 min-h-[44px] rounded-lg bg-water text-white" onClick={() => stepTour(1)}>{t("common.next")}</button>
-            : <button autoFocus className="px-3 py-2 min-h-[44px] rounded-lg bg-water text-white" onClick={endTour}>{single ? t("common.close") : t("common.done")}</button>}
+            ? <button autoFocus className="btn btn-primary" onClick={() => stepTour(1)}>{t("common.next")}</button>
+            : <button autoFocus className="btn btn-primary" onClick={endTour}>{single ? t("common.close") : t("common.done")}</button>}
         </div>
       </div>
     </div>

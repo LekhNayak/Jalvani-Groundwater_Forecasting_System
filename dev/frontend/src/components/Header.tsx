@@ -1,8 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Building2, CircleHelp, Sprout } from "lucide-react";
 import { setLang } from "../i18n";
 import { useApp } from "../context";
-import type { Lang } from "../lib/types";
+import type { Lang, Role } from "../lib/types";
 
 const LANGS: { code: Lang; label: string }[] = [
   { code: "en", label: "English" }, { code: "mr", label: "मराठी" }, { code: "hi", label: "हिन्दी" },
@@ -11,11 +12,10 @@ const LANGS: { code: Lang; label: string }[] = [
 export function LangSwitch({ big = false }: { big?: boolean }) {
   const { t, i18n } = useTranslation();
   return (
-    <div role="group" aria-label={t("common.language")} data-tour="lang-switch" className="flex gap-1">
+    <div role="group" aria-label={t("common.language")} data-tour="lang-switch" className={`seg ${big ? "text-lg" : ""}`}>
       {LANGS.map((l) => (
         <button key={l.code} lang={l.code} aria-pressed={i18n.language === l.code} onClick={() => setLang(l.code)}
-          className={`${big ? "px-5 py-3 text-lg" : "px-3 py-2 text-sm"} min-h-[44px] rounded-lg border border-[var(--border)]
-            ${i18n.language === l.code ? "bg-water text-white border-transparent" : "bg-surface text-ink hover:bg-plane"}`}>
+          className={big ? "!min-h-[52px] !px-6 !text-lg" : ""}>
           {l.label}
         </button>
       ))}
@@ -23,33 +23,46 @@ export function LangSwitch({ big = false }: { big?: boolean }) {
   );
 }
 
+export function Logo() {
+  return (
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+      <rect width="32" height="32" rx="9" fill="var(--series-1)" />
+      <path d="M16 6.5c-3.6 5-6 8.1-6 11.2a6 6 0 0 0 12 0c0-3.1-2.4-6.2-6-11.2z" fill="#fff" />
+      <path d="M12.6 19.4c1.4 1.6 3.6 2 5.6 1.2" stroke="var(--series-1)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function Header() {
   const { t } = useTranslation();
-  const { role, setRole } = useApp();
+  const { setRole } = useApp();
   const nav = useNavigate();
-  const other = role === "government" ? "farmer" : "government";
+  const go = (r: Role) => { setRole(r); nav(r === "farmer" ? "/farmer" : "/gov"); };
+  const tab = ({ isActive }: { isActive: boolean }) =>
+    `inline-flex items-center gap-2 min-h-[44px] px-3 rounded-lg text-[0.95rem] transition-colors ${
+      isActive ? "text-ink font-semibold bg-[var(--accent-soft)]" : "text-ink2 hover:text-ink hover:bg-[var(--surface-2)]"}`;
   return (
-    <header className="bg-surface border-b border-[var(--border)]">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
-        <Link to="/" className="flex items-center gap-2 min-h-[44px]" aria-label={t("common.app_name")}>
-          <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 2C8 8 5 11.5 5 15a7 7 0 0 0 14 0c0-3.5-3-7-7-13z" fill="var(--series-1)" />
-          </svg>
-          <span className="text-xl font-semibold">{t("common.app_name")}</span>
-          <span className="hidden sm:inline text-ink2 text-sm">{t("common.tagline")}</span>
-        </Link>
-        <nav className="flex flex-wrap items-center gap-2">
-          <LangSwitch />
-          {role && (
-            <button data-tour="role-switch" className="px-3 py-2 min-h-[44px] rounded-lg border border-[var(--border)] text-sm hover:bg-plane"
-              onClick={() => { setRole(other); nav(other === "farmer" ? "/farmer" : "/gov"); }}>
-              {t("common.switch_role")}: {t(other === "farmer" ? "common.role_farmer" : "common.role_government")}
-            </button>
-          )}
-          <Link to="/help" data-tour="help-link" className="px-3 py-2 min-h-[44px] inline-flex items-center rounded-lg text-sm underline">
-            {t("common.help")}
-          </Link>
+    <header className="bg-surface border-b border-[var(--border)] sticky top-0 z-40">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <NavLink to="/" className="flex items-center gap-2.5 min-h-[44px] mr-2" aria-label={t("common.app_name")}>
+          <Logo />
+          <span className="leading-tight">
+            <span className="block text-lg font-semibold tracking-tight">{t("common.app_name")}</span>
+            <span className="hidden sm:block text-xs text-muted">{t("common.tagline")}</span>
+          </span>
+        </NavLink>
+        <nav data-tour="role-switch" aria-label={t("common.switch_role")} className="flex items-center gap-1 order-3 lg:order-none w-full lg:w-auto">
+          <NavLink to="/farmer" className={tab} onClick={(e) => { e.preventDefault(); go("farmer"); }}>
+            <Sprout size={17} aria-hidden="true" />{t("common.role_farmer")}
+          </NavLink>
+          <NavLink to="/gov" className={tab} onClick={(e) => { e.preventDefault(); go("government"); }}>
+            <Building2 size={17} aria-hidden="true" />{t("common.role_government")}
+          </NavLink>
+          <NavLink to="/help" data-tour="help-link" className={tab}>
+            <CircleHelp size={17} aria-hidden="true" />{t("common.help")}
+          </NavLink>
         </nav>
+        <div className="ml-auto"><LangSwitch /></div>
       </div>
     </header>
   );

@@ -1,24 +1,26 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { AlertTriangle, Check, CircleAlert, Minus, TrendingDown, TrendingUp, X, type LucideIcon } from "lucide-react";
 import type { Reliability } from "../lib/types";
 
 /** Status colours always come with an icon and a word (never colour alone). */
-const STATUS_STYLE: Record<string, { bg: string; icon: string }> = {
-  good: { bg: "var(--status-good)", icon: "✓" },
-  fair: { bg: "var(--status-warning)", icon: "≈" },
-  limited: { bg: "var(--status-serious)", icon: "!" },
-  Safe: { bg: "var(--status-good)", icon: "✓" },
-  "Semi-Critical": { bg: "var(--status-warning)", icon: "!" },
-  Critical: { bg: "var(--status-serious)", icon: "!!" },
-  "Over-Exploited": { bg: "var(--status-critical)", icon: "✕" },
+const STATUS_STYLE: Record<string, { bg: string; Icon: LucideIcon }> = {
+  good: { bg: "var(--status-good)", Icon: Check },
+  fair: { bg: "var(--status-warning)", Icon: Minus },
+  limited: { bg: "var(--status-serious)", Icon: CircleAlert },
+  Safe: { bg: "var(--status-good)", Icon: Check },
+  "Semi-Critical": { bg: "var(--status-warning)", Icon: Minus },
+  Critical: { bg: "var(--status-serious)", Icon: AlertTriangle },
+  "Over-Exploited": { bg: "var(--status-critical)", Icon: X },
 };
 
 export function StatusPill({ kind, label }: { kind: string; label: string }) {
-  const s = STATUS_STYLE[kind] ?? { bg: "var(--nodata)", icon: "–" };
+  const s = STATUS_STYLE[kind];
+  const Icon = s?.Icon ?? Minus;
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-semibold border border-[var(--border)]">
-      <span aria-hidden="true" className="inline-flex h-5 w-5 items-center justify-center rounded-full text-xs text-[#0b0b0b]"
-        style={{ background: s.bg }}>{s.icon}</span>
+    <span className="chip font-semibold whitespace-nowrap">
+      <span aria-hidden="true" className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[#111110]"
+        style={{ background: s?.bg ?? "var(--nodata)" }}><Icon size={11} strokeWidth={3} /></span>
       {label}
     </span>
   );
@@ -36,37 +38,52 @@ export function CategoryBadge({ category }: { category: string | null | undefine
   return <StatusPill kind={category} label={t(`cat.${category}`)} />;
 }
 
-export function Card({ title, children, tour, actions, className = "" }:
-  { title: ReactNode; children: ReactNode; tour?: string; actions?: ReactNode; className?: string }) {
+/** A bento tile: an icon + small title (eyebrow), optional actions, content. Grid spans come from className. */
+export function Tile({ title, icon: Icon, children, tour, actions, className = "", bodyClass = "" }:
+  { title?: ReactNode; icon?: LucideIcon; children: ReactNode; tour?: string; actions?: ReactNode; className?: string;
+    bodyClass?: string }) {
   return (
-    <section data-tour={tour} className={`card p-4 sm:p-5 ${className}`} aria-label={typeof title === "string" ? title : undefined}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {actions}
-      </div>
-      {children}
+    <section data-tour={tour} className={`tile p-5 sm:p-6 flex flex-col min-w-0 fade-in ${className}`}
+      aria-label={typeof title === "string" ? title : undefined}>
+      {(title || actions) && (
+        <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mb-4">
+          <h2 className="eyebrow flex items-center gap-2">
+            {Icon && <Icon size={16} strokeWidth={2} aria-hidden="true" className="text-muted" />}{title}
+          </h2>
+          {actions}
+        </header>
+      )}
+      <div className={`flex-1 min-w-0 ${bodyClass}`}>{children}</div>
     </section>
   );
 }
 
-export function Loading() {
+/** Loading placeholder in the shape of the page's bento grid (no layout jump when data arrives). */
+export function Loading({ tiles = ["md:col-span-6 xl:col-span-4 h-56", "md:col-span-6 xl:col-span-8 h-56", "md:col-span-3 xl:col-span-5 h-40", "md:col-span-3 xl:col-span-7 h-40"] }:
+  { tiles?: string[] }) {
   const { t } = useTranslation();
-  return <p role="status" aria-live="polite" className="text-ink2 py-8 text-center">{t("common.loading")}</p>;
+  return (
+    <div role="status" aria-live="polite" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-4">
+      <span className="sr-only">{t("common.loading")}</span>
+      {tiles.map((c, i) => <div key={i} className={`skeleton ${c}`} aria-hidden="true" />)}
+    </div>
+  );
 }
 
 export function ErrorBox({ onRetry }: { onRetry?: () => void }) {
   const { t } = useTranslation();
   return (
-    <div role="alert" className="card p-4 text-center">
-      <p>{t("common.error")}</p>
-      {onRetry && <button className="mt-2 px-4 py-2 rounded-lg bg-water text-white min-h-[44px]" onClick={onRetry}>{t("common.retry")}</button>}
+    <div role="alert" className="tile p-6 flex flex-col items-start gap-3">
+      <p className="flex items-center gap-2"><AlertTriangle size={18} aria-hidden="true" />{t("common.error")}</p>
+      {onRetry && <button className="btn btn-primary" onClick={onRetry}>{t("common.retry")}</button>}
     </div>
   );
 }
 
-/** ▲ / ▼ / ● direction mark with a word: water rising (blue) / falling (red-orange) / steady. */
-export function DirMark({ dir }: { dir: "rise" | "fall" | "steady" | null }) {
+/** Direction icon: water rising (blue) / falling (red-orange) / steady. Always next to words. */
+export function DirMark({ dir, size = 16 }: { dir: "rise" | "fall" | "steady" | null; size?: number }) {
   if (!dir) return null;
-  const m = { rise: ["▲", "var(--rise)"], fall: ["▼", "var(--fall)"], steady: ["●", "var(--text-muted)"] }[dir];
-  return <span aria-hidden="true" style={{ color: m[1] }} className="mr-1">{m[0]}</span>;
+  const [Icon, color] = { rise: [TrendingUp, "var(--rise)"], fall: [TrendingDown, "var(--fall)"],
+                          steady: [Minus, "var(--text-muted)"] }[dir] as [LucideIcon, string];
+  return <Icon size={size} aria-hidden="true" style={{ color }} className="inline-block shrink-0" />;
 }

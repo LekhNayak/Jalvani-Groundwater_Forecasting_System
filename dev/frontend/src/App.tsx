@@ -18,22 +18,22 @@ export default function App() {
   const { t } = useTranslation();
   return (
     <div className="min-h-screen flex flex-col">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-surface px-3 py-2 rounded">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 bg-surface px-3 py-2 rounded">
         {t("common.skip")}
       </a>
       <Header />
       <FreshnessBar />
-      <main id="main" className="flex-1 w-full max-w-6xl mx-auto px-4 pt-5 pb-28">
+      <main id="main" className="flex-1 w-full px-4 sm:px-6 lg:px-8 pt-6 pb-28">
         <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route path="/" element={<StartPage />} />
-          <Route path="/farmer" element={<FarmerPage />} />
-          <Route path="/farmer/:slug" element={<FarmerPage />} />
-          <Route path="/gov" element={<GovPage />} />
-          <Route path="/gov/district/:slug" element={<GovDistrictPage />} />
-          <Route path="/help" element={<HelpPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          <Routes>
+            <Route path="/" element={<StartPage />} />
+            <Route path="/farmer" element={<FarmerPage />} />
+            <Route path="/farmer/:slug" element={<FarmerPage />} />
+            <Route path="/gov" element={<GovPage />} />
+            <Route path="/gov/district/:slug" element={<GovDistrictPage />} />
+            <Route path="/help" element={<HelpPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </Suspense>
       </main>
       <ChatWidget />

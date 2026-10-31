@@ -26,6 +26,7 @@ export type Reliability = "good" | "fair" | "limited";
 export interface HorizonForecast {
   target_date: string; q10: number; q50: number; q90: number; change_m: number; change_q10_m: number;
   change_q90_m: number; interval: string;
+  likely_margin_m?: number | null; likely_lo?: number | null; likely_hi?: number | null;
 }
 export interface RainWindow { from: string; to: string; mm: number | null; usual_mm: number | null; pct_of_usual: number | null;
                               provisional_days: number; usual_years: number[] }
