@@ -17,8 +17,8 @@ import httpx
 from ..config import settings
 
 CHAT_DIR = Path(__file__).resolve().parents[1] / "chat"
-LANG_NAME = {"en": "English", "mr": "Marathi (मराठी)", "hi": "Hindi (हिन्दी)"}
-ELEMENTS = {"lang-switch", "role-switch", "help-link", "freshness-bar", "chat-button", "district-picker",
+LANG_NAME = {"en": "English", "mr": "Marathi (मराठी)", "hi": "Hindi (हिन्दी)", "gu": "Gujarati (ગુજરાતી)"}
+ELEMENTS = {"lang-switch", "theme-switch", "role-switch", "help-link", "freshness-bar", "chat-button", "district-picker",
             "card-water-now", "card-forecast", "reliability-badge", "card-rain-soil", "advice-list", "details-chart",
             "listen-button", "kpi-row", "map", "map-layers", "glance-panel", "priority-table", "needs-panel", "download-csv",
             "gov-history-chart", "gov-extraction", "gov-wells", "gov-metrics"}

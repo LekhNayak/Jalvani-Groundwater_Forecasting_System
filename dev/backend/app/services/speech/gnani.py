@@ -15,7 +15,7 @@ import httpx
 from ...config import settings
 from .base import SpeechNotConfigured, SpeechProvider
 
-LANG_CODES = {"en": "en-IN", "mr": "mr-IN", "hi": "hi-IN"}
+LANG_CODES = {"en": "en-IN", "mr": "mr-IN", "hi": "hi-IN", "gu": "gu-IN"}
 TIMEOUT = httpx.Timeout(30.0, connect=10.0)
 
 
@@ -47,8 +47,8 @@ class GnaniProvider(SpeechProvider):
         return str(body.get("transcript", "")).strip()
 
     def synthesize(self, text: str, lang: str) -> tuple[bytes, str]:
-        voice = {"mr": settings.gnani_tts_voice_mr, "hi": settings.gnani_tts_voice_hi,
-                 "en": settings.gnani_tts_voice_en}.get(lang) or settings.gnani_tts_voice
+        voice = {"mr": settings.gnani_tts_voice_mr, "hi": settings.gnani_tts_voice_hi, "en": settings.gnani_tts_voice_en,
+                 "gu": settings.gnani_tts_voice_gu}.get(lang) or settings.gnani_tts_voice
         payload = {"text": text, "voice": voice, "model": settings.gnani_tts_model,
                    "language": LANG_CODES.get(lang, "en-IN"), "speed": 1.0,
                    "audio_config": {"sample_rate": 24000, "num_channels": 1, "sample_width": 2,

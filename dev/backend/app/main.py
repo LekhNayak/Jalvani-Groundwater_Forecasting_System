@@ -48,7 +48,8 @@ def meta():
     m = get_store().manifest
     return {"built": m["built"], "model": m["model"], "freshness": m["freshness"], "counts": m["counts"],
             "languages": list(settings.languages),
-            "features": {"chat": "groq" if settings.groq_api_keys else "guide", "speech": get_provider() is not None}}
+            "features": {"chat": "groq" if settings.groq_api_keys else "guide", "speech": get_provider() is not None,
+                         "speech_languages": list(settings.speech_languages) if get_provider() is not None else []}}
 
 
 @app.get("/api/districts")

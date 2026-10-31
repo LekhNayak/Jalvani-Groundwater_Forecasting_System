@@ -17,7 +17,7 @@ client = TestClient(app)
 
 def test_meta():
     m = client.get("/api/meta").json()
-    assert m["counts"]["districts"] == 36 and set(m["languages"]) == {"en", "mr", "hi"}
+    assert m["counts"]["districts"] == 36 and set(m["languages"]) == {"en", "mr", "hi", "gu"}
     assert m["features"]["chat"] in ("guide", "groq") and m["freshness"]["groundwater_last_reading"]
 
 
@@ -117,3 +117,19 @@ def test_most_likely_range_is_median_past_error():
             assert h["q10"] <= h["likely_lo"] <= h["q50"] <= h["likely_hi"] <= h["q90"] + 1e-9
     check = json.loads((settings.data_dir / "manifest.json").read_text(encoding="utf-8"))["most_likely"]["check_coverage_pct"]
     assert all(40 <= v <= 75 for v in check.values())
+
+
+def test_chat_chips_reach_the_right_answer_in_every_language():
+    """Each suggestion chip, in each site language, must hit its intent in offline guide mode (and answer in that language)."""
+    from app.services.chat import guide_reply
+    want = {"s.forecast": "forecast", "s.reliability": "reliability", "s.tour": "tour", "s.district": "choose_district",
+            "g.priorities": "priorities", "g.map": "map", "g.needs": "needs", "g.tour": "tour"}
+    i18n = ROOT / "dev/frontend/src/i18n"
+    for lang in settings.languages:
+        chat = json.loads((i18n / f"{lang}.json").read_text(encoding="utf-8"))["chat"]
+        for key, intent in want.items():
+            group, k = key.split(".")
+            r = guide_reply(chat[group][k], lang, "farmer")
+            assert r.get("intent") == intent, (lang, chat[group][k], r.get("intent"))
+        en_reply = guide_reply("show the forecast", "en", "farmer")["reply"]
+        assert lang == "en" or guide_reply(chat["s"]["forecast"], lang, "farmer")["reply"] != en_reply, lang

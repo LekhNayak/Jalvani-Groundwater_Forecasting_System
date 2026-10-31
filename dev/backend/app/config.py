@@ -39,7 +39,10 @@ class Settings:
     gnani_tts_voice_mr: str = env("GNANI_TTS_VOICE_MR")
     gnani_tts_voice_hi: str = env("GNANI_TTS_VOICE_HI")
     gnani_tts_voice_en: str = env("GNANI_TTS_VOICE_EN")
-    languages: tuple = ("en", "mr", "hi")
+    gnani_tts_voice_gu: str = env("GNANI_TTS_VOICE_GU")
+    # site languages (must match frontend src/lib/langs.ts); voice checked live for all four (Gujarati round trip 2026-11-01)
+    languages: tuple = ("en", "mr", "hi", "gu")
+    speech_languages: tuple = ("en", "mr", "hi", "gu")
 
 
 settings = Settings()

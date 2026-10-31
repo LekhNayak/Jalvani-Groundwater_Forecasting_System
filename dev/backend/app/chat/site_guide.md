@@ -25,7 +25,8 @@ District slugs are lower case, with spaces as underscores (for example `pune`, `
 ## Elements you can highlight (element ids)
 
 **Every page:**
-- `lang-switch`: language buttons
+- `lang-switch`: the language menu (English, Marathi, Hindi, Gujarati)
+- `theme-switch`: light, dark, or the device's setting
 - `role-switch`: change role
 - `help-link`: help page
 - `freshness-bar`: when each kind of data was last updated
