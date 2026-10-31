@@ -1,6 +1,6 @@
 # Jalvani — Project Status
 
-**Last updated:** 2026-10-31. The current status is at the end of §10: v4.2 run done, model frozen for the write-up. Several older sections are superseded; see the notices below.
+**Last updated:** 2026-10-31. The current status is at the end of §10: v4.2 run done; v4.3 and the dashboards built. Several older sections are superseded; see the notices below.
 **Scope:** Maharashtra groundwater level prediction using environmental time-series data
 **Time range:** 2023-01-01 to 2026-06-04 (raw groundwater/rainfall) — see §1 for per-source ranges
 **Geography:** All 36 districts of Maharashtra (24–26 usable for training, see district gate in §4.5)
@@ -785,6 +785,23 @@ Full numbers: `docs/history/TFT_VERSION_HISTORY.md` (§0 and the v4.1 section).
   - optional v4.3 (post-processing only): a LightGBM-only guard for Pune, per-district interval evenness, a width cap;
   - then dashboards, rainfall forecasts, and a monsoon-2026 fold when CGWB publishes.
 - Design, rules and full results: `docs/history/TFT_VERSION_HISTORY.md` (v4.2 section), `docs/REPORT.md` §9.8, §10.12, §12.4.
+
+**v4.3 (built 2026-10-31, Colab run pending).** Notebook `03_models/tft/notebooks/09_tft_colab_production_v4_3.ipynb`, pipeline 4.7.
+- **Post-processing:**
+  - a Pune LightGBM-only guard (rule G2);
+  - an interval width cap of 3 ×;
+  - the evenness-aware interval rule D2.
+- **Operational forecast** from the latest reading (`forecast_latest`) and `dashboard_export/` for the dashboards.
+- **Checked locally:** v4.2 is reproduced exactly with the switches off, and the latest-forecast smoke test passes. 23 of 24 districts are issued; Nanded is skipped because only 40% of its last 60 days have readings.
+- **Run on Colab:** about 40 min. Unzip to `04_results/tft_v4_3/`, then run `dev\scripts\build_data.ps1`.
+
+**Dashboards (built 2026-10-31), in `dev/`.**
+- Farmer and government views in English, Marathi and Hindi.
+- A site-guide chatbot: offline now, Groq once a key is set.
+- A Gnani speech plan and the plumbing for it.
+- Real data only; the build never writes outside `dev/`.
+- Run: `dev\scripts\setup.ps1` once, then `dev\scripts\run_local.ps1`.
+- Details: `dev/README.md`, `docs/REPORT.md` §13.
 
 Superseded:
 - v4.0: locked 0.865 / 0.788 / 0.664;

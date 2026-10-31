@@ -5,7 +5,8 @@
 **v3** = `09_tft_colab_production_v3.ipynb` — rebuilt 2026-08-15 after a full audit of v2; full 6-fold, 3-seed T4 run completed in **6.5 minutes**
 **v4** = `09_tft_colab_production_v4.ipynb` + `tft_v4.py` — rebuilt target, fixed evaluation, seasonal-naive baseline, TFT-led ensemble; Colab T4 run 2026-10-03 (v4 section near the end)
 **v4.1** = `09_tft_colab_production_v4_1.ipynb` (now in `notebooks/archive/`) — improvement run + simple per-district results; Colab T4 run 2026-10-29 (54 min); its forecasts are the final ones (v4.2 changed only the intervals) (v4.1 section; results in `04_results/tft_v4_1/`)
-**v4.2** = `09_tft_colab_production_v4_2.ipynb` + `tft_v4.py` 4.6 — post-processing only: honest intervals (ACI fixes + raw/calibrated choice per model and horizon) and a per-district stack guard (Pune); Colab T4 run 2026-10-30 (31 min). **The TFT's intervals are fixed; accuracy is unchanged (the guard was rejected)** (v4.2 section at the end; results in `04_results/tft_v4_2/`)
+**v4.2** = `09_tft_colab_production_v4_2.ipynb` + `tft_v4.py` 4.6 — post-processing only: honest intervals (ACI fixes + raw/calibrated choice per model and horizon) and a per-district stack guard (Pune); Colab T4 run 2026-10-30 (31 min). **The TFT's intervals are fixed; accuracy is unchanged (the guard was rejected)** (v4.2 section; results in `04_results/tft_v4_2/`)
+**v4.3** = `09_tft_colab_production_v4_3.ipynb` + `tft_v4.py` 4.7 — post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule) and the **operational forecast + dashboard export**; built 2026-10-31, **Colab run pending** (v4.3 section at the end)
 
 *v1 and v2 ran on different master datasets (v2's groundwater layer was rebuilt), so raw RMSE is not
 directly comparable between them. v2 and v3 ran on the **same district set and the same headline
@@ -1169,3 +1170,47 @@ Unchanged: Ensemble MASE 1.000 / 1.050 / 1.128 over all folds, while the TFT alo
   - rainfall forecasts as known-future inputs;
   - a monsoon-2026 locked fold once CGWB publishes after 2026-06-04;
   - reservoir storage.
+
+---
+
+# v4.3 (built 2026-10-31, Colab run pending): Pune fix, even intervals, width cap, and the latest forecast
+
+Notebook `09_tft_colab_production_v4_3.ipynb`, pipeline `tft_v4.py` **4.7**. The v4.2 notebook moved to `notebooks/archive/`. All the new switches default off, and with them off the new code gives the same `predictions_daily` as v4.2, all 63,630 rows. This was checked locally both with default settings and with v4.2's final settings.
+
+## Why
+v4.2 left three post-processing issues and one missing capability:
+1. **Pune** still lost to no-change. The v4.2 guard, which replaced the whole blend, was rejected: it fixed Pune but hurt 22 district-horizons.
+2. **The raw intervals were honest on average but uneven across districts.** On the locked test only 52–57% of districts had coverage in 65–90%, against 76–100% for v4.1's calibrated intervals.
+3. **A few calibrated intervals were 90–108 m wide** (Thane, Dhule).
+4. **There was no forecast from the latest reading.** The pipeline only scored backtests, but the dashboards need a forward forecast.
+
+## The changes
+
+| Switch / function | Default (= v4.2) | v4.3 | What it does |
+|---|---|---|---|
+| `lgbm_guard`, `lgbm_guard_margin` = 0.20, `lgbm_guard_min_n` = 50 | off | rule G2 | Per district and horizon, on the district's own pool: if LightGBM alone has a weighted MAE above 1.2 × SN-alone's, the district's stack is refitted **without LightGBM** and pulled toward the global weights (LightGBM removed and renormalised) |
+| `interval_width_cap` | None | 3.0 (fixed, not tuned) | A calibrated interval may reach at most 3 × the raw distance from the median on either side |
+| `pick_interval_choice_v2` (rule D2) | – | used | Keep options with dev coverage 75–85%; drop any with an interval score more than 5% worse than the best of those; of the rest take the higher share of districts covered 65–90% (within 5 points: lower score, then raw); if neither is in 75–85%, the lower score |
+| `load_data(extend_days)` + `forecast_latest()` | 0 / – | used | Adds 30 future calendar rows per district (calendar exactly as in `merge_master.py`). A synthetic fold `fold7_latest` starts the day after the last reading. The networks, LightGBM and post-processing then run **exactly as in an evaluated fold**, with the pool of all six folds. Districts with too few recent readings are listed with the reason |
+| `export_dashboard()` | – | used | `dashboard_export/`: latest forecast + TFT 30-day path + skipped districts, backtests and per-district metrics for both models, districts, and a manifest |
+
+**Offline dev-only check for G2.** This used v4.2 predictions, with pools from earlier dev folds and no calibration block. At margin 0.20 the guard fires only for Pune (folds 3–4) and Raigad (single-well); at 0.10 it fires in 8 districts.
+
+**Honesty note.** The cap and rule D2 respond to v4.2 findings that included the locked folds. So v4.3's locked numbers are a refinement check, not a fresh hold-out.
+
+## Local checks (CPU smoke tests: 1 seed, 2 epochs; not real results)
+- **Exact reproduction of v4.2** with every switch off (63,630 rows identical).
+- **Width cap:**
+  - the medians and raw rows are unchanged;
+  - every calibrated interval is within 3 × the raw distance;
+  - the maximum width fell from 170–219 m to 46–56 m on the toy networks.
+- **LightGBM guard** (`min_n` = 0 on the small smoke pool): only the guarded districts' Ensemble rows changed. In the full-pool smoke run it fired only for Pune (t+14, t+30).
+- **`extend_days` = 0** leaves `load_data` identical, and `extend_days` = 30 leaves every past row identical (720 future rows, 2026-06-05 → 2026-07-04).
+- **`forecast_latest`** on a full 6-fold smoke run:
+  - forecasts for 23 of 24 districts, all issued on 2026-06-04, with finite and ordered q10 ≤ q50 ≤ q90;
+  - a 30-day path for each;
+  - Nanded skipped, with the reason "readings on 40% of the last 60 days (at least 70% needed)", which is the same gate every evaluated window uses.
+- **The dashboard build script reads the export.** It was tested on the smoke export into a temporary folder; smoke numbers never enter `dev/backend/data`.
+
+*Results: to be added after the Colab run.*
+

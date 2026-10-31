@@ -17,6 +17,11 @@
 - Phase 2 (TFT) is complete through production version **v4.2** (Colab run of 30 Oct 2026).
 - v4.2 changed post-processing only. It reproduced v4.1's forecasts bit-for-bit, so the accuracy below is unchanged, and it fixed the TFT's prediction intervals (§9.8, §10.12).
 - The modelling is now frozen for the write-up. The open items are in §12.4.
+- **v4.3** (built 31 Oct, Colab run pending) adds three things:
+  - the LightGBM-only guard for Pune;
+  - an interval width cap and an evenness-aware interval rule;
+  - an **operational forecast** from the latest reading, with a **dashboard export**.
+- The **farmer and government dashboards** are built in `dev/`: English, Marathi and Hindi, with a site-guide chatbot (§13).
 
 > **Headline result (final Ensemble = v4.1 forecasts with v4.2 intervals; locked test = Oct 2025 – Jun 2026, never used for any choice in v4.1 or v4.2):**
 >
@@ -47,6 +52,7 @@
 10. [Results](#10-results)
 11. [Discussion](#11-discussion)
 12. [Conclusion and Future Work](#12-conclusion-and-future-work)
+13. [Dashboards and Decision Support](#13-dashboards-and-decision-support)
 - [Appendix A — Every Bug Found and Fixed](#appendix-a--every-bug-found-and-fixed)
 - [Appendix B — Repository Map](#appendix-b--repository-map)
 - [Appendix C — Glossary](#appendix-c--glossary)
@@ -303,6 +309,7 @@ Fitting the calibration on the same data it is applied to makes the coverage cla
 | **29 Oct** | **Production v4.1 run** | Colab T4, 54 min, pre-registered selection on dev folds 1–4 | **Locked Ensemble 0.839 / 0.763 / 0.616 vs persistence, 0.938 / 0.922 / 0.877 vs seasonal (still the final forecasts).** Interval-calibration issue found for the TFT alone |
 | **30 Oct** | v4.2 built | Post-processing only: ACI fed one outcome per issue date and band, symmetric α range, raw-or-calibrated interval per model and horizon, per-district stack guard (Pune); three rules fixed in advance on development folds | Pipeline 4.6, notebook `09_tft_colab_production_v4_2.ipynb`; defaults reproduce v4.1 exactly |
 | **30 Oct** | **Production v4.2 run** | Colab T4, 31 min, 10 seeds; three rules fixed in advance, applied on development folds 1–4 | Forecasts bit-for-bit identical to v4.1. **TFT intervals fixed:** locked coverage 66–74% → 77–80%, interval score 11–19% better. Ensemble intervals about the same. Pune guard rejected by its rule |
+| **31 Oct** | v4.3 built; dashboards built | Post-processing (Pune LightGBM-only guard, width cap, evenness-aware interval rule), operational forecast + dashboard export; farmer and government dashboards in `dev/` (en / mr / hi, site guide) | Pipeline 4.7, notebook `09_tft_colab_production_v4_3.ipynb`; v4.3 **Colab run pending** |
 
 > **Naming note.** The repository has two unrelated "v1/v2" lines.
 > - The **prototype** TFT runs of May–June are described in `docs/PROJECT_STATUS.md` §9.
@@ -1228,6 +1235,10 @@ In date order. "Kept" means the change is part of the current system. Negative r
 | 25 | 29 Oct | analysis | Calibrated vs uncalibrated intervals compared on development folds | Check whether the calibration step earns its place | **It hurts the TFT's intervals** (coverage 80/77/71 → 72/68/64% on development folds) | to be fixed in v4.2 |
 | 26 | 30 Oct | v4.2 | ACI fed one outcome per issue date and band; symmetric α range; static conformal; calibrated or raw interval chosen per model × horizon (rules C, D) | v4.1 fed the TFT ~10 correlated outcomes per issue date (the Ensemble 1), and the α range 0.01–0.30 around 0.10 favoured narrowing | **TFT:** locked coverage 74/70/66 → 80/78/77%, interval score −12/−11/−19%. **Ensemble:** +3/+3/+2% locked, +2/−9/−3% all folds. Static conformal (γ = 0) chosen; raw intervals reported except Ensemble t+30 | **yes** (TFT intervals fixed) |
 | 27 | 30 Oct | v4.2 | Per-district stack guard (rule G) | Pune's weights were ≈ global, which leaned on LightGBM (MASE 1.30 at t+30 in Pune, vs 0.87 for SN and TFT) | Fixed Pune on development folds (t+30 1.27 → 0.87), but fired in 53 cases and made 22 district-horizons worse (Dhule +0.13); development mean vs SN 0.950 → 0.969 | **no** (rejected by rule G) |
+| 28 | 31 Oct | v4.3 | LightGBM-only guard (rule G2): refit a district's stack without LightGBM where LightGBM alone is > 20% worse than SN on its pool | v4.2's whole-blend guard fixed Pune but hurt 22 district-horizons; a dev-only check showed this version fires for Pune and Raigad only | Colab run pending | run pending |
+| 29 | 31 Oct | v4.3 | Calibrated interval width cap (3 × the raw distance from the median) and the evenness-aware interval rule D2 | 90–108 m intervals (Thane, Dhule); raw intervals uneven across districts. Designed after seeing v4.2's locked results | Colab run pending | run pending |
+| 30 | 31 Oct | v4.3 | Operational forecast from the latest reading (`forecast_latest`, `fold7_latest`) + `dashboard_export` | The dashboards need a forward forecast made exactly like an evaluated fold | Local smoke test: 23 of 24 districts issued on 4 Jun 2026; Nanded skipped (40% of the last 60 days observed) | yes |
+| 31 | 31 Oct | dashboards | Farmer and government dashboards (`dev/`), en / mr / hi, site-guide chatbot, Gnani speech plan | The project's operational goal | 14 backend + 13 frontend tests; browser run with 0 console errors | yes |
 
 ### 9.8 Production v4.2 (built and run 30 Oct 2026)
 
@@ -1650,7 +1661,7 @@ v4.2 completed the interval fix (priority 1 of the previous list). Its Pune guar
 | 5 | More stations for tier-C districts; any usable data for the 12 missing districts | Directly addresses the district gap |
 | 6 | Cluster districts by similar dynamics and train per cluster | The cheaper alternative to a GAT suggested by the 2026 HESS study |
 | 7 | TFT + GAT spatial layer | Only after 5 and 6, and only if the data supports it |
-| 8 | **Deployment:** the planned farmer and government dashboards and a map view, driven by `ensemble_predictions_all_folds.csv`-style outputs | The project's operational goal; not yet built |
+| 8 | **Deployment:** the farmer and government dashboards are **built and run locally** (§13). Remaining: hosting, a scheduled data refresh, the Gnani voice integration, user testing | The project's operational goal |
 
 ### 12.3 The Improvement Loop We Follow
 
@@ -1694,8 +1705,15 @@ results -> find a specific weakness -> diagnose it with a check or probe -> chan
 
 **What we do next, in order:**
 1. **Write-up and viva on the frozen model.** Use this report, `docs/history/TFT_VERSION_HISTORY.md` and `04_results/tft_v4_2/` with `docs/RESULTS_GUIDE.md`.
-2. **Optional v4.3, post-processing only** (§12.2 item 1): a LightGBM-only guard for Pune, per-district interval evenness, and a width cap. It reuses the v4.2 notebook design: rules fixed in advance, development folds only, a same-network reference.
-3. **Dashboards and a map** (farmer and government views), driven by `simple/ensemble/ensemble_predictions_all_folds.csv`.
+2. **v4.3: built (31 Oct), Colab run pending.** Notebook `09_tft_colab_production_v4_3.ipynb`, pipeline 4.7.
+   - **Post-processing:**
+     - a LightGBM-only guard for Pune (rule G2);
+     - an interval width cap of 3 × the raw distance from the median;
+     - the evenness-aware raw-or-calibrated rule (D2).
+   - **The operational forecast** from the latest reading, plus `dashboard_export/`.
+   - Each change is behind a switch, and with all switches off v4.2 is reproduced exactly (local check).
+   - **Honesty note:** the cap and rule D2 were designed after seeing v4.2's locked-fold results.
+3. **Dashboards:** built (§13). They show the v4.2 backtests now, and the v4.3 latest forecast once the run is unzipped and `dev\scripts\build_data.ps1` is run.
 4. **Rainfall forecasts as a known-future input** (IMD or ECMWF extended-range).
    - **Why:** the largest remaining error is unknown future rain (monsoon, t+30).
    - **How:** use the forecast *as it was issued* on each anchor day, never the rain that later fell. Using observed future rain would leak the answer.
@@ -1705,6 +1723,81 @@ results -> find a specific weakness -> diagnose it with a check or probe -> chan
    - Reservoir storage (`cwc_reservoir.py`, once an API key is available), tested as an input ablation.
    - Then clustering districts by similar dynamics, measured by the worst-5 minus best-5 district gap.
    - Only after that, a GAT.
+
+---
+
+## 13. Dashboards and Decision Support
+
+The project's operational goal is to turn the forecasts into decisions:
+- a **farmer** view for one district;
+- a **government** view for the state.
+
+Both are built in `dev/` and run locally. They work in **English, Marathi and Hindi**, and include a site-guide chatbot. Their documentation is in `dev/README.md` and `dev/docs/`.
+
+### 13.1 Who it is for, and what each view shows
+
+| View | Users | Shows (all real data; see `dev/docs/DATA_CONTRACT.md`) |
+|---|---|---|
+| **Farmer** (phone first, plain words) | farmers, extension workers | **Three cards:**<br>1. *water now*: depth below ground, the 30-day and 1-year change, compared with the same weeks in 2023–25;<br>2. *next 7 / 14 / 30 days*: expected depth with a likely range and a reliability badge;<br>3. *rain and soil*: rain since 1 June vs the 2023–25 average, soil moisture.<br>**Then:** rule-based water-use tips, and a details chart (measured level + forecast fan) |
+| **Government** | district and state officials, GSDA | **Overview:**<br>- headline counts (districts, wells, semi-critical extraction, falling forecasts, districts without data);<br>- a map with five layers (level vs usual, 30-day forecast change, stage of extraction, monitoring wells, reliability);<br>- a priority table, ranked by transparent flags with reasons, with CSV download;<br>- a "what we have / what we need" panel.<br>**District page:** measured level with past forecasts and ranges, accuracy, extraction history and use split, wells used |
+
+### 13.2 How it is built
+- **Batch model, file-based site.** The model runs on Colab (the v4.3 notebook) and writes `dashboard_export/`. A build script turns that, plus the project's data, into small JSON files, which a FastAPI backend serves to a React frontend.
+- **No model server is needed.** Forecasts change only when CGWB publishes new readings.
+- **Hosting later:** one small server, with the model still a batch job.
+- **No mock data, and the model cannot be affected:**
+  - the build only reads `data/` and `04_results/`, and writes only inside `dev/`;
+  - a test checks that the project files are unchanged after a build;
+  - where data is missing, the site says so. Examples:
+    - groundwater readings end on 4 Jun 2026;
+    - the latest forecast is "not yet produced" until the v4.3 run;
+    - ten districts have no usable well data;
+    - September 2026 rainfall is provisional.
+- **The latest forecast** comes from v4.3's `forecast_latest`. It is issued from each district's last reading, exactly like an evaluated fold. A district with too few recent readings gets no forecast, and the site shows the reason (Nanded: readings on 40% of the last 60 days, 70% needed).
+
+### 13.3 Human–machine interface
+The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principles and WCAG 2.1 AA. `dev/docs/HMI_CHECKLIST.md` maps each one to the screen that applies it. In particular:
+- **Status is always visible.** A freshness bar on every page shows the date of every kind of data.
+- **Units are real-world.** Depth is in metres below ground, on a reversed axis so that up = water nearer the surface.
+- **Uncertainty is shown as words and ranges,** never a bare number.
+- **Colour is never alone.** Every colour comes with an icon and a word; the palette is colour-blind safe.
+- **Disclosure is progressive.** Three cards come first; details sit behind a button.
+- **Recognition over recall.** Language, role and district are remembered.
+- **The user stays in control.** The chatbot never navigates by itself; it offers a "Go there" button.
+- **Built for slow connections.** The farmer page loads about 95 kB of gzipped JavaScript; the map and charts load only when opened.
+
+### 13.4 Languages, chatbot and voice
+- **Languages.** Every text is in `dev/frontend/src/i18n/{en,mr,hi}.json`. A test fails if a key or `{{placeholder}}` is missing in any language. The Marathi and Hindi text is drafted and awaits a native speaker's review (`dev/docs/I18N_REVIEW.md`). District names appear in all three scripts, with the official new names.
+- **Chatbot (site guide).**
+  - It helps users navigate, teaches the site (guided tours, highlighting a card) and explains the numbers on screen.
+  - It gives no farming, borewell or legal advice.
+  - It works now as an offline three-language guide. With a Groq API key it becomes an LLM assistant under the same rules: answers only from the numbers on screen, with allowlisted actions (`dev/docs/CHATBOT.md`).
+- **Voice (Gnani Vachana STT/TTS).** It is implemented with one API key (`dev/docs/SPEECH_PLAN.md`): push-to-talk, a transcript to confirm, spoken replies with captions, and "Listen" on every card. A live Marathi round trip (text → speech → text) returned the sentence word for word, in about 0.9 s each way.
+- **The Groq assistant was also tested live.** It answered in Marathi from the on-screen numbers only, and referred a borewell question in Hindi to officials. It rotates between several API keys.
+
+### 13.5 Verification
+- **Backend tests (pytest):**
+  - API values checked against the source files;
+  - the rules;
+  - the chat guide in three languages and the action allowlist;
+  - speech returning 501 while not configured;
+  - "the build never touches project data".
+- **Frontend tests (vitest):** translation completeness and placeholders, and the formatting helpers.
+- **The production build.**
+- **A browser run (Playwright) on desktop and phone widths in all three languages:**
+  - the farmer and government flows;
+  - a Marathi district search;
+  - the chat guide highlighting a card;
+  - a guided tour;
+  - keyboard-only Tab order.
+
+  The run produced no console errors.
+
+### 13.6 Limits and next steps
+- District level only.
+- Groundwater readings end on 4 Jun 2026, until CGWB publishes newer ones.
+- The latest forecast appears after the v4.3 Colab run.
+- **Still to do:** a native-language review, usability sessions with farmers and officials, the Gnani integration, and deployment with a scheduled data refresh.
 
 ---
 
@@ -1749,8 +1842,9 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 | `data/raw/` · `data/clean/` · `data/audit/` | collector outputs · preprocessing outputs · target-audit plots and tables |
 | `data/master/` | frozen training sets: `master_dataset_v4target.csv` (current), `master_dataset_v3target.csv` (old target) |
 | `03_models/baselines_phase1/` | Phase 1 ARIMA / XGBoost / LSTM notebooks and scripts |
-| `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline 4.6 = v4.2), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_2.ipynb` (current); `notebooks/archive/` (production v1–v4.1, prototypes); `legacy/tft_model.py` (v1/v2 network) |
-| `04_results/` | `tft_v4_2/` (**final results**, read with `docs/RESULTS_GUIDE.md`), `tft_v4_1/` (the v4.1 run: identical forecasts, v4.1 intervals; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
+| `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline 4.7 = v4.3), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_3.ipynb` (current); `notebooks/archive/` (production v1–v4.2, prototypes); `legacy/tft_model.py` (v1/v2 network) |
+| `dev/` | the farmer and government dashboards (§13): `pipeline/` (data build), `backend/` (FastAPI, chat, speech), `frontend/` (React, en / mr / hi), `docs/` |
+| `04_results/` | `tft_v4_2/` (**final results**; `docs/RESULTS_GUIDE.md` now describes the v4.3 zip, and v4.2's version is in git history), `tft_v4_1/` (the v4.1 run: identical forecasts, v4.1 intervals; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
 | `docs/` | this report, `PROJECT_STATUS.md`, `RESULTS_GUIDE.md`, `STRUCTURE.md`, `history/` (`TFT_VERSION_HISTORY.md` with §0 = scores of every version, `V3_PLAN.md`, `TFT_IMPROVEMENT_PLAN.md`) |
 | `archive/` | backups and byte-identical duplicates, with `MANIFEST.csv`; not used by the pipeline |
 
@@ -1799,5 +1893,5 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 ---
 
 *End of Report — last updated 2026-10-31.*
-*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.2 (run 30 Oct 2026); model frozen for the write-up; next: optional v4.3 post-processing, dashboards, rainfall forecasts.*
+*Status: Phase 1 (baselines) complete; Phase 2 (TFT) complete through production v4.2 (run 30 Oct 2026); v4.3 (post-processing + operational forecast) built, Colab run pending; dashboards built in `dev/` (§13).*
 *Detailed version history and every number: `docs/history/TFT_VERSION_HISTORY.md`. How to read the results files: `docs/RESULTS_GUIDE.md`.*

@@ -15,6 +15,7 @@ The complete file-by-file log is `archive/MOVES_2026-10-29.csv`.
 | `01_data_collection/` | code that downloads data | writes only to `data/raw/` (plus its own `progress/` and `logs/`) |
 | `02_preprocessing/` | code that cleans and merges | reads `data/raw/`, writes `data/clean/` and `data/audit/` |
 | `data/` | **all data**, one live copy of each file | `raw/` = downloaded, `clean/` = produced, `master/` = frozen training sets with versioned names |
+| `dev/` | the farmer and government dashboards: data build, backend, frontend, docs | reads `data/` and `04_results/` only; writes only inside `dev/`; its generated data (`dev/backend/data/`) is git-ignored |
 | `03_models/` | model code and notebooks | the current version sits at the top level; older versions in `notebooks/archive/` or `legacy/` |
 | `04_results/` | **all results**, one folder per run | a run's files stay together, exactly as the run wrote them |
 | `docs/` | every document | the report, the status log, the results guide, this file; `history/` holds the design history |
@@ -54,6 +55,11 @@ Each stage's scripts find their files relative to their own location, so they ca
 | `result zips/v4_1/` | `04_results/tft_v4_1/` (the guide copy shipped in the zip → `RESULTS_GUIDE_as_shipped.md`) |
 | `result zips/tft_v4_1_outputs.zip` | `04_results/zips/` |
 | `.ipynb_checkpoints/` (Jupyter autosaves) | `archive/notebook_checkpoints/` |
+
+**2026-10-31 (v4.3 and the dashboards):**
+- `09_tft_colab_production_v4_2.ipynb` moved to `03_models/tft/notebooks/archive/`.
+- The current notebook is `09_tft_colab_production_v4_3.ipynb`. Its zip is extracted to `04_results/tft_v4_3/`; the dashboards read its `dashboard_export/`.
+- `dev/` was added.
 
 **After the restructure (2026-10-30, v4.2):**
 - `09_tft_colab_production_v4_1.ipynb` moved to `03_models/tft/notebooks/archive/`.

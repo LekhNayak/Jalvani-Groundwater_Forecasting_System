@@ -1,17 +1,16 @@
-# JalVaani v4.2: guide to the results zip
+# JalVaani v4.3: guide to the results zip
 
-This guide comes with `tft_v4_2_outputs.zip`, produced by `09_tft_colab_production_v4_2.ipynb`. It says what each file is, which ones to use, and how to read them.
+This guide comes with `tft_v4_3_outputs.zip`, produced by `09_tft_colab_production_v4_3.ipynb`. It says what each file is, which ones to use, and how to read them.
 
-(The v4.1 zip has its own copy of the guide it shipped with: `04_results/tft_v4_1/RESULTS_GUIDE_as_shipped.md`.)
+The v4.1 zip has its own copy of its guide: `04_results/tft_v4_1/RESULTS_GUIDE_as_shipped.md`. The v4.2 version of this guide is in git history (commit `ac2cdf2`).
 
-**What v4.2 changed.** Only what happens *after* the models have predicted:
-- how the 80% intervals are calibrated;
-- which interval is reported for each model;
-- a guard against a district's ensemble leaning on a model that is poor there (Pune).
+**What v4.3 changed.** Only post-processing. The TFT networks and LightGBM are the v4.1 ones; v4.2 showed they re-train bit-for-bit.
+1. **Pune (rule G2).** Where LightGBM alone was more than 20% worse than seasonal-naive on a district's own past errors, that district's blend is refitted without LightGBM.
+2. **Width cap.** A calibrated interval may reach at most 3 × the network's own distance from the median.
+3. **Even intervals (rule D2).** Raw or calibrated is chosen per model and horizon with the district evenness of coverage counted.
+4. **The latest forecast.** A forecast issued from each district's last groundwater reading, plus `dashboard_export/`, the files the dashboards (`dev/`) read.
 
-The TFT networks and LightGBM use the v4.1 settings. They were re-trained on Colab, and in the run of 2026-10-30 they reproduced v4.1 **bit-for-bit**. So the forecasts (q50) are identical to v4.1's, and the `same-net v4.1-post` columns of `v4_1_vs_v4_2.csv` equal the published v4.1 numbers exactly (see §3).
-
-The extracted run is in `04_results/tft_v4_2/`. This guide was not uploaded to that Colab run, so the zip does not contain a copy; this file is its guide.
+**Honesty note.** Changes 2 and 3 were designed after seeing v4.2's results, including the locked folds 5–6. So v4.3's locked-fold numbers are a refinement check, not a fresh hold-out. All rules still use dev folds 1–4 only.
 
 ## 1. The words used everywhere
 
@@ -20,88 +19,46 @@ The extracted run is in `04_results/tft_v4_2/`. This guide was not uploaded to t
 | **t+7 / t+14 / t+30** | forecast made today for the water level 7, 14 or 30 days ahead | – |
 | **No-change (persistence)** | the simplest forecast: "the level stays where it is today" | – |
 | **Seasonal-naive (SN)** | today's level + the district's usual change for this time of year (past data only). Hard to beat | – |
-| **MASE** (`rMAE_P`, "MASE (vs no-change)") | our error ÷ the no-change error | **below 1** = better than no-change. 0.75 = 25% less error |
+| **MASE** (`rMAE_P`, "MASE (vs no-change)") | our error ÷ the no-change error | **below 1** = better than no-change |
 | **vs seasonal** (`rMAE_SN`) | our error ÷ the seasonal-naive error | **below 1** = better than the seasonal forecast |
 | **MAE / RMSE (m)** | typical / large-error-weighted miss, in metres | smaller is better |
-| **MAPE (%)** | error as a % of the depth. The simple files use the old v1 formula; `MAPE floored` divides by at least 0.5 m. On this data the two are almost identical | smaller is better; never quote alone |
-| **Coverage (%)** | how often the real level fell inside the 80% interval (q10 to q90) | **about 80** (75–85). Below = intervals too narrow; above = too wide |
+| **Coverage (%)** | how often the real level fell inside the 80% interval (q10 to q90) | **about 80** (75–85) |
 | **Below q10 / Above q90 (%)** | misses on each side | **about 10 each** (5–15) |
-| **Interval (m)** / **Width (m)** | average width of the 80% interval | narrower is better, at the right coverage |
-| **Interval score (m)** | width plus 10 × the size of every miss (Winkler score for an 80% interval) | smaller is better; one number for "sharp *and* honest" |
-| **TFT** | the Temporal Fusion Transformer alone (the project's main model) | – |
-| **Ensemble** | the final forecast: a weighted blend of no-change, seasonal-naive, TFT and LightGBM, with weights learned per district on past held-out errors | – |
-| **raw interval** | the interval the model itself gives (the TFT's own q10–q90 spread around the median). In `predictions_daily.csv` these are the `TFT` and `Ensemble` rows | – |
-| **calibrated interval** | the same median with the interval re-sized by conformal calibration from past errors: the `TFT (calibrated)` and `Ensemble (calibrated)` rows | – |
-| **reported interval** (new in v4.2) | for each model and horizon, either the raw or the calibrated interval, **chosen on the dev folds by rule D** (§4). Every file in `simple/`, `RESULTS_TO_QUOTE.csv` and `coverage_reported*.csv` uses the reported interval. The `interval` column says which one | – |
-| **ACI** | adaptive conformal inference: the calibration widens or narrows the intervals as recent misses come in | – |
-| **Stack guard** (new in v4.2) | if a district's blend was worse on its own past errors than both seasonal-naive alone and the TFT alone, that district uses the better of the two | – |
-| **Folds** | six test periods, each forecast by models trained only on data before it: monsoon 2024, post-monsoon 2024, dry 2025, monsoon 2025, post-monsoon 2025, dry 2026 | – |
-| **Dev folds 1–4** | used for every choice in v4.2 | – |
-| **Locked folds 5–6** | Oct 2025 → 4 Jun 2026. In v4.2 they are not even computed until every choice has been made. **The honest test** (seen in earlier versions' results, but never used to choose anything since v4.0) | – |
+| **Interval score (m)** | width plus 10 × the size of every miss (Winkler score for an 80% interval) | smaller is better |
+| **Districts 65–90 (%)** | share of the 21 headline districts whose own coverage is between 65% and 90% (evenness) | higher is better |
+| **raw / calibrated / reported interval** | raw = the network's own q10–q90 around the median; calibrated = conformal (static, capped in v4.3); reported = the one chosen per model and horizon by rule D2. The `interval` column says which | – |
+| **Ensemble** | the final forecast: a weighted blend of no-change, seasonal-naive, TFT and LightGBM, weights learned per district | – |
+| **Dev folds 1–4 / locked folds 5–6** | used for every choice / Oct 2025 → 4 Jun 2026 | – |
 | **Headline districts (21)** | the 24 modelled districts minus the single-well ones (Nanded, Raigad, Thane) | – |
-| **Data tier A / B / C** | data quality: A = 6+ wells and well observed; C = thin or gappy. Assigned from the data only, never from results | – |
-| **Beed, Latur** | listed as "no usable data" (Beed: its only well is a stuck/dry sensor; Latur: tier D) | – |
+| **Latest forecast** | issued from each district's last reading (`fold7_latest`), made exactly like an evaluated fold; no actuals yet | – |
 
 ## 2. What is in the zip
 
 ```
-tft_v4_2_outputs.zip
-├── RESULTS_GUIDE.md                       this file
-├── RUN_SUMMARY.md                         the three decisions (rules G, C, D) with their tables, seeds, run time,
-│                                          v4.1 -> v4.2, Pune
-├── RESULTS_TO_QUOTE.csv                   *** the v4.2 headline numbers (both models, locked + all folds) ***
-│                                          incl. `interval` (raw / calibrated) and `interval score (m)`
-├── RESULTS_TO_QUOTE_ref_v4_1_postproc.csv the same table with v4.1's post-processing on the SAME networks
-├── v4_1_vs_v4_2.csv                       published v4.1 | v4.1 post-processing on the v4.2 networks ("same-net") | v4.2
-├── pune_v4_1_vs_v4_2.csv                  Pune's Ensemble, same-net v4.1 post-processing vs v4.2
-├── guard_decision.csv                     rule G: every headline district x horizon, dev MASE with the guard off / on
-├── guard_cases_dev.csv                    which (district, horizon, fold) the guard switched on the dev folds, and to what
-├── conformal_variant_summary.csv          rule C: the five calibration variants tried, with their scores
-├── interval_choice_table.csv              rule D inputs: dev coverage, tails, width, interval score of raw and calibrated
-├── interval_choice_decisions.csv          rule D: the pick per model x horizon and the reason
-├── ablations.csv                          one row per reported run with its settings and key numbers
-│
-├── simple/                                *** v1-style results, reported intervals - start here ***
-│   ├── summary_tft_vs_ensemble.csv        TFT vs Ensemble, 21 headline districts, all folds + locked (`interval` column)
-│   ├── tft_training_curves.png            train / early-stopping loss per fold and seed
-│   ├── tft_vsn_importance.png/.csv        which inputs the TFT weighted most (fold 6 network)
-│   ├── comparison_v1_vs_v4_2_per_district.csv   only if the old v1 file was uploaded (not like-for-like)
-│   ├── ensemble/                          the final forecast
-│   │   ├── ensemble_metrics_headline.csv          per horizon, 21 headline and all 24 districts, all folds
-│   │   ├── ensemble_metrics_headline_locked.csv   the same, locked folds 5-6 only
-│   │   ├── ensemble_metrics_per_district.csv      every district x horizon (Beed/Latur = "no usable data")
-│   │   ├── ensemble_metrics_per_season.csv        per fold, and grouped: monsoon / post-monsoon / dry
-│   │   ├── ensemble_mase_by_district.csv          district x horizon table of MASE
-│   │   ├── ensemble_mape_by_district.csv          district x horizon table of MAPE
-│   │   ├── ensemble_coverage_by_district.csv      district x horizon table of coverage
-│   │   ├── ensemble_predictions_all_folds.csv     every forecast: district, date, horizon, actual, q10, q50, q90,
-│   │   │                                          fold, issue_date, no_change, seasonal_naive
-│   │   ├── ensemble_per_district_mase_t7/t14/t30.png   bar chart per district (dashed line = 1)
-│   │   ├── ensemble_per_district_mape_t7/t14/t30.png
-│   │   ├── ensemble_coverage_heatmap.png          red = intervals too narrow, blue = too wide
-│   │   ├── ensemble_forecast_grid_t7/t14/t30.png  every district on one page
-│   │   └── quantile/quantile_<district>.png       one page per district: t+7, t+14, t+30 with real dates
-│   └── tft/                               exactly the same files for the TFT alone (tft_ prefix)
-│
-├── FINAL_v4_2/                            detailed results of the final run, all 6 folds
-│   ├── metrics_headline.csv / ensemble_metrics_headline.csv     full metric set (TFT / Ensemble); the coverage
-│   │                                      columns in these two are of the RAW interval
-│   ├── coverage_reported.csv / ensemble_coverage_reported.csv   coverage of the reported interval (+ `_by_district`)
-│   ├── coverage_calibrated.csv / ensemble_coverage_calibrated.csv   the conformal interval, always (diagnostics)
-│   ├── baseline_ladder.csv                every model vs both baselines (seasonal-naive, ridge, LightGBM, TFT, Ensemble)
-│   ├── significance.csv / ensemble_significance.csv   bootstrap + Diebold-Mariano p-values (Holm-adjusted)
-│   ├── metrics_per_fold.csv, metrics_per_district.csv, district_gap.csv
-│   ├── stack_weights.csv                  how much each district's ensemble trusts no-change / SN / TFT / LightGBM
-│   │                                      (a guarded district shows 1.0 on SN or TFT)
-│   ├── stack_guard.csv                    every guarded (district, horizon, fold) with the pool errors that triggered it
-│   ├── best_epochs.csv, windows.csv, config.json
-│   ├── predictions_daily.csv              TFT (raw), TFT, TFT (calibrated), Ensemble, Ensemble (calibrated) rows
-│   ├── predictions_base.csv               seasonal-naive, ridge and LightGBM forecasts
-│   ├── predictions_weekly.csv             7-day-mean target
-│   └── model_<fold>_lastseed.pt           one trained network per fold (last seed)
-├── FINAL_v4_2_locked/                     the same metric files restricted to folds 5-6
-├── REF_v4_1_postproc/ (+ _locked/)        metric files of the same-net reference (v4.1 post-processing)
-└── dev_ref/                               dev-fold metric files of the reference (v4.1 post-processing)
+tft_v4_3_outputs.zip
+├── RESULTS_GUIDE.md, RUN_SUMMARY.md     this file; the decisions (G2, D2) with their tables, run time, comparisons
+├── RESULTS_TO_QUOTE.csv                 *** v4.3 headline numbers (both models, locked + all folds) ***
+├── RESULTS_TO_QUOTE_ref_v4_2_postproc.csv   the same with v4.2's post-processing on the SAME networks
+├── v4_2_vs_v4_3.csv                     published v4.2 | v4.2 post-processing on the same networks | v4.3
+├── district_evenness_v4_2_vs_v4_3.csv   share of districts with coverage 65-90%, both versions, all / locked
+├── wide_intervals_v4_2_vs_v4_3.csv      reported intervals wider than 20 m, both versions
+├── pune_v4_2_vs_v4_3.csv                Pune's Ensemble, both versions
+├── guard_decision.csv, guard_cases_dev.csv     rule G2: dev MASE per district guard off / on; where it acted
+├── interval_choice_table.csv, interval_choice_decisions.csv   rule D2 inputs (incl. evenness) and picks
+├── ablations.csv
+├── dashboard_export/                    *** what the dashboards read (dev/pipeline/build_dashboard_data.py) ***
+│   ├── forecast_latest.csv              latest forecast: district, model (Ensemble/TFT), horizon, issue / target date,
+│   │                                    level_now, q10, q50, q90, interval, seasonal_naive
+│   ├── forecast_latest_tft_path.csv     the TFT's 30 daily steps from the issue date
+│   ├── forecast_latest_skipped.csv      modelled districts with no latest forecast, and why
+│   ├── backtest_ensemble.csv / backtest_tft.csv   every evaluated forecast (reported intervals, all folds)
+│   ├── metrics_ensemble_per_district.csv / metrics_tft_per_district.csv   all folds and locked folds
+│   ├── districts.csv                    tier, single-well flag, modelled, headline
+│   └── export_manifest.json             run tag, pipeline version, data md5, issue date, settings
+├── simple/                              v1-style tables and plots, reported intervals (as in v4.2)
+├── FINAL_v4_3/ (+ _locked/)             detailed results of the final run (as in v4.2; coverage_reported*.csv etc.)
+├── REF_v4_2_postproc/ (+ _locked/)      metric files of the same-net reference
+└── dev_ref/                             dev-fold metric files of the reference
 ```
 
 ## 3. Which files to use
@@ -109,56 +66,33 @@ tft_v4_2_outputs.zip
 | You need | Use |
 |---|---|
 | **The numbers for the report / viva** | `RESULTS_TO_QUOTE.csv`, locked rows first, then all folds |
-| **What v4.2 changed** | `v4_1_vs_v4_2.csv`. Compare the `v4.2` columns with the `same-net v4.1-post` columns, which use the same networks, so only post-processing differs. The `v4.1` columns are the published v4.1 run and differ also by GPU noise |
-| How the three choices were made | `RUN_SUMMARY.md`, then `guard_decision.csv`, `conformal_variant_summary.csv`, `interval_choice_decisions.csv` |
-| Pune | `pune_v4_1_vs_v4_2.csv`, `simple/ensemble/quantile/quantile_pune.png` |
-| A results table like the old one | `simple/ensemble/ensemble_metrics_headline.csv` (and the `tft/` version) |
-| Per-district results | `simple/ensemble/ensemble_metrics_per_district.csv` or the `*_by_district.csv` tables |
-| Figures | `simple/ensemble/ensemble_per_district_mase_t30.png`, `ensemble_coverage_heatmap.png`, `simple/tft/tft_coverage_heatmap.png`, `ensemble_forecast_grid_t30.png`, `quantile/quantile_nagpur.png` (or any district), `simple/tft_vsn_importance.png`, `simple/tft_training_curves.png` |
-| "Is the transformer worth it?" | `FINAL_v4_2/baseline_ladder.csv` and `simple/summary_tft_vs_ensemble.csv` |
-| Statistical proof | `FINAL_v4_2_locked/ensemble_significance.csv` |
-| Raw forecasts for your own analysis or a dashboard | `simple/ensemble/ensemble_predictions_all_folds.csv` |
+| **What v4.3 changed** | `v4_2_vs_v4_3.csv` (compare `v4.3` with `same-net v4.2-post`), `district_evenness_v4_2_vs_v4_3.csv`, `wide_intervals_v4_2_vs_v4_3.csv`, `pune_v4_2_vs_v4_3.csv` |
+| How the choices were made | `RUN_SUMMARY.md`, `guard_decision.csv`, `interval_choice_decisions.csv` |
+| **The latest forecast / the dashboards** | `dashboard_export/`. Unzip to `04_results/tft_v4_3/`, then run `dev\scripts\build_data.ps1` |
+| Tables and figures | `simple/` (as before) |
+| Statistical proof | `FINAL_v4_3_locked/ensemble_significance.csv` |
 
-## 4. The three v4.2 rules (fixed before the run; dev folds 1–4 only)
+## 4. The v4.3 rules (dev folds 1–4 only; fixed before the run)
 
 | Rule | Question | Decision |
 |---|---|---|
-| **G** | Use the stack guard? | Yes, if the mean Ensemble error ÷ seasonal-naive error (21 headline districts, 3 horizons) does not get worse **and** no district's Ensemble MASE rises by more than 0.02 at any horizon |
-| **C** | Which calibration variant? (V0 = v4.1; V1 = one ACI outcome per issue date and band; V2 = V1 + symmetric α range 0–0.20; V3 = V2 with γ 0.03; V4 = no adaptation) | The lowest mean of (calibrated interval score ÷ raw interval score) over TFT and Ensemble × 3 horizons. V0 is kept unless beaten by more than 0.01 |
-| **D** | For each model and horizon, report the raw or the calibrated interval? | If exactly one has coverage within 75–85%, take it. Otherwise take the lower interval score. Within 1%, take raw |
+| **G2** | Use the LightGBM-only guard? | Yes, if the mean Ensemble error ÷ seasonal-naive error (21 headline districts, 3 horizons) does not get worse **and** no district's Ensemble MASE rises by more than 0.02 at any horizon |
+| **C** | Calibration | Fixed: v4.2's static conformal (γ = 0) + width cap 3 (not tuned) |
+| **D2** | Raw or calibrated, per model and horizon? | Keep options with coverage 75–85%; drop any whose interval score is > 5% worse than the best of those; of the rest take the higher share of districts at 65–90% coverage (within 5 points: lower interval score, then raw). If neither is in 75–85%: lower interval score |
 
-## 5. How to analyse the results (in this order)
-
-1. **Headline.** Open `RESULTS_TO_QUOTE.csv` and look at the *locked folds 5-6* Ensemble rows.
-   - MASE (`rMAE vs persistence`) below 1 at every horizon, with p < 0.05, means it beats doing nothing.
-   - `rMAE vs seasonal` below 1 with p < 0.05 means it also beats the seasonal forecast. This is the harder and more convincing claim.
-2. **Did v4.2 help?** In `v4_1_vs_v4_2.csv`, compare v4.2 with same-net:
-   - interval score (lower is better);
-   - coverage (closer to 80 is better);
-   - vs no-change (should be equal, except where the guard acted).
-3. **TFT vs Ensemble.** Compare the two models in `simple/summary_tft_vs_ensemble.csv`. If the TFT alone is about 1.0 against seasonal-naive, say so: the ensemble is where the gain over seasonality comes from.
-4. **Across districts.** Open `ensemble_per_district_mase_t30.png`.
-   - Bars left of the dashed line beat no-change.
-   - Compare the colours: if tier C (thin data) districts sit at the bottom, the limit is the data, not the model.
-   - `district_gap.csv` gives the worst-5 minus best-5 spread.
-5. **Across seasons.** Use `ensemble_metrics_per_season.csv`. The monsoon is the hard season, because future rain is unknown. Expect it to be the weakest.
-6. **Intervals.** Open `ensemble_coverage_heatmap.png` and `tft_coverage_heatmap.png`.
-   - White means close to 80%, which is right. Red means too narrow; blue means too wide.
-   - Check the overall coverage and the two tails in `RESULTS_TO_QUOTE.csv`, aiming for about 80 overall and about 10 per tail.
-7. **Look at the forecasts.** Open two or three `quantile_<district>.png` pages: a good district, a tier-C one and Pune. Check how the forecast (blue) tracks the actual (black) through the monsoon rise and the dry-season decline, against the no-change line (orange dotted).
+## 5. How to analyse the results
+1. **Headline:** `RESULTS_TO_QUOTE.csv`, locked Ensemble rows. Medians change only where the guard acted (Pune), so expect the v4.2 numbers almost exactly.
+2. **v4.3 vs v4.2:** in `v4_2_vs_v4_3.csv`, compare the interval score and coverage; then evenness and wide intervals; then Pune.
+3. **The latest forecast:** `dashboard_export/forecast_latest.csv`. Check the issue date (each district's last reading) and that `forecast_latest_skipped.csv` explains any missing district.
+4. Then the per-district, per-season and interval checks as in earlier versions (`simple/`).
 
 ## 6. Caveats to state with the results
-
-- The groundwater record starts in 2023, so the walk-forward test covers only three monsoons.
-- Folds 5-6 contain no monsoon, so the locked test covers post-monsoon and dry seasons only. Monsoon skill comes from folds 1 and 4, which are development folds.
-- Folds 5-6 have been seen in earlier versions' results, but nothing in v4.1 or v4.2 was chosen on them.
-- The networks were re-trained. GPU training was not guaranteed to be repeatable, so v4.2 also reports v4.1's post-processing on the *same* networks. In the 2026-10-30 run the re-training matched v4.1 bit-for-bit, so both comparisons agree.
-- **The reported intervals are honest on average but uneven across districts.** On the locked test only 52–57% of headline districts have coverage within 65–90%; v4.1's calibrated intervals reached 76–100%. Look at the coverage heat maps before quoting a single district's interval.
-- **Rule D chose the calibrated interval for the Ensemble at t+30** (raw covered only 73.7% on the dev folds). On the locked test the raw one would have scored better (2.74 vs 3.11). The choice was fixed beforehand and is kept; say so if asked.
-- **A few calibrated intervals are extremely wide** (90–108 m), in Thane (single well) and Dhule fold 1. 332 Ensemble t+30 rows in Dhule, Nandurbar and Thane are wider than 20 m. Treat those districts' t+30 intervals with care.
-- **No input knows future rain.** That is the main remaining source of error, especially at t+30 in the monsoon.
-- The single-well districts (Nanded, Raigad, Thane) are reported but kept out of the headline. Beed and Latur have no usable data.
-- The VSN plot shows what the network weights. It is not proof of physical causation.
-- Most of the Ensemble's accuracy comes from LightGBM: on its own it is about as accurate, but its intervals are too narrow. Check `baseline_ladder.csv`.
-- **Pune was identified as a problem from v4.1's all-fold results.** Its failure is visible in dev folds 1 and 3 alone, and the guard rule uses only each district's own past errors, so it is not tuned to Pune. In the run the guard was **rejected** by rule G: it fixed Pune but hurt 22 other district-horizons. So `stack_guard.csv` is absent and Pune is unchanged.
-- The v1 comparison file (if present) is **not like-for-like**: v1 used the old, noisier groundwater series and a different scoring protocol.
+- **Folds 5–6:**
+  - they contain no monsoon;
+  - they have been seen in earlier versions' results;
+  - v4.3's design was informed by v4.2's locked results, so they are a refinement check for v4.3.
+- **The latest forecast is issued from the last CGWB reading (4 Jun 2026)** and has no actuals yet. It is shown as such on the dashboards.
+- **No input knows future rain.** That is the main remaining error source (monsoon, t+30).
+- **Single-well and limited data.** Single-well districts (Nanded, Raigad, Thane) are reported but kept out of the headline. Beed and Latur have no usable data.
+- **A district can miss the latest forecast.** It does so if its wells reported on fewer than 70% of the last 60 days. The same rule applies to every evaluated window.
+- **LightGBM carries most of the Ensemble's accuracy;** the TFT supplies most of its interval spread.
