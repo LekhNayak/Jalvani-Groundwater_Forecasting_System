@@ -3,7 +3,7 @@
 **Goal.** A farmer who prefers speaking or listening can:
 - ask the guide by voice;
 - hear its answers;
-- have any card read aloud in Marathi, Hindi or English.
+- have any card read aloud in Marathi, Hindi, Gujarati or English.
 
 **Status (2026-10-31): implemented and tested live.**
 - **One Gnani API key** covers both directions. It is sent in the `X-API-Key-ID` header to Gnani Vachana (https://docs.gnani.ai).
@@ -11,6 +11,7 @@
 - **Text-to-speech:** `POST https://api.vachana.ai/api/v1/tts/inference` (JSON: text, voice, model `timbre-v2.5`, language, `audio_config` = WAV).
 - **The browser converts its recording to 16 kHz mono WAV** (`src/lib/wav.ts`). Gnani accepts WAV/MP3/OGG/FLAC/AAC/M4A up to 30 s, and the app stops recording at 25 s.
 - **Live round trip in Marathi:** "नमस्कार, जलवाणीमध्ये आपले स्वागत आहे." → TTS (0.9 s, WAV) → STT (0.9 s) → the same sentence back.
+- **Live round trip in Gujarati (2026-11-01):** "નમસ્તે, જલવાણીમાં આપનું સ્વાગત છે." → TTS (voice `Nalini`, `gu-IN`) → STT → the same sentence back. `/api/meta` lists the voice languages in `features.speech_languages`; the mic and "Listen" buttons appear only for those.
 - **Still to do:**
   - choose a Marathi voice (`GNANI_TTS_VOICE_MR`, from Gnani's voice catalog; the default is `Nalini`);
   - field tests with real speakers (below).

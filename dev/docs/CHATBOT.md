@@ -11,7 +11,7 @@ It is **not** a data oracle and gives no farming, borewell, scheme or legal advi
 ```
 ChatWidget (frontend) ──POST /api/chat {message, lang, role, page, district, visible_context, history}──▶ backend
 backend: GROQ_API_KEY set?  yes → Groq chat completion (JSON mode) → {reply, actions}
-                            no  → offline guide: keyword intents in app/chat/faq.json (en / mr / hi) → {reply, actions}
+                            no  → offline guide: keyword intents in app/chat/faq.json (en / mr / hi / gu) → {reply, actions}
          actions are checked against an allowlist (clean_actions) → frontend carries them out
 ```
 
@@ -27,7 +27,7 @@ backend: GROQ_API_KEY set?  yes → Groq chat completion (JSON mode) → {reply,
 
 The routes and element ids are listed in `backend/app/chat/site_guide.md`, and must stay in sync with the `data-tour` attributes in the frontend.
 
-**Languages.** The reply is in the user's selected language (en / mr / hi). In guide mode, keywords match in the selected language first, then in English.
+**Languages.** The reply is in the user's selected language (en / mr / hi / gu). In guide mode, keywords match in the selected language first, then in English. A test checks that every suggestion chip, in every language, reaches its answer.
 
 ## Turning on Groq
 1. Get an API key from the Groq console.
@@ -59,7 +59,7 @@ On any Groq error the backend answers from the offline guide, so the user always
 
 ## Testing
 - `backend/tests/test_api.py` covers:
-  - guide mode in all three languages;
+  - guide mode in all four languages, including every suggestion chip;
   - the tour action;
   - the action allowlist (rejects external URLs, unknown elements and unknown action types).
 - **With a key, check by hand:**

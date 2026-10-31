@@ -804,7 +804,7 @@ Full numbers: `docs/history/TFT_VERSION_HISTORY.md` (§0 and the v4.1 section).
 - **Next:** re-run when CGWB publishes newer readings.
 
 **Dashboards (built 2026-10-31), in `dev/`.**
-- Farmer and government views in English, Marathi and Hindi.
+- Farmer and government views in English, Marathi, Hindi and Gujarati (language menu; natural wording; more languages planned), with light and dark themes.
 - A site-guide chatbot: offline now, Groq once a key is set.
 - A Gnani speech plan and the plumbing for it.
 - Real data only; the build never writes outside `dev/`.

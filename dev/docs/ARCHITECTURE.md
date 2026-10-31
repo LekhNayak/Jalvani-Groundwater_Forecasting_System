@@ -18,7 +18,7 @@
                                       │ JSON
                                       ▼
    React app (dev/frontend): StartPage · FarmerPage · GovPage · GovDistrictPage · HelpPage
-     ChatWidget + Tour (data-tour ids) · i18next (en / mr / hi) · Recharts · Leaflet (no tile server)
+     ChatWidget + Tour (data-tour ids) · i18next (en / mr / hi / gu, lazy-loaded) · light / dark theme · Recharts · Leaflet (no tile server)
 ```
 
 ## Why it is built this way

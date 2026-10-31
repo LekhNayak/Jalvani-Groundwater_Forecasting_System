@@ -2,7 +2,8 @@
 
 The checks on 2026-10-31 used Playwright on the local app:
 - desktop at 1280 px and phone at 390 px;
-- all three languages;
+- English, Marathi, Hindi and Gujarati;
+- light and dark themes;
 - keyboard-only Tab order;
 - the chat and tour flows;
 - 0 console errors.
@@ -73,16 +74,25 @@ The checks on 2026-10-31 used Playwright on the local app:
 - **Quiet surfaces, colour for meaning.** White tiles on a warm-grey plane; blue only for water and forecasts; status colours only for status, always with an icon and a word.
 - **Numbers first.** Large tabular numerals for the headline value of each tile, with the unit and date beside it.
 - **Smooth, not flashy.** A 180 ms fade-in for tiles, a shimmer on loading skeletons, 150 ms hover transitions. All motion is switched off under reduced motion.
-- **Checked** with Playwright at 1600, 1280 and 390 px in English, Marathi and Hindi: no horizontal scroll and no console errors; both guided tours reach every step (including the new `glance-panel`).
+- **Checked** with Playwright at 1600, 1280 and 390 px in English, Marathi, Hindi and Gujarati, in light and dark: no horizontal scroll and no console errors; both guided tours reach every step (including the new `glance-panel`).
+
+## Language and theme
+- **Language menu** in the header: each language in its own script, with its English name. It is an ARIA listbox: ↑ ↓ Home End move, Enter or Space choose, Esc closes. The start page shows the same languages as large buttons, for people who recognise their script rather than read a menu. The choice is remembered, and `<html lang>` follows it.
+- **Natural wording, not word for word** (`I18N_REVIEW.md`): everyday words, the language's own sentence order, units written in full in sentences, official CGWB/GSDA category names.
+- **Theme:** Light / Dark / "Same as this device" (three labelled icon buttons). The choice is remembered and applied before the first paint, so there is no flash. Dark colours are chosen, not inverted:
+  - the map ramps are stepped for the dark surface (near-zero steps recede; strong steps are bright);
+  - the colour-blind check on the dark map colours: worst pair ΔE 9.1, against a target of ≥ 8;
+  - buttons keep white-text contrast of 4.5:1 or more (`--accent`);
+  - map tooltips and zoom controls follow the theme;
+  - theme changes ease over 200 ms (off under reduced motion).
 
 ## Low literacy and low bandwidth (farmers)
 - Icons with every tip, and big numbers.
 - "Listen" on each card (device voice now, Gnani TTS later).
 - The chat guide (voice later).
-- First load is about 105 kB of gzipped JS (icons are tree-shaken from lucide). Charts and the map load only on demand. No map tiles are downloaded.
+- First load is about 99 kB of gzipped JS (icons are tree-shaken from lucide; each non-English language is a separate ~7 kB file loaded only when chosen). Charts and the map load only on demand. No map tiles are downloaded.
 
 ## Still to do before a public release
-- A native-speaker review of the Marathi and Hindi text (`I18N_REVIEW.md`).
+- A native-speaker review of the Marathi, Hindi and Gujarati text (`I18N_REVIEW.md`).
 - An automated contrast audit (axe / Lighthouse) in CI.
-- A dark-mode visual pass. The tokens exist, but this was not screenshotted.
 - Usability sessions with 3–5 farmers and 2–3 officials.

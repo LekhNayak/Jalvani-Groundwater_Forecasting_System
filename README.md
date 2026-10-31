@@ -39,7 +39,7 @@
 > - It issues the forecast from the latest reading (4 Jun 2026), which the dashboards show.
 > - Its Pune fix did not hold on the locked folds (`docs/REPORT.md` §9.9).
 >
-> **Dashboards (`dev/`)** are built and run locally: farmer and government views in English, Marathi and Hindi, with a site-guide chatbot.
+> **Dashboards (`dev/`)** are built and run locally: farmer and government views in English, Marathi, Hindi and Gujarati, light and dark themes, and a site-guide chatbot.
 > - Start with `dev\scripts\setup.ps1`, then `dev\scripts\run_local.ps1`.
 > - See `dev/README.md`.
 >
@@ -728,7 +728,7 @@ Major Project/
 │   ├── tft_v4_2/                     v4.2 results  <- FINAL (read with docs/RESULTS_GUIDE.md)
 │   ├── tft_runs/                     where new local runs of run_v4.py are written
 │   └── zips/                         the original results zip(s)
-├── dev/                              farmer + government dashboards (React + FastAPI, en/mr/hi, site guide): see dev/README.md
+├── dev/                              farmer + government dashboards (React + FastAPI, en/mr/hi/gu, site guide): see dev/README.md
 └── archive/                          nothing here is used by the pipeline
     ├── MANIFEST.csv                  every archived file: md5, original path, new path, reason
     ├── backups/                      2026-04_pre_extend, 2026-10_pre_extend, 2026-10_v3_target

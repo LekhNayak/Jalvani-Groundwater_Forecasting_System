@@ -18,7 +18,7 @@
 - v4.2 and v4.3 changed only post-processing. The networks and LightGBM re-trained bit-for-bit identically to v4.1 both times.
   - v4.2 fixed the TFT's intervals.
   - v4.3 made the Ensemble's 7-day intervals even across districts, removed most extreme intervals, and added a Pune-only fix (with mixed results, §9.9) and the **operational forecast** (§9.8–§9.9, §10.12–§10.13).
-- The **farmer and government dashboards** in `dev/` now show that forecast. They are in English, Marathi and Hindi, with a site-guide chatbot (§13).
+- The **farmer and government dashboards** in `dev/` now show that forecast. They are in English, Marathi, Hindi and Gujarati, with a site-guide chatbot and light / dark themes (§13).
 - The modelling is frozen for the write-up. The open items are in §12.4.
 
 > **Headline result (final Ensemble = v4.3; locked test = Oct 2025 – Jun 2026, never used for any choice since v4.0):**
@@ -1793,7 +1793,7 @@ results -> find a specific weakness -> diagnose it with a check or probe -> chan
 
    It uses the same notebook: collectors → preprocessing → v4.3 notebook → `dev\scripts\build_data.ps1`.
 3. **Dashboards:**
-   - a native-speaker review of the Marathi and Hindi text;
+   - a native-speaker review of the Marathi, Hindi and Gujarati text;
    - choosing a Gnani Marathi voice;
    - short usability sessions with farmers and officials;
    - then hosting, with a scheduled data refresh.
@@ -1811,7 +1811,7 @@ The project's operational goal is to turn the forecasts into decisions:
 - a **farmer** view for one district;
 - a **government** view for the state.
 
-Both are built in `dev/` and run locally. They work in **English, Marathi and Hindi**, and include a site-guide chatbot. Their documentation is in `dev/README.md` and `dev/docs/`.
+Both are built in `dev/` and run locally. They work in **English, Marathi, Hindi and Gujarati** (more Indian languages are planned), have light and dark themes, and include a site-guide chatbot. Their documentation is in `dev/README.md` and `dev/docs/`.
 
 ### 13.1 Who it is for, and what each view shows
 
@@ -1849,10 +1849,15 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
 - **One visual language.** One icon set, no emoji, skeleton loading in the shape of each page, and short fades that switch off under reduced motion.
 - **Recognition over recall.** Language, role and district are remembered.
 - **The user stays in control.** The chatbot never navigates by itself; it offers a "Go there" button.
-- **Built for slow connections.** The farmer page loads about 105 kB of gzipped JavaScript; the map and charts load only when opened.
+- **Light and dark themes.** Light, dark, or the device's setting. The dark colours, including the map's, are chosen for the dark surface and checked for colour-blind separation, not simply inverted.
+- **Built for slow connections.** The farmer page loads about 99 kB of gzipped JavaScript (each extra language is a separate ~7 kB file); the map and charts load only when opened.
 
 ### 13.4 Languages, chatbot and voice
-- **Languages.** Every text is in `dev/frontend/src/i18n/{en,mr,hi}.json`. A test fails if a key or `{{placeholder}}` is missing in any language. The Marathi and Hindi text is drafted and awaits a native speaker's review (`dev/docs/I18N_REVIEW.md`). District names appear in all three scripts, with the official new names.
+- **Languages.** English, Marathi, Hindi and Gujarati, chosen from a menu in the header. Every text is in `dev/frontend/src/i18n/<language>.json`.
+  - **Natural wording.** The first Marathi and Hindi drafts read like word-for-word translations. They were rewritten in everyday wording: "अनुमान" rather than "पूर्वानुमान", the language's own sentence order, units in full, and the official CGWB/GSDA category names. Gujarati was written the same way. All three await a native speaker's review (`dev/docs/I18N_REVIEW.md`).
+  - **Tests.** A test fails if a key or `{{placeholder}}` is missing, or if text is left in English. Another checks that every chat suggestion chip finds its answer in every language.
+  - **District names** appear in every script, with the official new names.
+  - **Planned next:** Kannada, Telugu, Tamil, Malayalam, Bengali, Punjabi and Odia.
 - **Chatbot (site guide).**
   - It helps users navigate, teaches the site (guided tours, highlighting a card) and explains the numbers on screen.
   - It gives no farming, borewell or legal advice.
@@ -1864,12 +1869,12 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
 - **Backend tests (pytest):**
   - API values checked against the source files, including the "most likely" range against the back-test file;
   - the rules;
-  - the chat guide in three languages and the action allowlist;
+  - the chat guide in four languages (every suggestion chip) and the action allowlist;
   - speech returning 501 while not configured;
   - "the build never touches project data".
 - **Frontend tests (vitest):** translation completeness and placeholders, and the formatting helpers.
 - **The production build.**
-- **A browser run (Playwright) on desktop and phone widths in all three languages:**
+- **A browser run (Playwright) on desktop and phone widths, in all four languages and in light and dark:**
   - the farmer and government flows;
   - a Marathi district search;
   - the chat guide highlighting a card;
@@ -1928,7 +1933,7 @@ Every folder and the full old-path → new-path table are in `docs/STRUCTURE.md`
 | `data/master/` | frozen training sets: `master_dataset_v4target.csv` (current), `master_dataset_v3target.csv` (old target) |
 | `03_models/baselines_phase1/` | Phase 1 ARIMA / XGBoost / LSTM notebooks and scripts |
 | `03_models/tft/` | `tft_model_v3.py` (network), `tft_v4.py` (pipeline 4.7 = v4.3), `run_v4.py`, `tune_snaive.py`; `notebooks/09_tft_colab_production_v4_3.ipynb` (current); `notebooks/archive/` (production v1–v4.2, prototypes); `legacy/tft_model.py` (v1/v2 network) |
-| `dev/` | the farmer and government dashboards (§13): `pipeline/` (data build), `backend/` (FastAPI, chat, speech), `frontend/` (React, en / mr / hi), `docs/` |
+| `dev/` | the farmer and government dashboards (§13): `pipeline/` (data build), `backend/` (FastAPI, chat, speech), `frontend/` (React, en / mr / hi / gu, light / dark), `docs/` |
 | `04_results/` | `tft_v4_3/` (**final results**, including `dashboard_export/`; read with `docs/RESULTS_GUIDE.md`), `tft_v4_2/` (v4.2 run), `tft_v4_1/` (the v4.1 run: identical forecasts, v4.1 intervals; its own guide is `RESULTS_GUIDE_as_shipped.md`), `tft_v4_0_dev/`, `tft_prod_v1/`, `phase1_baselines/`, `zips/` |
 | `docs/` | this report, `PROJECT_STATUS.md`, `RESULTS_GUIDE.md`, `STRUCTURE.md`, `history/` (`TFT_VERSION_HISTORY.md` with §0 = scores of every version, `V3_PLAN.md`, `TFT_IMPROVEMENT_PLAN.md`) |
 | `archive/` | backups and byte-identical duplicates, with `MANIFEST.csv`; not used by the pipeline |

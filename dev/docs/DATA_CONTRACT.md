@@ -40,7 +40,7 @@ Every number shown comes from a real file. Where a value does not exist, the sit
 | Wells, completeness, tier | 26 | `data/clean/district_data_quality.csv` | As computed by `02_preprocessing/merge_master.py` |
 | Wells used (list, map) | 122 wells | `data/clean/groundwater_station_daily.csv` + `groundwater_stations.geojson` (coordinates for 117) | First and last reading, days |
 | District boundaries | 36 | `data/raw/maharashtra_district_geoms.geojson` | Simplified (0.004°) for the web |
-| Names in Marathi / Hindi | 36 | `dev/frontend/src/i18n/districts.json` | Drafted; native review pending (`I18N_REVIEW.md`). The official new names (Ahilyanagar, Chhatrapati Sambhajinagar, Dharashiv) are shown alongside |
+| Names in every site language | 36 | `dev/frontend/src/i18n/districts.json` | Marathi, Hindi, Gujarati, plus the seven planned languages. Drafted; native review pending (`I18N_REVIEW.md`). The official new names (Ahilyanagar, Chhatrapati Sambhajinagar, Dharashiv) are shown alongside |
 
 ## Government priority flags (backend `priorities.py`; the weights are shown on the Help page)
 
