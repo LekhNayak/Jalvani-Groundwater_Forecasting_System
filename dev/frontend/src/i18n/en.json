@@ -11,7 +11,6 @@
     "error": "Could not load the data. Is the backend running?",
     "retry": "Try again",
     "m_below_ground": "{{v}} m below ground",
-    "as_of": "as of {{date}}",
     "show_table": "Show as table",
     "show_chart": "Show as chart",
     "details_show": "See details",
@@ -23,13 +22,15 @@
     "next": "Next",
     "back": "Back",
     "done": "Done",
-    "open": "Open",
     "skip": "Skip to main content",
-    "district": "District",
     "district_level_only": "Information is for the whole district, not for villages.",
     "date": "Date",
     "m": "m",
-    "days_provisional": "{{n}} days provisional"
+    "days_provisional": "{{n}} days provisional",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "Same as this device"
   },
   "freshness": {
     "title": "Data as of",
@@ -49,7 +50,8 @@
     "farmer_desc": "See the water in your district and what the next month may bring.",
     "government_desc": "See all districts, what needs attention, and what data is missing.",
     "stats_title": "What is inside",
-    "open": "Open"
+    "open": "Open",
+    "latest_reading": "Latest groundwater reading"
   },
   "farmer": {
     "pick_title": "Choose your district",
@@ -58,7 +60,6 @@
     "no_results": "No district matches",
     "change_district": "Change district",
     "water_now_title": "Water in the wells now",
-    "latest_reading": "Latest reading {{date}}",
     "trend30": {
       "rise": "Rose {{v}} m in the last 30 days",
       "fall": "Fell {{v}} m in the last 30 days",
@@ -76,10 +77,8 @@
     },
     "usual_note": "Usual = the same weeks in {{years}}",
     "forecast_title": "Next 7, 14 and 30 days",
-    "forecast_from": "Counted from the latest reading ({{date}})",
     "forecast_days": "In {{n}} days",
     "expected": "about {{v}} m below ground",
-    "range": "likely between {{lo}} and {{hi}} m",
     "fc_dir": {
       "falling": "likely to go deeper",
       "rising": "likely to come up",
@@ -107,7 +106,6 @@
     "rain_season": "Rain since {{date}}: {{mm}} mm",
     "rain_vs_usual": "{{pct}}% of the usual for this period",
     "rain_usual_note": "Usual = average of {{years}}",
-    "rain_30d": "Last 30 days: {{mm}} mm ({{pct}}% of usual)",
     "soil_label": {
       "wetter": "Soil is wetter than usual",
       "drier": "Soil is drier than usual",
@@ -125,7 +123,6 @@
     "no_groundwater_text": "CGWB does not publish usable well readings for {{district}}, so there is no level or forecast. Rain and groundwater use are shown below.",
     "insufficient_text": "{{district}} has too few reliable well readings for a level or forecast.",
     "extraction_title": "Groundwater use (CGWB {{year}})",
-    "extraction_text": "{{pct}}% of the usable groundwater is extracted each year",
     "stale_note": "The latest groundwater reading is from {{date}} ({{days}} days ago). CGWB has not published newer readings, so today's level may be different.",
     "forecast_past": "These dates have already passed. The forecast will be checked when CGWB publishes newer readings.",
     "most_likely": "most likely {{lo}}–{{hi}} m",
@@ -173,7 +170,6 @@
     "title": "State overview",
     "kpi": {
       "districts": "Districts",
-      "with_forecast": "with a forecast",
       "wells": "Monitoring wells used",
       "semi_or_worse": "Extraction semi-critical or worse",
       "falling": "Falling in the 30-day forecast",
@@ -196,8 +192,7 @@
       "rise": "rising",
       "steady": "little change",
       "no_data": "no data",
-      "wells": "wells",
-      "m": "m"
+      "wells": "wells"
     },
     "map_hint": "Tap a district to see it in the panel. Grey = no data.",
     "map_no_forecast": "The 30-day forecast layer appears after the next model run.",
@@ -367,14 +362,14 @@
   },
   "tour": {
     "farmer": {
-      "lang-switch": "Change the language here. Everything on the site switches.",
+      "lang-switch": "Choose your language here. The whole site changes to it.",
       "district-picker": "Choose your district. The site remembers it.",
       "card-water-now": "How deep the water is now, and whether that is usual for this time of year.",
       "card-forecast": "What the next 7, 14 and 30 days may bring: the expected level, the most likely range and the wider range it could be in.",
       "reliability-badge": "How far you can trust the forecast in this district.",
       "card-rain-soil": "Rain this season and soil moisture, compared with earlier years.",
       "advice-list": "General tips that follow from these numbers.",
-      "chat-button": "Ask the guide any time, by typing (and later by voice)."
+      "chat-button": "Ask the guide any time, by typing or speaking."
     },
     "government": {
       "freshness-bar": "When each kind of data was last updated.",

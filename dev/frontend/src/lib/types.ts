@@ -1,4 +1,5 @@
-export type Lang = "en" | "mr" | "hi";
+export type { Lang } from "./langs";
+import type { Lang } from "./langs";
 export type Role = "farmer" | "government";
 export type Horizon = "t+7" | "t+14" | "t+30";
 export const HORIZONS: Horizon[] = ["t+7", "t+14", "t+30"];
@@ -11,7 +12,7 @@ export interface Meta {
                soil_as_of: string; extraction_year: number };
   counts: { districts: number; with_forecast: number; insufficient_data: number; no_data: number; wells_used: number };
   languages: Lang[];
-  features: { chat: "groq" | "guide"; speech: boolean };
+  features: { chat: "groq" | "guide"; speech: boolean; speech_languages?: string[] };
 }
 
 export type Status = "forecast" | "insufficient_data" | "no_data";

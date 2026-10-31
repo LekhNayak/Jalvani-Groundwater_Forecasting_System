@@ -1,27 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Building2, CircleHelp, Sprout } from "lucide-react";
-import { setLang } from "../i18n";
+import LangMenu, { ThemeSwitch } from "./LangMenu";
 import { useApp } from "../context";
-import type { Lang, Role } from "../lib/types";
-
-const LANGS: { code: Lang; label: string }[] = [
-  { code: "en", label: "English" }, { code: "mr", label: "मराठी" }, { code: "hi", label: "हिन्दी" },
-];
-
-export function LangSwitch({ big = false }: { big?: boolean }) {
-  const { t, i18n } = useTranslation();
-  return (
-    <div role="group" aria-label={t("common.language")} data-tour="lang-switch" className={`seg ${big ? "text-lg" : ""}`}>
-      {LANGS.map((l) => (
-        <button key={l.code} lang={l.code} aria-pressed={i18n.language === l.code} onClick={() => setLang(l.code)}
-          className={big ? "!min-h-[52px] !px-6 !text-lg" : ""}>
-          {l.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+import type { Role } from "../lib/types";
 
 export function Logo() {
   return (
@@ -62,7 +44,7 @@ export default function Header() {
             <CircleHelp size={17} aria-hidden="true" />{t("common.help")}
           </NavLink>
         </nav>
-        <div className="ml-auto"><LangSwitch /></div>
+        <div className="ml-auto flex items-center gap-2"><ThemeSwitch /><LangMenu /></div>
       </div>
     </header>
   );

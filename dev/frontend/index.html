@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="JalVaani: groundwater levels and forecasts for Maharashtra districts" />
     <title>JalVaani</title>
+    <script>
+      // apply the remembered theme before the first paint (no flash); "system" = no attribute, the CSS follows the device
+      try { var t = localStorage.getItem("jalvaani.theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

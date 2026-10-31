@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { applyTheme, readTheme, systemDark, type ThemePref } from "./lib/theme";
 import { api, useApi } from "./lib/api";
 import type { Meta, Role } from "./lib/types";
 
@@ -31,6 +32,10 @@ interface Ctx {
   highlight: (element: string) => void;
   stepTour: (delta: number) => void;
   endTour: () => void;
+  /** colour theme: the user's choice and whether dark is in effect now */
+  theme: ThemePref;
+  setTheme: (t: ThemePref) => void;
+  dark: boolean;
   /** what the user sees now, sent to the chat assistant as context */
   visible: Record<string, unknown>;
   setVisible: (v: Record<string, unknown>) => void;
@@ -47,6 +52,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [savedDistrict, setSavedDistrict] = useState<string | null>(() => read(DISTRICT_KEY));
   const [tour, setTour] = useState<Ctx["tour"]>(null);
   const [visible, setVisible] = useState<Record<string, unknown>>({});
+  const [theme, setThemeState] = useState<ThemePref>(readTheme);
+  const [sysDark, setSysDark] = useState(systemDark);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mq) return;
+    const on = () => setSysDark(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const setTheme = useCallback((t: ThemePref) => { applyTheme(t); setThemeState(t); }, []);
+  const dark = theme === "dark" || (theme === "system" && sysDark);
 
   const setRole = useCallback((r: Role) => { setRoleState(r); write(ROLE_KEY, r); }, []);
   const saveDistrict = useCallback((s: string) => { setSavedDistrict(s); write(DISTRICT_KEY, s); }, []);
@@ -68,7 +84,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppCtx.Provider value={{ meta: metaState.data, metaError: metaState.error, role, setRole, savedDistrict, saveDistrict,
-                              tour, startTour, highlight, stepTour, endTour, visible, setVisible }}>
+                              tour, startTour, highlight, stepTour, endTour, visible, setVisible, theme, setTheme, dark }}>
       {children}
     </AppCtx.Provider>
   );

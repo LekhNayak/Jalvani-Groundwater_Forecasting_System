@@ -95,7 +95,7 @@ export default function ChatWidget() {
     <>
       <button data-tour="chat-button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="chat-panel"
         aria-label={open ? t("common.close") : t("chat.open")}
-        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-water text-white shadow-lg px-4 sm:px-5 min-h-[52px] min-w-[52px] text-[0.95rem] font-semibold transition-transform hover:-translate-y-0.5">
+        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-lg px-4 sm:px-5 min-h-[52px] min-w-[52px] text-[0.95rem] font-semibold transition-transform hover:-translate-y-0.5">
         {open ? <X size={20} aria-hidden="true" /> : <MessageCircle size={20} aria-hidden="true" />}
         <span className="sr-only sm:not-sr-only">{open ? t("common.close") : t("chat.open")}</span>
       </button>
@@ -116,7 +116,7 @@ export default function ChatWidget() {
             <p className="text-ink2">{t("chat.hello")}</p>
             {msgs.map((m, i) => (
               <div key={i} className={m.role === "user" ? "text-right" : ""}>
-                <div className={`inline-block max-w-[90%] rounded-2xl px-3.5 py-2 text-left ${m.role === "user" ? "bg-water text-white rounded-br-md" : "bg-[var(--surface-2)] rounded-bl-md"}`}>
+                <div className={`inline-block max-w-[90%] rounded-2xl px-3.5 py-2 text-left ${m.role === "user" ? "bg-[var(--accent)] text-white rounded-br-md" : "bg-[var(--surface-2)] rounded-bl-md"}`}>
                   {m.content}
                 </div>
                 {m.actions?.filter((a) => a.type === "navigate").map((a, j) => (
@@ -142,7 +142,7 @@ export default function ChatWidget() {
             <label htmlFor="chat-input" className="sr-only">{t("chat.placeholder")}</label>
             <input id="chat-input" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("chat.placeholder")}
               className="flex-1 rounded-xl border border-[var(--border)] bg-surface px-3 py-2 min-h-[44px]" maxLength={500} />
-            {meta?.features.speech && (
+            {meta?.features.speech && (meta.features.speech_languages ?? []).includes(i18n.language) && (
               <button type="button" onClick={toggleMic} aria-pressed={recording}
                 className={`btn ${recording ? "!bg-[var(--status-serious)]" : ""}`}
                 aria-label={recording ? t("chat.listening") : t("chat.mic")} title={recording ? t("chat.listening") : t("chat.mic")}><Mic size={18} aria-hidden="true" /></button>

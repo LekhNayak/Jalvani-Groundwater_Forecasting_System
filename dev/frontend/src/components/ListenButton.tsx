@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useApp } from "../context";
 import { api } from "../lib/api";
 import { Square, Volume2 } from "lucide-react";
-
-const BCP47: Record<string, string> = { en: "en-IN", mr: "mr-IN", hi: "hi-IN" };
+import { bcp47 } from "../lib/langs";
 
 /** Read a card aloud. Uses the Gnani TTS backend when configured; otherwise the device's own voice if it has one
  *  for the chosen language; otherwise the button is not shown (dev/docs/SPEECH_PLAN.md). */
@@ -14,7 +13,7 @@ export default function ListenButton({ text }: { text: string }) {
   const [speaking, setSpeaking] = useState(false);
   const [deviceVoice, setDeviceVoice] = useState(false);
   const audio = useRef<HTMLAudioElement | null>(null);
-  const lang = BCP47[i18n.language] ?? "en-IN";
+  const lang = bcp47(i18n.language);
 
   useEffect(() => {
     if (!("speechSynthesis" in window)) return;
@@ -24,7 +23,7 @@ export default function ListenButton({ text }: { text: string }) {
     return () => window.speechSynthesis.removeEventListener("voiceschanged", check);
   }, [lang]);
 
-  const server = !!meta?.features.speech;
+  const server = !!meta?.features.speech && (meta.features.speech_languages ?? []).includes(i18n.language);
   if (!server && !deviceVoice) return null;
 
   async function toggle() {

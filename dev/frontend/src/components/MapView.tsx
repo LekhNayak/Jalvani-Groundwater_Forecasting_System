@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { GeoJSON, MapContainer } from "react-leaflet";
 import type { Layer, PathOptions } from "leaflet";
 import type { TFunction } from "i18next";
+import { useApp } from "../context";
+import { cssVar } from "../lib/theme";
 import { districtName } from "../i18n";
 import { fmtNum } from "../lib/format";
 import type { DistrictLite, Lang } from "../lib/types";
@@ -12,11 +14,13 @@ export type MapLayer = "vs_usual" | "forecast" | "extraction" | "wells" | "relia
 
 // Diverging (blue = shallower / rising, red = deeper / falling, grey midpoint); status for categories;
 // one-hue blue for counts. Every colour is repeated as words in the legend, the tooltip and the table.
-const DIV = ["#b83232", "#e66767", "#f0efec", "#6da7ec", "#1c5cab"];
+// Colours are theme tokens (index.css --map-*): CSS var() for the legend, resolved hex for Leaflet (SVG attributes).
+const DIV = ["var(--map-d0)", "var(--map-d1)", "var(--map-d2)", "var(--map-d3)", "var(--map-d4)"];
 const STATUS: Record<string, string> = { good: "#0ca30c", fair: "#fab219", limited: "#ec835a",
   Safe: "#0ca30c", "Semi-Critical": "#fab219", Critical: "#ec835a", "Over-Exploited": "#d03b3b" };
-const WELLS = ["#86b6ef", "#5598e7", "#2a78d6", "#184f95"];
-const NODATA = "#d9d8d3";
+const WELLS = ["var(--map-w0)", "var(--map-w1)", "var(--map-w2)", "var(--map-w3)"];
+const NODATA = "var(--map-nodata)";
+const resolve = (c: string) => (c.startsWith("var(") ? cssVar(c.slice(4, -1)) : c);
 
 function binDiverging(v: number | null, inner: number, outer: number) {
   if (v === null || v === undefined) return NODATA;
@@ -85,26 +89,28 @@ export default function MapView({ geo, districts, layer, selected, onSelect, cla
   const { t, i18n } = useTranslation();
   const lang = i18n.language as Lang;
   const nav = useNavigate();
+  const { dark } = useApp();
   const byName = useMemo(() => Object.fromEntries(districts.map((d) => [d.district, d])), [districts]);
   const style = (f?: GeoJSON.Feature): PathOptions => {
     const d = f ? byName[f.properties?.district] : undefined;
     const sel = !!d && d.slug === selected;
-    return { fillColor: d ? layerColour(d, layer) : NODATA, fillOpacity: 0.92, color: sel ? "#111110" : "#ffffff", weight: sel ? 3 : 1.2 };
+    return { fillColor: resolve(d ? layerColour(d, layer) : NODATA), fillOpacity: 0.92,
+             color: cssVar(sel ? "--map-select" : "--map-line"), weight: sel ? 3 : 1.2 };
   };
   const onEach = (f: GeoJSON.Feature, l: Layer) => {
     const d = byName[f.properties?.district];
     if (!d) return;
     l.bindTooltip(`<strong>${districtName(d.district, lang, false)}</strong><br/>${valueText(d, layer, t, lang)}`, { sticky: true });
     l.on({ click: () => (onSelect ? onSelect(d.slug) : nav(`/gov/district/${d.slug}`)),
-           mouseover: (e) => e.target.setStyle({ weight: 3, color: "#111110" }),
+           mouseover: (e) => e.target.setStyle({ weight: 3, color: cssVar("--map-select") }),
            mouseout: (e) => e.target.setStyle(style(f)) });
   };
   return (
     <div data-tour="map" className={`${className} rounded-xl overflow-hidden border border-[var(--border)]`}>
       <MapContainer bounds={[[15.6, 72.6], [22.1, 80.9]]} boundsOptions={{ padding: [12, 12] }} zoomSnap={0.25} zoomDelta={0.5}
         scrollWheelZoom={false} attributionControl={false} style={{ height: "100%" }}>
-        {/* key forces a restyle and fresh tooltips when the layer, language or selection changes */}
-        <GeoJSON key={`${layer}-${lang}-${selected ?? ""}`} data={geo} style={style} onEachFeature={onEach} />
+        {/* key forces a restyle and fresh tooltips when the layer, language, selection or theme changes */}
+        <GeoJSON key={`${layer}-${lang}-${selected ?? ""}-${dark ? "d" : "l"}`} data={geo} style={style} onEachFeature={onEach} />
       </MapContainer>
     </div>
   );

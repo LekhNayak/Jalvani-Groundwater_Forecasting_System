@@ -9,7 +9,7 @@ export default {
         water: "var(--series-1)", fall: "var(--fall)", good: "var(--status-good)",
         warn: "var(--status-warning)", serious: "var(--status-serious)", critical: "var(--status-critical)",
       },
-      fontFamily: { sans: ['"Noto Sans"', '"Noto Sans Devanagari"', "system-ui", "sans-serif"] },
+      fontFamily: { sans: ['"Noto Sans"', '"Noto Sans Devanagari"', '"Noto Sans Gujarati"', "system-ui", "sans-serif"] },
     },
   },
   plugins: [],

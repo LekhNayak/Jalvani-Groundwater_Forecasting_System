@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Colour roles (reference palette of the dataviz method). Light and dark are both selected, not flipped. */
+/* Colour roles. Light and dark are both chosen (dataviz reference palette), not flipped. The user's choice sets
+   data-theme on <html>; with no choice the device setting decides. Status colours are the same in both themes. */
 :root {
   color-scheme: light;
   --page-plane: #f3f3ef;
@@ -15,62 +16,113 @@
   --axis: #c3c2b7;
   --border: rgba(17, 17, 16, 0.09);
   --shadow: 0 1px 2px rgba(17, 17, 16, 0.04), 0 1px 1px rgba(17, 17, 16, 0.02);
-  --series-1: #2a78d6;          /* water / forecast */
-  --band-1: #cde2fb;            /* 80% range ("could be") */
-  --band-2: #86b6ef;            /* 50% range ("most likely") */
-  --fall: #c4462f;              /* deeper / falling */
-  --rise: #1c5cab;              /* shallower / rising */
+  --shadow-pop: 0 12px 32px rgba(17, 17, 16, 0.14), 0 2px 6px rgba(17, 17, 16, 0.06);
+  --series-1: #2a78d6;
+  --band-1: #cde2fb;
+  --band-2: #86b6ef;
+  --fall: #c4462f;
+  --rise: #1c5cab;
+  --accent: #1f66c1;
+  --accent-hover: #184f95;
+  --accent-soft: #eaf2fd;
   --status-good: #0ca30c;
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
   --nodata: #dcdbd5;
   --focus: #1c5cab;
-  --accent-soft: #eaf2fd;
+  --overlay: rgba(0, 0, 0, 0.35);
+  --map-d0: #b83232;
+  --map-d1: #e66767;
+  --map-d2: #f0efec;
+  --map-d3: #6da7ec;
+  --map-d4: #1c5cab;
+  --map-w0: #86b6ef;
+  --map-w1: #5598e7;
+  --map-w2: #2a78d6;
+  --map-w3: #184f95;
+  --map-nodata: #d9d8d3;
+  --map-bg: #f7f7f4;
+  --map-line: #ffffff;
+  --map-select: #111110;
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
     --page-plane: #0d0d0d;
     --surface-1: #1a1a19;
-    --surface-2: #222220;
+    --surface-2: #232321;
     --text-primary: #f0efec;
     --text-secondary: #c3c2b7;
     --text-muted: #9a9890;
     --gridline: #2c2c2a;
-    --axis: #383835;
+    --axis: #45453f;
     --border: rgba(255, 255, 255, 0.10);
     --shadow: none;
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
     --series-1: #3987e5;
     --band-1: #1c3b63;
     --band-2: #2e62a3;
-    --fall: #e66767;
+    --fall: #ef7f6a;
     --rise: #86b6ef;
+    --accent: #2a6fc9;
+    --accent-hover: #3a7fd6;
+    --accent-soft: #16263b;
     --nodata: #3a3a37;
     --focus: #86b6ef;
-    --accent-soft: #16263b;
+    --overlay: rgba(0, 0, 0, 0.6);
+    --map-d0: #ea6f6f;
+    --map-d1: #93403c;
+    --map-d2: #383835;
+    --map-d3: #2b5f9e;
+    --map-d4: #7fb2ee;
+    --map-w0: #184f95;
+    --map-w1: #256abf;
+    --map-w2: #3987e5;
+    --map-w3: #86b6ef;
+    --map-nodata: #2a2a27;
+    --map-bg: #111110;
+    --map-line: #1a1a19;
+    --map-select: #f0efec;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --page-plane: #0d0d0d;
   --surface-1: #1a1a19;
-  --surface-2: #222220;
+  --surface-2: #232321;
   --text-primary: #f0efec;
   --text-secondary: #c3c2b7;
   --text-muted: #9a9890;
   --gridline: #2c2c2a;
-  --axis: #383835;
+  --axis: #45453f;
   --border: rgba(255, 255, 255, 0.10);
   --shadow: none;
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.55);
   --series-1: #3987e5;
   --band-1: #1c3b63;
   --band-2: #2e62a3;
-  --fall: #e66767;
+  --fall: #ef7f6a;
   --rise: #86b6ef;
+  --accent: #2a6fc9;
+  --accent-hover: #3a7fd6;
+  --accent-soft: #16263b;
   --nodata: #3a3a37;
   --focus: #86b6ef;
-  --accent-soft: #16263b;
+  --overlay: rgba(0, 0, 0, 0.6);
+  --map-d0: #ea6f6f;
+  --map-d1: #93403c;
+  --map-d2: #383835;
+  --map-d3: #2b5f9e;
+  --map-d4: #7fb2ee;
+  --map-w0: #184f95;
+  --map-w1: #256abf;
+  --map-w2: #3987e5;
+  --map-w3: #86b6ef;
+  --map-nodata: #2a2a27;
+  --map-bg: #111110;
+  --map-line: #1a1a19;
+  --map-select: #f0efec;
 }
 
 html, body { background: var(--page-plane); color: var(--text-primary); }
@@ -85,8 +137,8 @@ body { font-size: 1rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
          border: 1px solid var(--border); background: var(--surface-1); font-size: 0.9375rem;
          transition: background-color 150ms ease, border-color 150ms ease; }
   .btn:hover { background: var(--surface-2); }
-  .btn-primary { background: var(--series-1); color: #fff; border-color: transparent; }
-  .btn-primary:hover { background: var(--rise); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: transparent; }
+  .btn-primary:hover { background: var(--accent-hover); }
   .seg { position: relative; display: inline-flex; padding: 3px; gap: 2px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border); }
   .seg > button, .seg > label { position: relative; min-height: 38px; padding: 0 0.85rem; border-radius: 9px; font-size: 0.9rem;
          display: inline-flex; align-items: center; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
@@ -104,8 +156,18 @@ body { font-size: 1rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 .fade-in { animation: fadein 180ms ease-out both; }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.tour-highlight { z-index: 60; box-shadow: 0 0 0 4px var(--focus), 0 0 0 9999px rgba(0,0,0,0.35); border-radius: 18px; }
+.tour-highlight { z-index: 60; box-shadow: 0 0 0 4px var(--focus), 0 0 0 9999px var(--overlay); border-radius: 18px; }
 .tour-highlight:not(.fixed) { position: relative; } /* the floating chat button must stay fixed */
-.leaflet-container { background: var(--surface-2); font-family: inherit; }
-.leaflet-tooltip { font-family: inherit; }
+.leaflet-container { background: var(--map-bg); font-family: inherit; }
+.leaflet-tooltip { font-family: inherit; background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+                   box-shadow: var(--shadow-pop); border-radius: 8px; }
+.leaflet-tooltip-top::before { border-top-color: var(--surface-1); }
+.leaflet-tooltip-bottom::before { border-bottom-color: var(--surface-1); }
+.leaflet-tooltip-left::before { border-left-color: var(--surface-1); }
+.leaflet-tooltip-right::before { border-right-color: var(--surface-1); }
+.leaflet-bar { border: 1px solid var(--border) !important; box-shadow: none !important; }
+.leaflet-bar a, .leaflet-bar a:hover { background: var(--surface-1); color: var(--text-primary); border-bottom-color: var(--border); }
+.leaflet-bar a:hover { background: var(--surface-2); }
+/* theme switch: colours ease instead of jumping */
+body, .tile, .btn, .seg, .chip { transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }

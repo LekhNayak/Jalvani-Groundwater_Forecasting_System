@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Building2, CalendarClock, LineChart, Network, Sprout, Waves, type LucideIcon } from "lucide-react";
-import { LangSwitch, Logo } from "../components/Header";
+import { Logo } from "../components/Header";
+import { LangGrid } from "../components/LangMenu";
 import { useApp } from "../context";
 import { fmtDate } from "../lib/format";
 import type { Lang, Role } from "../lib/types";
@@ -36,7 +37,7 @@ export default function StartPage() {
         </div>
         <div className="mt-auto">
           <h2 className="eyebrow mb-3">{t("start.choose_language")}</h2>
-          <LangSwitch big />
+          <LangGrid />
         </div>
       </section>
 
@@ -62,7 +63,7 @@ export default function StartPage() {
           <Stat icon={Network} value={String(meta.counts.districts)} label={t("gov.kpi.districts")} />
           <Stat icon={LineChart} value={String(meta.counts.with_forecast)} label={t("govd.status.forecast")} />
           <Stat icon={Waves} value={String(meta.counts.wells_used)} label={t("gov.kpi.wells")} />
-          <Stat icon={CalendarClock} value={fmtDate(meta.freshness.groundwater_last_reading, lang)} label={t("farmer.latest_reading", { date: "" }).trim()} />
+          <Stat icon={CalendarClock} value={fmtDate(meta.freshness.groundwater_last_reading, lang)} label={t("start.latest_reading")} />
         </div>
       )}
     </div>
