@@ -28,6 +28,17 @@ Config switches for Phase 2 (defaults reproduce "v3-fixed"):
                + per-district normalised scores + adaptive conformal)
   combine      'lambda' (v3 shrinkage toward persistence) | 'stack' (simplex blend of
                persistence / SN / TFT / LightGBM fitted on the cal pool) | 'none'
+
+v4.2 switches (post-processing only; the defaults reproduce v4.1 exactly):
+  aci_feedback     'cell' (v4.1: every scored cell updates alpha — about 10 correlated outcomes
+                   per anchor for the TFT, 1 for the Ensemble) | 'anchor' (one mean outcome per
+                   anchor, district and band)
+  aci_alpha_min/max  clip range of the adaptive miscoverage (v4.1: 0.01-0.30 around a 0.10
+                   target, i.e. more room to narrow than to widen)
+  stack_guard      per (district, horizon): if the shrunk stack is worse on that district's own
+                   pool than both seasonal-naive alone and the TFT alone, use the better of the two
+  interval_choice  {model: {horizon: 'raw' | 'calibrated'}}: which interval is REPORTED for that
+                   model and horizon (missing = 'calibrated', as in v4.1). Both are always computed.
 """
 
 from __future__ import annotations
@@ -82,7 +93,7 @@ DEFAULT_DATA = (REPO / "data" / "master" if REPO else HERE) / "master_dataset_v4
 DEFAULT_OUT = REPO / "04_results" / "tft_runs" if REPO else HERE / "outputs" / "v4"
 # Part of every cache key — bump whenever code that changes fold results is edited,
 # so a cached fold computed by older code can never be silently reused.
-PIPELINE_VERSION = "4.5"
+PIPELINE_VERSION = "4.6"
 
 # ─── Folds ────────────────────────────────────────────────────────────────────
 FOLDS = [
@@ -198,6 +209,13 @@ class Config:
     gbm_lr: float = 0.05
     gbm_min_child: int = 30
     gbm_leaves: int = 15
+    # ── v4.2 ── post-processing only (defaults = v4.1)
+    aci_feedback: str = "cell"         # 'cell' | 'anchor' (one mean outcome per anchor, district, band)
+    aci_alpha_min: float = 0.01
+    aci_alpha_max: float = 0.30
+    stack_guard: bool = False          # fall back to the better of SN / TFT where the stack loses to both
+    stack_guard_min_n: float = 50.0    # weighted pool rows a district needs before the guard may act
+    interval_choice: dict = field(default_factory=dict)   # {model: {horizon: 'raw'|'calibrated'}}
     only_folds: list = field(default_factory=list)   # smoke tests: restrict to these fold names
 
     # fields that do not change per-fold results (excluded from the cache key)
@@ -907,9 +925,14 @@ def _simplex_grid(k, step=0.1):
     return np.array(pts, dtype=np.float64) / n
 
 
-def fit_stack(P, cfg: Config):
+def fit_stack(P, cfg: Config, guarded=None):
     """Simplex weights over STACK_COMPONENTS per eval step, fitted on the pool (weighted MAE).
-    Per-district weights are pulled toward the global ones with strength cfg.stack_prior_n."""
+    Per-district weights are pulled toward the global ones with strength cfg.stack_prior_n.
+
+    v4.2 stack_guard: the pull toward the global weights can leave a district on a component that is
+    poor there (Pune: LightGBM, MASE 1.30 at t+30, while seasonal-naive and the TFT are ~0.87). If the
+    shrunk weights are worse on the district's own pool than both SN alone and the TFT alone, that
+    district uses the better of the two. Each guarded case is appended to `guarded` (if given)."""
     W = _simplex_grid(len(STACK_COMPONENTS), 0.1)
     out = {}
     for s in EVAL_STEPS:
@@ -924,7 +947,19 @@ def fit_stack(P, cfg: Config):
         for dist, idx in Q.groupby("district").indices.items():
             n = float(w[idx].sum())
             wd = W[np.argmin((E[idx] * w[idx, None]).sum(0))]
-            out[(dist, s)] = (n * wd + cfg.stack_prior_n * g) / (n + cfg.stack_prior_n)
+            ws = (n * wd + cfg.stack_prior_n * g) / (n + cfg.stack_prior_n)
+            if cfg.stack_guard and n >= cfg.stack_guard_min_n:
+                y_, w_ = Q["y"].values[idx], w[idx]
+                e_stack = _wmae(y_ - C[idx] @ ws, w_)
+                e_sn, e_tft = _wmae(y_ - C[idx, 1], w_), _wmae(y_ - C[idx, 2], w_)
+                if e_stack > min(e_sn, e_tft):
+                    pick = 1 if e_sn <= e_tft else 2
+                    ws = np.eye(len(STACK_COMPONENTS))[pick]
+                    if guarded is not None:
+                        guarded.append({"district": dist, "horizon": HNAME[s], "pool_n": round(n, 1),
+                                        "stack MAE": round(e_stack, 4), "SN MAE": round(e_sn, 4),
+                                        "TFT MAE": round(e_tft, 4), "uses": STACK_COMPONENTS[pick]})
+            out[(dist, s)] = ws
     return out
 
 
@@ -1014,7 +1049,12 @@ def conformal_v4_online(T, t_mid, t_lo, t_hi, P, p_mid, p_lo, p_hi, cfg: Config,
     with pseudo-count 100.
     ACI: cells are processed in anchor order; a cell's outcome is fed back only once its
     target date has passed the current anchor (delayed feedback, as in deployment), and
-    alpha <- clip(alpha + gamma * (alpha* - miss), 0.01, 0.3) per (district, band, side).
+    alpha <- clip(alpha + gamma * (alpha* - miss), aci_alpha_min, aci_alpha_max) per
+    (district, band, side).
+    aci_feedback='cell' (v4.1) feeds back every cell, i.e. ~10 strongly correlated outcomes per
+    anchor and band for the TFT (all 30 steps are scored) but 1 for the Ensemble (eval steps only).
+    'anchor' feeds back ONE outcome per (anchor, district, band): the mean miss of its cells, due
+    once the last of them is observed.
     """
     import heapq
     a_star = (1.0 - cfg.target_coverage) / 2.0
@@ -1055,7 +1095,9 @@ def conformal_v4_online(T, t_mid, t_lo, t_hi, P, p_mid, p_lo, p_hi, cfg: Config,
             _, d_, b_, ml, mh = heapq.heappop(pending)
             for side, miss in (("lo", ml), ("hi", mh)):
                 al = alpha.get((d_, b_, side), a_star)
-                alpha[(d_, b_, side)] = float(np.clip(al + cfg.aci_gamma * (a_star - miss), 0.01, 0.3))
+                alpha[(d_, b_, side)] = float(np.clip(al + cfg.aci_gamma * (a_star - miss),
+                                                      cfg.aci_alpha_min, cfg.aci_alpha_max))
+        groups = {}                            # 'anchor' feedback: (district, band) -> [last date, misses]
         for k in order[i:j]:
             if not np.isfinite(t_mid[k]):
                 continue                       # no forecast at this step (e.g. ensemble off eval steps)
@@ -1064,7 +1106,16 @@ def conformal_v4_online(T, t_mid, t_lo, t_hi, P, p_mid, p_lo, p_hi, cfg: Config,
             m_hi = side_q("hi", d_, b_, 1.0 - alpha.get((d_, b_, "hi"), a_star))
             lo_c[k] = min(t_lo[k] - m_lo * tw[k], t_mid[k])
             hi_c[k] = max(t_hi[k] + m_hi * tw[k], t_mid[k])
-            heapq.heappush(pending, (tdates[k], d_, b_, float(y[k] < lo_c[k]), float(y[k] > hi_c[k])))
+            miss = (float(y[k] < lo_c[k]), float(y[k] > hi_c[k]))
+            if cfg.aci_feedback == "anchor":
+                g = groups.setdefault((d_, b_), [tdates[k], [], []])
+                g[0] = max(g[0], tdates[k])
+                g[1].append(miss[0])
+                g[2].append(miss[1])
+            else:
+                heapq.heappush(pending, (tdates[k], d_, b_) + miss)
+        for (d_, b_), (td, ml, mh) in groups.items():
+            heapq.heappush(pending, (td, d_, b_, float(np.mean(ml)), float(np.mean(mh))))
         i = j
     return lo_c, hi_c
 
@@ -1475,9 +1526,9 @@ def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True):
     parts = [frame_rows(T, T["tft_mid"].values, T["tft_lo"].values, T["tft_hi"].values, "TFT (raw)", name),
              frame_rows(T, t_mid, t_lo, t_hi, "TFT", name),
              frame_rows(T, t_mid, lo_c, hi_c, "TFT (calibrated)", name)]
-    stack = {}
+    stack, guarded = {}, []
     if cfg.combine == "stack" and cfg.with_tabular:
-        stack = fit_stack(P, cfg)
+        stack = fit_stack(P, cfg, guarded)
         e_mid, e_lo, e_hi = apply_stack(T, stack)
         elo_c, ehi_c = calibrate(e_mid, e_lo, e_hi, lambda F: apply_stack(F, stack))
         parts += [frame_rows(T, e_mid, e_lo, e_hi, "Ensemble", name),
@@ -1521,13 +1572,16 @@ def postprocess_fold(cfg: Config, meta, fold, s1, tab, pool=None, verbose=True):
             e = metrics(headline_subset(daily[daily.model == "Ensemble"])).set_index("Horizon")
             msg += f" | Ensemble rMAE_SN {e['rMAE_SN'].round(3).to_dict()}"
         print(msg, flush=True)
-    return dict(daily=daily, weekly=weekly, base=base, keys=keys, lam=lam, stack=stack, pool=T)
+    return dict(daily=daily, weekly=weekly, base=base, keys=keys, lam=lam, stack=stack, pool=T,
+                guarded=pd.DataFrame(guarded).assign(fold=name) if guarded else pd.DataFrame())
 
 
 # ── cache keys: three independent stages ─────────────────────────────────────
 # post-processing settings: changing these never retrains anything
 POST_FIELDS = ("calib_mode", "combine", "aci_gamma", "stack_prior_n", "season_weight_other", "lambda_center",
-               "use_refit", "lambda_prior_n", "conf_min_n", "band_size", "target_coverage")
+               "use_refit", "lambda_prior_n", "conf_min_n", "band_size", "target_coverage",
+               "aci_feedback", "aci_alpha_min", "aci_alpha_max", "stack_guard", "stack_guard_min_n",
+               "interval_choice")
 # tabular-model settings: changing these never retrains the networks
 TAB_FIELDS = ("with_tabular", "tab_features", "tab_stride", "tab_fresh", "gbm_n_estimators", "gbm_lr",
               "gbm_min_child", "gbm_leaves")
@@ -1568,7 +1622,7 @@ def run(cfg: Config, verbose=True):
               f"mode {cfg.mode} | seeds {cfg.seeds}", flush=True)
 
     parts = {"daily": [], "weekly": [], "base": [], "keys": []}
-    curves, curves_p2, lams, stacks, wins, states, epochs = {}, {}, {}, {}, [], {}, []
+    curves, curves_p2, lams, stacks, wins, states, epochs, guards = {}, {}, {}, {}, [], {}, [], []
     t0 = time.time()
     req = [f for f in RUN_FOLDS[cfg.mode] if not cfg.only_folds or f["name"] in cfg.only_folds]
     # v4 calibration / stacking carry earlier folds' out-of-sample errors forward, so every
@@ -1604,6 +1658,7 @@ def run(cfg: Config, verbose=True):
         curves[nm], curves_p2[nm], lams[nm], stacks[nm] = s1["curves"], s1.get("curves_p2", []), blob["lam"], \
             blob["stack"]
         wins.append(s1["win"])
+        guards.append(blob["guarded"])
         _, _, state, used2 = _pick_pass(cfg, s1)
         states[nm] = state
         epochs.append({"fold": nm, "best_epochs": s1.get("best_epochs"), "refit_epochs": s1.get("refit_epochs"),
@@ -1613,6 +1668,7 @@ def run(cfg: Config, verbose=True):
     res = {k: pd.concat(v, ignore_index=True) for k, v in parts.items()}
     res["all"] = pd.concat([res["daily"], res["base"]], ignore_index=True)
     res.update(curves=curves, curves_p2=curves_p2, lams=lams, stacks=stacks, wins=pd.DataFrame(wins),
+               guarded=pd.concat(guards, ignore_index=True) if guards else pd.DataFrame(),
                epochs=pd.DataFrame(epochs), model_states=states, meta=meta, cfg=cfg, ckey=ckey,
                out_dir=out_dir, minutes=(time.time() - t0) / 60)
     return res
@@ -1627,6 +1683,8 @@ def subset_folds(res, folds, tag):
     cfg.tag, cfg.mode = tag, "final"
     r["cfg"] = cfg
     r["wins"] = res["wins"][res["wins"]["fold"].isin(folds)]
+    g = res.get("guarded", pd.DataFrame())
+    r["guarded"] = g[g["fold"].isin(folds)] if len(g) else g
     r["out_dir"] = Path(cfg.out_root) / tag
     r["out_dir"].mkdir(parents=True, exist_ok=True)
     return r
@@ -1637,21 +1695,43 @@ LADDER = ["Seasonal-naive", "Ridge", "LightGBM", "TFT (raw)", "TFT", "TFT (calib
           "Ensemble", "Ensemble (calibrated)"]
 
 
-def _summary(DAILY, model, cal_model, tier):
+def interval_source(cfg: Config, model, horizon):
+    """'raw' or 'calibrated': which interval is reported for this model and horizon (v4.2)."""
+    return (cfg.interval_choice or {}).get(model, {}).get(horizon, "calibrated")
+
+
+def reported_rows(D, model, cfg: Config):
+    """Rows of `model` whose intervals are the REPORTED ones: per horizon either '<model>' (the network's
+    own spreads) or '<model> (calibrated)' (conformal), as cfg.interval_choice says. q50 is the same in both."""
+    parts = []
+    for h in HORDER:
+        src = model if interval_source(cfg, model, h) == "raw" else f"{model} (calibrated)"
+        parts.append(D[(D.model == src) & (D.horizon == h)])
+    return pd.concat(parts, ignore_index=True)
+
+
+def _cov_tables(sub):
+    cov = metrics(sub).set_index("Horizon")
+    cov_d = metrics(sub, by="district")
+    in_band = cov_d.groupby("Horizon")["Cov (%)"].apply(lambda v: float(((v >= 65) & (v <= 90)).mean() * 100))
+    cov["districts in 65-90% (%)"] = in_band
+    return cov, cov_d
+
+
+def _summary(DAILY, model, tier, cfg: Config):
     sub = headline_subset(DAILY[DAILY.model == model])
     if not len(sub):
         return None
     head = metrics(sub).set_index("Horizon")
     per_dist = metrics(sub, by="district")
     per_dist["tier"] = per_dist["district"].map(tier)
-    csub = headline_subset(DAILY[DAILY.model == cal_model])
-    cov = metrics(csub).set_index("Horizon")
-    cov_d = metrics(csub, by="district")
-    in_band = cov_d.groupby("Horizon")["Cov (%)"].apply(lambda v: float(((v >= 65) & (v <= 90)).mean() * 100))
-    cov["districts in 65-90% (%)"] = in_band
+    rsub = headline_subset(reported_rows(DAILY, model, cfg))
+    cov, cov_d = _cov_tables(rsub)
+    cov_cal, cov_cal_d = _cov_tables(headline_subset(DAILY[DAILY.model == f"{model} (calibrated)"]))
     return dict(head=head, per_fold=metrics(sub, by="fold"), per_dist=per_dist, gap=district_gap(per_dist),
-                sig=significance(DAILY, model), cov=cov, cov_d=cov_d,
-                cov_fold=metrics(csub, by="fold"))
+                sig=significance(DAILY, model), cov=cov, cov_d=cov_d, cov_fold=metrics(rsub, by="fold"),
+                cov_cal=cov_cal, cov_cal_d=cov_cal_d,
+                interval={h: interval_source(cfg, model, h) for h in HORDER})
 
 
 def report(res, verbose=True, save_predictions=True):
@@ -1670,8 +1750,8 @@ def report(res, verbose=True, save_predictions=True):
             ladder.append(metrics(sub).assign(model=mname))
     ladder = pd.concat(ladder, ignore_index=True)
     ladder.to_csv(out / "baseline_ladder.csv", index=False)
-    S = {"TFT": _summary(DAILY, "TFT", "TFT (calibrated)", tier),
-         "Ensemble": _summary(DAILY, "Ensemble", "Ensemble (calibrated)", tier)}
+    S = {"TFT": _summary(DAILY, "TFT", tier, cfg),
+         "Ensemble": _summary(DAILY, "Ensemble", tier, cfg)}
     S = {k: v for k, v in S.items() if v is not None}
     for name, sm in S.items():
         pre = "" if name == "TFT" else "ensemble_"
@@ -1679,9 +1759,14 @@ def report(res, verbose=True, save_predictions=True):
         sm["per_fold"].to_csv(out / f"{pre}metrics_per_fold.csv", index=False)
         sm["per_dist"].to_csv(out / f"{pre}metrics_per_district.csv", index=False)
         sm["sig"].to_csv(out / f"{pre}significance.csv", index=False)
-        sm["cov"].to_csv(out / f"{pre}coverage_calibrated.csv")
-        sm["cov_d"].to_csv(out / f"{pre}coverage_calibrated_by_district.csv", index=False)
+        # reported intervals (per cfg.interval_choice), and the conformal ones as diagnostics
+        sm["cov"].assign(interval=pd.Series(sm["interval"])).to_csv(out / f"{pre}coverage_reported.csv")
+        sm["cov_d"].to_csv(out / f"{pre}coverage_reported_by_district.csv", index=False)
+        sm["cov_cal"].to_csv(out / f"{pre}coverage_calibrated.csv")
+        sm["cov_cal_d"].to_csv(out / f"{pre}coverage_calibrated_by_district.csv", index=False)
         pd.DataFrame(sm["gap"]).T.to_csv(out / f"{pre}district_gap.csv")
+    if len(res.get("guarded", [])):
+        res["guarded"].to_csv(out / "stack_guard.csv", index=False)
     wk = metrics(headline_subset(WEEKLY)).set_index("Horizon") if len(WEEKLY) else None
     res["wins"].to_csv(out / "windows.csv", index=False)
     if "epochs" in res and len(res["epochs"]):
@@ -1702,7 +1787,9 @@ def report(res, verbose=True, save_predictions=True):
            "aci_gamma": cfg.aci_gamma, "stack_prior_n": cfg.stack_prior_n, "refit": cfg.refit,
            "use_refit": cfg.use_refit, "epoch_frac": cfg.epoch_frac, "train_stride": cfg.train_stride,
            "tab_features": cfg.tab_features, "tab_stride": cfg.tab_stride, "tab_fresh": cfg.tab_fresh,
-           "lambda_center": cfg.lambda_center,
+           "lambda_center": cfg.lambda_center, "aci_feedback": cfg.aci_feedback,
+           "aci_alpha": f"{cfg.aci_alpha_min}-{cfg.aci_alpha_max}", "stack_guard": cfg.stack_guard,
+           "interval_choice": json.dumps(cfg.interval_choice, sort_keys=True),
            "data": Path(cfg.data_path).name, "data_md5": file_md5(cfg.data_path)[:8]}
     for name, sm in S.items():
         pre = "" if name == "TFT" else "ens "
@@ -1744,8 +1831,8 @@ def report(res, verbose=True, save_predictions=True):
             print(tiers.round(3).unstack("Horizon").to_string())
             print("significance (district-cluster bootstrap + DM, Holm-adjusted):")
             print(sm["sig"].to_string(index=False))
-            print("coverage (calibrated, honest):")
-            print(sm["cov"][["Cov (%)", "Below q10 (%)", "Above q90 (%)", "Width (m)",
+            print(f"coverage of the reported intervals {sm['interval']}:")
+            print(sm["cov"][["Cov (%)", "Below q10 (%)", "Above q90 (%)", "Width (m)", "Interval score (m)",
                              "districts in 65-90% (%)"]].to_string())
         if wk is not None:
             print("\nWEEKLY-MEAN TARGET (TFT)")
@@ -1865,12 +1952,13 @@ def _daily(s, col):
 
 def export_simple(res, model, out_dir, locked=LOCKED_FOLDS):
     """v1-style result files for one model ('Ensemble' or 'TFT'), all modelled districts.
-    Rows come from '<model> (calibrated)'; its q50 equals the un-calibrated q50."""
+    Intervals are the REPORTED ones (cfg.interval_choice, per horizon: the network's own spreads or
+    the conformal '<model> (calibrated)' rows); q50 is the same either way."""
     out_dir = Path(out_dir)
     (out_dir / "quantile").mkdir(parents=True, exist_ok=True)
     pre = model.lower()
     D = res["daily"]
-    rows = D[D.model == f"{model} (calibrated)"].copy()
+    rows = reported_rows(D, model, res["cfg"]).copy()
     if not len(rows):
         print(f"export_simple: no rows for {model}")
         return None
@@ -2108,20 +2196,21 @@ def export_shared(res, out_dir, summaries=None):
     D = res["daily"]
     rows = []
     for model in ("TFT", "Ensemble"):
-        r = D[D.model == f"{model} (calibrated)"]
+        r = reported_rows(D, model, res["cfg"])
         if not len(r):
             continue
         for scope, rr in (("all folds", r), ("locked folds 5-6", r[r.fold.isin(LOCKED_FOLDS)])):
             for h in HORDER:
                 g = headline_subset(rr[rr.horizon == h])
                 if len(g):
-                    rows.append({"model": model, "test set": scope, "Horizon": h, **simple_metrics(g)})
+                    rows.append({"model": model, "test set": scope, "Horizon": h,
+                                 "interval": interval_source(res["cfg"], model, h), **simple_metrics(g)})
     pd.DataFrame(rows).to_csv(out_dir / "summary_tft_vs_ensemble.csv", index=False)
     print(f"export_shared -> {out_dir}")
 
 
-def compare_v1(v1_csv, simple_dir):
-    """Old v1 per-district metrics beside v4.1 (TFT and Ensemble). NOT like-for-like - see caveat column."""
+def compare_v1(v1_csv, simple_dir, label="v4.2"):
+    """Old v1 per-district metrics beside this run (TFT and Ensemble). NOT like-for-like - see caveat column."""
     simple_dir = Path(simple_dir)
     v1 = pd.read_csv(v1_csv)
     keep = ["district", "Horizon", "RMSE (m)", "MAE (m)", "MAPE (%)", "Coverage (%)", "n"]
@@ -2130,12 +2219,12 @@ def compare_v1(v1_csv, simple_dir):
         f = simple_dir / model / f"{model}_metrics_per_district.csv"
         if f.exists():
             m = pd.read_csv(f)[keep + ["MASE (vs no-change)"]]
-            m = m.rename(columns={c: f"v4.1 {model} {c}" for c in keep[2:] + ["MASE (vs no-change)"]})
+            m = m.rename(columns={c: f"{label} {model} {c}" for c in keep[2:] + ["MASE (vs no-change)"]})
             out = out.merge(m, on=["district", "Horizon"], how="outer")
     out["caveat"] = ("v1 = old 11.6M-parameter model on the OLD groundwater series (before the target rebuild), "
                      "absolute-level target, different scoring windows; v1 has no no-change comparison. "
                      "Directional comparison only, not like-for-like.")
-    out.to_csv(simple_dir / "comparison_v1_vs_v4_1_per_district.csv", index=False)
+    out.to_csv(simple_dir / f"comparison_v1_vs_{label.replace('.', '_')}_per_district.csv", index=False)
     return out
 
 
@@ -2153,8 +2242,83 @@ def results_to_quote(S_locked, S_all):
                     "rMAE vs persistence": hd["rMAE_P"], "rMAE vs seasonal": hd["rMAE_SN"],
                     "p vs persistence": sig.loc[(h, "persistence"), "p_boot_holm"],
                     "p vs seasonal": sig.loc[(h, "snaive"), "p_boot_holm"],
+                    "interval": sm.get("interval", {}).get(h, "calibrated"),
                     "coverage 80% (%)": cv["Cov (%)"], "below q10 (%)": cv["Below q10 (%)"],
                     "above q90 (%)": cv["Above q90 (%)"], "width (m)": cv["Width (m)"],
+                    "interval score (m)": cv["Interval score (m)"],
                     "districts beating persistence": f"{gp.get('n_lt1', np.nan):.0f}/{gp.get('n', np.nan):.0f}",
                     "worst5 - best5 gap": gp.get("gap", np.nan)})
     return pd.DataFrame(rows)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# v4.2 selection rules (fixed before the run; applied to the development folds only)
+# ══════════════════════════════════════════════════════════════════════════════
+DEV_FOLDS = tuple(f["name"] for f in RUN_FOLDS["dev"])
+
+
+def _fold_filter(D, folds):
+    return D if folds is None else D[D.fold.isin(folds)]
+
+
+def guard_decision(res_off, res_on, folds=DEV_FOLDS, max_rise=0.02):
+    """Rule G: adopt stack_guard if the mean Ensemble rMAE vs seasonal-naive (headline districts,
+    t+7/t+14/t+30) does not get worse AND no headline district's Ensemble MASE (vs no-change) rises
+    by more than `max_rise` at any horizon. Returns (adopt, mean_off, mean_on, per-district table)."""
+    def per(res):
+        sub = headline_subset(_fold_filter(res["daily"], folds).query("model == 'Ensemble'"))
+        return (float(metrics(sub)["rMAE_SN"].mean()),
+                metrics(sub, by="district").set_index(["district", "Horizon"])["rMAE_P"])
+    m_off, d_off = per(res_off)
+    m_on, d_on = per(res_on)
+    tab = pd.DataFrame({"MASE guard off": d_off, "MASE guard on": d_on})
+    tab["change"] = (tab["MASE guard on"] - tab["MASE guard off"]).round(4)
+    adopt = bool(m_on <= m_off and tab["change"].max() <= max_rise)
+    return adopt, m_off, m_on, tab.reset_index()
+
+
+def interval_table(res, folds=DEV_FOLDS):
+    """Per model x horizon x interval ('raw' = the network's own spreads, 'calibrated' = conformal),
+    headline districts, given folds: coverage, tails, width and interval score."""
+    D = _fold_filter(res["daily"], folds)
+    cols = ["Cov (%)", "Below q10 (%)", "Above q90 (%)", "Width (m)", "Interval score (m)", "n"]
+    out = []
+    for model in ("TFT", "Ensemble"):
+        for src, name in (("raw", model), ("calibrated", f"{model} (calibrated)")):
+            sub = headline_subset(D[D.model == name])
+            if len(sub):
+                m = metrics(sub)
+                out.append(m[["Horizon"] + cols].rename(columns={"Horizon": "horizon"})
+                           .assign(model=model, interval=src))
+    t = pd.concat(out, ignore_index=True)
+    return t[["model", "horizon", "interval"] + cols]
+
+
+def calibration_score(table):
+    """Rule C score of one conformal variant: mean over model x horizon of
+    (calibrated interval score / raw interval score). Below 1 = calibration helps."""
+    t = table.pivot_table(index=["model", "horizon"], columns="interval", values="Interval score (m)")
+    return float((t["calibrated"] / t["raw"]).mean())
+
+
+def pick_interval_choice(table, lo=75.0, hi=85.0, tie=0.01):
+    """Rule D, per model x horizon: if exactly one of raw / calibrated has coverage in [lo, hi], take it;
+    otherwise take the lower interval score, preferring raw unless calibrated is lower by more than `tie`
+    (relative). Returns (interval_choice dict for Config, table of the decisions)."""
+    choice, why = {}, []
+    for (model, h), g in table.groupby(["model", "horizon"], sort=False):
+        g = g.set_index("interval")
+        r, c = g.loc["raw"], g.loc["calibrated"]
+        in_r, in_c = lo <= r["Cov (%)"] <= hi, lo <= c["Cov (%)"] <= hi
+        if in_r != in_c:
+            pick, reason = ("raw" if in_r else "calibrated"), f"only one in {lo:.0f}-{hi:.0f}% coverage"
+        else:
+            better = c["Interval score (m)"] < r["Interval score (m)"] * (1 - tie)
+            pick = "calibrated" if better else "raw"
+            reason = ("both" if in_r else "neither") + f" in {lo:.0f}-{hi:.0f}%: lower interval score" + \
+                     ("" if better else " (or within 1%: simpler)")
+        choice.setdefault(model, {})[h] = pick
+        why.append({"model": model, "horizon": h, "raw cov": r["Cov (%)"], "cal cov": c["Cov (%)"],
+                    "raw score": r["Interval score (m)"], "cal score": c["Interval score (m)"],
+                    "pick": pick, "reason": reason})
+    return choice, pd.DataFrame(why)

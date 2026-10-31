@@ -11,6 +11,10 @@ Examples
   # the v4.0 reference set-up on the dev folds
   python run_v4.py --tag snaive --mode dev --target-mode snaive --calib-mode v4 --combine stack
 
+  # v4.2 post-processing switches (no retraining): one ACI outcome per anchor, symmetric alpha range,
+  # Pune guard, and the TFT reported with its own (un-calibrated) intervals
+  python run_v4.py --tag v42_try --mode dev --target-mode snaive --calib-mode v4 --combine stack       --aci-feedback anchor --aci-alpha-min 0 --aci-alpha-max 0.2 --stack-guard --tft-interval raw
+
 Every run writes 04_results/tft_runs/<tag>/ and appends one row to 04_results/tft_runs/ablations.csv
 (the v4.0 development runs are kept in 04_results/tft_v4_0_dev/).
 Networks, tabular models and post-processing are cached separately (see tft_v4.run), so changing
@@ -58,6 +62,13 @@ def main():
     ap.add_argument("--gbm-n-estimators", type=int, default=None)
     ap.add_argument("--gbm-lr", type=float, default=None)
     ap.add_argument("--gbm-min-child", type=int, default=None)
+    # v4.2 (post-processing only)
+    ap.add_argument("--aci-feedback", choices=["cell", "anchor"], default=None)
+    ap.add_argument("--aci-alpha-min", type=float, default=None)
+    ap.add_argument("--aci-alpha-max", type=float, default=None)
+    ap.add_argument("--stack-guard", action="store_true", help="fall back to SN / TFT where the stack loses to both")
+    ap.add_argument("--tft-interval", choices=["raw", "calibrated"], default=None, help="reported TFT interval")
+    ap.add_argument("--ens-interval", choices=["raw", "calibrated"], default=None, help="reported Ensemble interval")
     ap.add_argument("--export-simple", action="store_true", help="write the v1-style simple outputs")
     ap.add_argument("--out-root", default=None, help="default 04_results/tft_runs")
     ap.add_argument("--no-tabular", action="store_true")
@@ -75,6 +86,7 @@ def main():
         "lambda_center": a.lambda_center, "train_stride": a.train_stride, "epoch_frac": a.epoch_frac,
         "tab_features": a.tab_features, "tab_stride": a.tab_stride, "gbm_n_estimators": a.gbm_n_estimators,
         "gbm_lr": a.gbm_lr, "gbm_min_child": a.gbm_min_child,
+        "aci_feedback": a.aci_feedback, "aci_alpha_min": a.aci_alpha_min, "aci_alpha_max": a.aci_alpha_max,
     }
     for k, v in overrides.items():
         if v is not None:
@@ -87,6 +99,11 @@ def main():
         cfg.tab_fresh = True
     if a.no_tabular:
         cfg.with_tabular = False
+    if a.stack_guard:
+        cfg.stack_guard = True
+    for model, src in (("TFT", a.tft_interval), ("Ensemble", a.ens_interval)):
+        if src:
+            cfg.interval_choice[model] = {h: src for h in v4.HORDER}
 
     res = v4.run(cfg, verbose=not a.quiet)
     v4.report(res, verbose=True)
