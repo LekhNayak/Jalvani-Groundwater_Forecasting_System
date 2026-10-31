@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colour roles (reference palette of the dataviz method). Light and dark are both selected, not flipped. */
+:root {
+  color-scheme: light;
+  --page-plane: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #6f6d68;
+  --gridline: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.12);
+  --series-1: #2a78d6;          /* water / forecast */
+  --band-1: #b7d3f6;            /* forecast range */
+  --fall: #c4462f;              /* deeper / falling (text-safe red-orange) */
+  --rise: #1c5cab;              /* shallower / rising */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --nodata: #d9d8d3;
+  --focus: #1c5cab;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page-plane: #0d0d0d;
+    --surface-1: #1a1a19;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --text-muted: #9a9890;
+    --gridline: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.12);
+    --series-1: #3987e5;
+    --band-1: #1c3b63;
+    --fall: #e66767;
+    --rise: #86b6ef;
+    --nodata: #3a3a37;
+    --focus: #86b6ef;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page-plane: #0d0d0d;
+  --surface-1: #1a1a19;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --text-muted: #9a9890;
+  --gridline: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.12);
+  --series-1: #3987e5;
+  --band-1: #1c3b63;
+  --fall: #e66767;
+  --rise: #86b6ef;
+  --nodata: #3a3a37;
+  --focus: #86b6ef;
+}
+
+html, body { background: var(--page-plane); color: var(--text-primary); }
+body { font-size: 1rem; line-height: 1.5; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; }
+.tabnum { font-variant-numeric: tabular-nums; }
+.tour-highlight { position: relative; z-index: 60; box-shadow: 0 0 0 4px var(--focus), 0 0 0 9999px rgba(0,0,0,0.35); border-radius: 14px; }
+.leaflet-container { background: var(--surface-1); font-family: inherit; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
