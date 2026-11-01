@@ -23,6 +23,17 @@ class GnaniError(RuntimeError):
     pass
 
 
+_client = None
+
+
+def _http() -> httpx.Client:
+    """One shared client, so the secure connection to Gnani is opened once and reused (saves a few hundred ms per call)."""
+    global _client
+    if _client is None:
+        _client = httpx.Client(timeout=TIMEOUT, limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=120))
+    return _client
+
+
 class GnaniProvider(SpeechProvider):
     name = "gnani"
 
@@ -37,8 +48,8 @@ class GnaniProvider(SpeechProvider):
         data = {"language_code": LANG_CODES.get(lang, "en-IN")}
         if settings.gnani_stt_model:
             data["model"] = settings.gnani_stt_model
-        r = httpx.post(settings.gnani_stt_url, headers=self.headers, data=data,
-                       files={"audio_file": (f"speech.{ext}", audio, mime.split(";")[0] or "audio/wav")}, timeout=TIMEOUT)
+        r = _http().post(settings.gnani_stt_url, headers=self.headers, data=data,
+                         files={"audio_file": (f"speech.{ext}", audio, mime.split(";")[0] or "audio/wav")})
         if r.status_code != 200:
             raise GnaniError(f"STT HTTP {r.status_code}: {r.text[:200]}")
         body = r.json()
@@ -53,8 +64,7 @@ class GnaniProvider(SpeechProvider):
                    "language": LANG_CODES.get(lang, "en-IN"), "speed": 1.0,
                    "audio_config": {"sample_rate": 24000, "num_channels": 1, "sample_width": 2,
                                     "encoding": "linear_pcm", "container": "wav"}}
-        r = httpx.post(settings.gnani_tts_url, headers={**self.headers, "Content-Type": "application/json"},
-                       json=payload, timeout=TIMEOUT)
+        r = _http().post(settings.gnani_tts_url, headers={**self.headers, "Content-Type": "application/json"}, json=payload)
         if r.status_code != 200 or not r.content:
             raise GnaniError(f"TTS HTTP {r.status_code}: {r.text[:200]}")
         return r.content, r.headers.get("content-type", "audio/wav").split(";")[0]

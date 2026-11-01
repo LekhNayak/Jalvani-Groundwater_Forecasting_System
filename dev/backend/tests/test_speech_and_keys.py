@@ -1,6 +1,8 @@
 """Groq key rotation and the Gnani adapter, with fakes (no network)."""
 from dataclasses import replace
 
+import types
+
 import httpx
 from fastapi.testclient import TestClient
 
@@ -30,10 +32,6 @@ def test_groq_rotates_to_next_key_on_rate_limit(monkeypatch):
     used = []
 
     class FakeClient:
-        def __init__(self, *a, **k): pass
-        def __enter__(self): return self
-        def __exit__(self, *a): return False
-
         def post(self, url, json, headers):
             used.append(headers["Authorization"])
             if headers["Authorization"].endswith("k1"):
@@ -42,7 +40,7 @@ def test_groq_rotates_to_next_key_on_rate_limit(monkeypatch):
                 '{"reply": "Here is the forecast card.", "actions": [{"type": "highlight", "element": "card-forecast"}]}'}}]})
 
     monkeypatch.setattr(chat, "settings", replace(chat.settings, groq_api_keys=("k1", "k2", "k3")))
-    monkeypatch.setattr(chat.httpx, "Client", FakeClient)
+    monkeypatch.setattr(chat, "get_client", lambda: FakeClient())
     monkeypatch.setattr(chat, "_next_key", iter([0]))
     out = chat.chat(ChatRequest(message="show forecast", lang="en"))
     assert used == ["Bearer k1", "Bearer k2"]
@@ -51,13 +49,10 @@ def test_groq_rotates_to_next_key_on_rate_limit(monkeypatch):
 
 def test_groq_failure_falls_back_to_guide(monkeypatch):
     class Boom:
-        def __init__(self, *a, **k): pass
-        def __enter__(self): return self
-        def __exit__(self, *a): return False
         def post(self, *a, **k): raise httpx.ConnectError("offline")
 
     monkeypatch.setattr(chat, "settings", replace(chat.settings, groq_api_keys=("k1",)))
-    monkeypatch.setattr(chat.httpx, "Client", Boom)
+    monkeypatch.setattr(chat, "get_client", lambda: Boom())
     out = chat.chat(ChatRequest(message="show me the forecast", lang="en"))
     assert out["mode"] == "guide" and "note" in out
 
@@ -72,7 +67,7 @@ def test_gnani_requests_match_the_docs(monkeypatch):
         return FakeResp(200, content=b"RIFFxxxxWAVE", headers={"content-type": "audio/wav"})
 
     monkeypatch.setattr(gnani, "settings", replace(gnani.settings, gnani_api_key="test-key"))
-    monkeypatch.setattr(gnani.httpx, "post", fake_post)
+    monkeypatch.setattr(gnani, "_http", lambda: types.SimpleNamespace(post=fake_post))
     p = gnani.GnaniProvider()
     assert p.transcribe(b"RIFF....", "audio/wav", "mr") == "पाऊस किती झाला"
     audio, mime = p.synthesize("नमस्कार", "mr")

@@ -141,11 +141,12 @@ def chat(req: ChatRequest):
 
 
 @app.post("/api/speech/stt")
-async def speech_stt(audio: UploadFile = File(...), lang: str = Form("en")):
+def speech_stt(audio: UploadFile = File(...), lang: str = Form("en")):
+    # a plain `def`: FastAPI runs it in a worker thread, so waiting for Gnani does not block the other requests
     provider = get_provider()
     if provider is None:
         raise HTTPException(501, "speech_not_configured")
-    data = await audio.read()
+    data = audio.file.read()
     if not data or len(data) > 5_000_000:
         raise HTTPException(400, "empty or too large recording (max 30 s)")
     try:

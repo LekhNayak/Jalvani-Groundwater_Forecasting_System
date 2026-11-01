@@ -58,6 +58,18 @@ def clean_actions(actions, role):
     return out[:3]
 
 
+_client = None
+
+
+def get_client() -> httpx.Client:
+    """One shared client: connections to Groq stay open between messages, so only the first one pays the secure-
+    connection set-up (a few hundred ms)."""
+    global _client
+    if _client is None:
+        _client = httpx.Client(timeout=20.0, limits=httpx.Limits(max_keepalive_connections=4, keepalive_expiry=120))
+    return _client
+
+
 def guide_reply(message, lang, role):
     text = f" {message.lower()} "
     best, best_score = None, 0
@@ -113,12 +125,12 @@ def groq_reply(req):
     keys = settings.groq_api_keys
     start = next(_next_key) % len(keys)            # round-robin spreads the load over the keys
     resp = None
-    with httpx.Client(timeout=20.0) as client:
-        for i in range(len(keys)):
-            key = keys[(start + i) % len(keys)]
-            resp = client.post(settings.groq_url, json=payload, headers={"Authorization": f"Bearer {key}"})
-            if resp.status_code not in RETRY_STATUS:
-                break
+    client = get_client()
+    for i in range(len(keys)):
+        key = keys[(start + i) % len(keys)]
+        resp = client.post(settings.groq_url, json=payload, headers={"Authorization": f"Bearer {key}"})
+        if resp.status_code not in RETRY_STATUS:
+            break
     resp.raise_for_status()
     content = resp.json()["choices"][0]["message"]["content"]
     try:
