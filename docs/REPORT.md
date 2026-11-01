@@ -1862,7 +1862,7 @@ The design follows Nielsen's heuristics, Shneiderman's rules, Norman's principle
   - It helps users navigate, teaches the site (guided tours, highlighting a card) and explains the numbers on screen.
   - It gives no farming, borewell or legal advice.
   - It works now as an offline three-language guide. With a Groq API key it becomes an LLM assistant under the same rules: answers only from the numbers on screen, with allowlisted actions (`dev/docs/CHATBOT.md`).
-- **Voice (Gnani Vachana STT/TTS).** It is implemented with one API key (`dev/docs/SPEECH_PLAN.md`): push-to-talk, a transcript to confirm, spoken replies with captions, and "Listen" on every card. A live Marathi round trip (text → speech → text) returned the sentence word for word, in about 0.9 s each way.
+- **Voice (Gnani Vachana STT/TTS).** It is implemented with one API key (`dev/docs/SPEECH_PLAN.md`): tap-to-talk with automatic stop when the user finishes speaking, the transcript shown as the user's message and answered at once (about 3 s after they stop talking), and "Listen" on every card. A live Marathi round trip (text → speech → text) returned the sentence word for word, in about 0.9 s each way.
 - **The Groq assistant was also tested live.** It answered in Marathi from the on-screen numbers only, and referred a borewell question in Hindi to officials. It rotates between several API keys.
 
 ### 13.5 Verification

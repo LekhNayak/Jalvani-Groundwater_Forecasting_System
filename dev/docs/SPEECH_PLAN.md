@@ -24,7 +24,10 @@ The original plan follows; the parts marked "fill in" are done.
 1. Tap 🎤. It turns red while recording; there is a consent notice the first time.
 2. Speak. Tap again to stop. The maximum is about 20 s.
 3. The audio goes to `POST /api/speech/stt` (`audio`, `lang`), then Gnani STT.
-4. The **text appears in the input box for the user to check**, then they tap Send. Voice never sends a message unseen.
+4. Recording **stops by itself** about 1.2 s after the user stops talking (voice-activity check on the microphone level; 7 s with no speech stops it with a "did not hear anything" message; 25 s is the hard limit). Tapping the mic again stops it early.
+5. The transcript is **sent to the guide at once and shown as the user's own message**, so nothing is sent unseen and the user can see what was understood. (Until 2026-11-01 the text waited in the input box for a Send tap; removing that extra step made voice about 1 s faster and hands-free.)
+
+**Where the time goes** (measured 2026-11-01, Marathi, one sentence): speech-to-text about 0.6 s + about 0.5 s of browser conversion; the chat model about 0.8 s. Most of the old delay was waiting for the user to tap stop (up to 25 s if forgotten) and tap Send, not the services. Hands-free, a reply arrives about 3 s after the user stops talking. The server reuses its connections to Gnani and Groq, and speech-to-text no longer blocks other requests.
 5. The reply is shown as text, always, and read aloud through `POST /api/speech/tts` (Gnani TTS) if the user has turned on "read replies".
 
 **Listen to a card:** "Listen" → `POST /api/speech/tts` with the card's summary text → audio plays → "Stop" ends it.
@@ -45,7 +48,7 @@ The original plan follows; the parts marked "fill in" are done.
 - **Endpoints:** `POST /api/speech/stt`, `POST /api/speech/tts`. Both answer 501 until configured. `/api/meta` reports `features.speech`.
 
 ## Frontend (built)
-- **Mic button** in `ChatWidget.tsx`: shown only when `features.speech` is true. It uses MediaRecorder, and the transcript fills the input box.
+- **Mic button** in `ChatWidget.tsx`: shown only when `features.speech` is true and the language is in `features.speech_languages`. It uses MediaRecorder with silence detection, shows "Listening…" and "Understanding…", and sends the transcript to the guide.
 - **`ListenButton.tsx`:** uses Gnani TTS when configured. Otherwise it uses the browser's `speechSynthesis` if the device has a voice for the language; otherwise it is hidden. Marathi voices are often missing on PCs, which is why Gnani matters.
 
 ## Design decisions to confirm with Gnani's docs
