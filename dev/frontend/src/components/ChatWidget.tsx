@@ -23,9 +23,16 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [stage, setStage] = useState<"" | "thinking" | "understanding">("");
+  const [heard, setHeard] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [msgs, open]);
+  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight }); }, [msgs, open, stage]);
+  // a transcript from the microphone is sent at once (it shows as the user's message), using the freshest state
+  useEffect(() => {
+    if (heard !== null && !busy) { const m = heard; setHeard(null); void send(m); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heard, busy]);
 
   function run(actions: ChatAction[] | undefined) {
     for (const a of actions ?? []) {
@@ -41,6 +48,7 @@ export default function ChatWidget() {
     setMsgs((m) => [...m, { role: "user", content: message }]);
     setText("");
     setBusy(true);
+    setStage("thinking");
     try {
       const r = await api.chat({ message, lang: i18n.language, role: role ?? "farmer", page: loc.pathname,
                                  district: slug, visible_context: visible, history });
@@ -51,33 +59,66 @@ export default function ChatWidget() {
       setMsgs((m) => [...m, { role: "assistant", content: t("chat.error") }]);
     } finally {
       setBusy(false);
+      setStage("");
     }
   }
 
-  /** push-to-talk: record (auto-stop at 25 s; Gnani accepts up to 30 s), convert to 16 kHz WAV, send to
-   *  /api/speech/stt (Gnani); the text lands in the input box for the user to check, then Send */
+  /** Tap the mic and speak. Recording stops by itself about 1.2 s after you stop talking (or after 25 s, Gnani takes
+   *  up to 30 s; or after 7 s of silence), is converted to 16 kHz WAV and sent to /api/speech/stt (Gnani). The transcript
+   *  is sent to the guide straight away and appears as your message, so nothing is sent unseen. Tapping the mic again
+   *  stops it early. */
   async function toggleMic() {
     if (recording) { recorder.current?.stop(); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const chunks: Blob[] = [];
       const rec = new MediaRecorder(stream);
+      const ac = new AudioContext();
+      const analyser = ac.createAnalyser();
+      analyser.fftSize = 1024;
+      ac.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Float32Array(analyser.fftSize);
+      const startedAt = performance.now();
+      let lastVoice = 0, spoke = false, floor = 0.004, n = 0;
+      // voice activity: loudness (RMS) clearly above the room's noise, measured over the first 0.4 s
+      const watch = setInterval(() => {
+        analyser.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let k = 0; k < buf.length; k++) sum += buf[k] * buf[k];
+        const rms = Math.sqrt(sum / buf.length), now = performance.now();
+        if (now - startedAt < 400) { floor = Math.max(floor, rms); n++; return; }
+        if (rms > Math.max(0.015, floor * 2.5)) { spoke = true; lastVoice = now; }
+        if (spoke && now - lastVoice > 1200) rec.state === "recording" && rec.stop();
+        else if (!spoke && now - startedAt > 7000) rec.state === "recording" && rec.stop();
+      }, 100);
       rec.ondataavailable = (e) => chunks.push(e.data);
       rec.onstop = async () => {
+        clearInterval(watch); clearTimeout(limit);
         stream.getTracks().forEach((tr) => tr.stop());
-        clearTimeout(limit);
+        void ac.close();
         setRecording(false);
+        if (!spoke) {
+          setMsgs((m) => [...m, { role: "assistant", content: t("chat.no_speech") }]);
+          return;
+        }
         setBusy(true);
+        setStage("understanding");
+        let said = "";
         try {
           const fd = new FormData();
           fd.append("audio", await toWav16k(new Blob(chunks, { type: rec.mimeType })), "speech.wav");
           fd.append("lang", i18n.language);
           const r = await fetch("/api/speech/stt", { method: "POST", body: fd });
-          if (r.ok) { const { text: heard } = await r.json(); setText(heard); }
+          if (r.ok) said = ((await r.json()).text ?? "").trim();
           else setMsgs((m) => [...m, { role: "assistant", content: t("chat.error") }]);
+        } catch {
+          setMsgs((m) => [...m, { role: "assistant", content: t("chat.error") }]);
         } finally {
           setBusy(false);
+          setStage("");
         }
+        if (said) setHeard(said);
+        else if (said === "") setMsgs((m) => (m[m.length - 1]?.content === t("chat.error") ? m : [...m, { role: "assistant", content: t("chat.no_speech") }]));
       };
       const limit = setTimeout(() => rec.state === "recording" && rec.stop(), 25000);
       recorder.current = rec;
@@ -129,7 +170,8 @@ export default function ChatWidget() {
                 ))}
               </div>
             ))}
-            {busy && <p className="text-muted">…</p>}
+            {recording && <p className="text-muted flex items-center gap-2"><span className="inline-block h-2 w-2 rounded-full bg-[var(--status-serious)] animate-pulse" aria-hidden="true" />{t("chat.listening")}</p>}
+            {busy && <p className="text-muted">{stage === "understanding" ? t("chat.understanding") : "…"}</p>}
           </div>
           <div className="px-4 pb-2 flex flex-wrap gap-2">
             {suggestions.map((k) => (

@@ -358,7 +358,9 @@
       "map": "How do I use the map?",
       "needs": "What data is missing?",
       "tour": "Take a tour"
-    }
+    },
+    "understanding": "Understanding…",
+    "no_speech": "I did not hear anything. Tap the microphone and speak after it starts listening."
   },
   "tour": {
     "farmer": {
