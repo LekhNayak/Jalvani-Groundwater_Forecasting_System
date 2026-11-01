@@ -30,7 +30,22 @@ The original plan follows; the parts marked "fill in" are done.
 **Where the time goes** (measured 2026-11-01, Marathi, one sentence): speech-to-text about 0.6 s + about 0.5 s of browser conversion; the chat model about 0.8 s. Most of the old delay was waiting for the user to tap stop (up to 25 s if forgotten) and tap Send, not the services. Hands-free, a reply arrives about 3 s after the user stops talking. The server reuses its connections to Gnani and Groq, and speech-to-text no longer blocks other requests.
 5. The reply is shown as text, always, and read aloud through `POST /api/speech/tts` (Gnani TTS) if the user has turned on "read replies".
 
-**Listen to a card:** "Listen" → `POST /api/speech/tts` with the card's summary text → audio plays → "Stop" ends it.
+**Listen to a card:** "Listen" → the card's text is split into short pieces (`src/lib/speech.ts`, first piece about 55 characters) → each piece goes to `POST /api/speech/tts` in order → the first piece plays while the next is made → "Stop" ends it.
+
+**Why it is built this way** (measured 2026-11-01, Marathi). Text-to-speech time grows with length: the water card took about 2.2 s and the forecast card about 5.4 s, all of it before any sound. Gnani allows **one active request per account** (`429 RATE_LIMITED`, "Only 1 active request is allowed"), so pieces cannot be fetched in parallel. What works:
+- **Short first piece:** sound starts after about 1.2 s instead of 5.4 s, and the next piece is ready before the first finishes playing.
+- **Clips are cached.** The same text, language, voice and sample rate always gives the same clip. The server keeps clips in memory and in `dev/backend/.cache/tts/` (git-ignored, safe to delete); the browser keeps them for the tab. A card read once is instant (0.09 s) for everyone afterwards.
+- **Warm-up on intent:** hovering, focusing or touching the button makes the first piece in advance (0.04 s to sound).
+- **A queue on the server:** every Gnani call waits its turn, and a call that still gets a 429 is retried up to 4 times, so two quick clicks, or a click during a voice question, do not fail.
+- **16 kHz audio** (`GNANI_TTS_SAMPLE_RATE`): about 25% faster to make and a third smaller than 24 kHz.
+- If the voice service fails, the rest of the card is read by the device's own voice, if it has one.
+
+| Forecast card, Marathi | Time to first sound |
+|---|---|
+| before | about 5.5 s |
+| first listen now | 1.4 s |
+| heard before | 0.09 s |
+| after hovering | 0.04 s |
 
 ## Backend (built; fill in the Gnani details)
 - **`backend/app/services/speech/base.py`:** `SpeechProvider` with `transcribe(audio, mime, lang) -> text` and `synthesize(text, lang) -> (bytes, mime)`.
@@ -49,7 +64,7 @@ The original plan follows; the parts marked "fill in" are done.
 
 ## Frontend (built)
 - **Mic button** in `ChatWidget.tsx`: shown only when `features.speech` is true and the language is in `features.speech_languages`. It uses MediaRecorder with silence detection, shows "Listening…" and "Understanding…", and sends the transcript to the guide.
-- **`ListenButton.tsx`:** uses Gnani TTS when configured. Otherwise it uses the browser's `speechSynthesis` if the device has a voice for the language; otherwise it is hidden. Marathi voices are often missing on PCs, which is why Gnani matters.
+- **`ListenButton.tsx`:** uses Gnani TTS when configured (in pieces, cached, see above). Otherwise it uses the browser's `speechSynthesis` if the device has a voice for the language; otherwise it is hidden. Marathi voices are often missing on PCs, which is why Gnani matters.
 
 ## Design decisions to confirm with Gnani's docs
 | Topic | Plan |
