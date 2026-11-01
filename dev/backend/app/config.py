@@ -40,6 +40,9 @@ class Settings:
     gnani_tts_voice_hi: str = env("GNANI_TTS_VOICE_HI")
     gnani_tts_voice_en: str = env("GNANI_TTS_VOICE_EN")
     gnani_tts_voice_gu: str = env("GNANI_TTS_VOICE_GU")
+    # 16 kHz is plenty for speech: about 25% faster to make and a third smaller than 24 kHz
+    gnani_tts_sample_rate: int = int(env("GNANI_TTS_SAMPLE_RATE", "16000"))
+    tts_cache_dir: Path = Path(env("TTS_CACHE_DIR", str(BACKEND / ".cache" / "tts")))
     # site languages (must match frontend src/lib/langs.ts); voice checked live for all four (Gujarati round trip 2026-11-01)
     languages: tuple = ("en", "mr", "hi", "gu")
     speech_languages: tuple = ("en", "mr", "hi", "gu")

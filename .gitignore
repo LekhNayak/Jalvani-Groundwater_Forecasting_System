@@ -95,3 +95,6 @@ temp_data/
 # -----------------------------
 04_results/zips/*.zip
 *.zip
+
+# generated speech clips (dev/backend/app/services/speech/gnani.py)
+dev/backend/.cache/

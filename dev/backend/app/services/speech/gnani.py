@@ -10,6 +10,10 @@ From Gnani's API quick start (https://docs.gnani.ai/api/introduction/quick-start
 The browser sends WAV (converted from its recording in src/lib/wav.ts), so no server-side audio conversion is needed.
 Endpoints, models and voices can be overridden in dev/backend/.env (GNANI_* in .env.example).
 """
+import hashlib
+import threading
+import time
+
 import httpx
 
 from ...config import settings
@@ -23,7 +27,21 @@ class GnaniError(RuntimeError):
     pass
 
 
+# Gnani allows ONE active request per account ("Only 1 active request is allowed", HTTP 429), so every call waits its
+# turn here, and a call that still meets a 429 (another process, another user) is retried a few times.
+_lock = threading.Lock()
+RETRIES = 4
+_clips: dict[str, bytes] = {}     # clips already made, newest last (also on disk, see settings.tts_cache_dir)
+MAX_CLIPS_IN_MEMORY = 200
 _client = None
+
+
+def _post(*args, **kwargs):
+    for attempt in range(RETRIES):
+        r = _http().post(*args, **kwargs)
+        if r.status_code != 429 or attempt == RETRIES - 1:
+            return r
+        time.sleep(0.6 * (attempt + 1))
 
 
 def _http() -> httpx.Client:
@@ -48,8 +66,9 @@ class GnaniProvider(SpeechProvider):
         data = {"language_code": LANG_CODES.get(lang, "en-IN")}
         if settings.gnani_stt_model:
             data["model"] = settings.gnani_stt_model
-        r = _http().post(settings.gnani_stt_url, headers=self.headers, data=data,
-                         files={"audio_file": (f"speech.{ext}", audio, mime.split(";")[0] or "audio/wav")})
+        with _lock:
+            r = _post(settings.gnani_stt_url, headers=self.headers, data=data,
+                      files={"audio_file": (f"speech.{ext}", audio, mime.split(";")[0] or "audio/wav")})
         if r.status_code != 200:
             raise GnaniError(f"STT HTTP {r.status_code}: {r.text[:200]}")
         body = r.json()
@@ -58,16 +77,50 @@ class GnaniProvider(SpeechProvider):
         return str(body.get("transcript", "")).strip()
 
     def synthesize(self, text: str, lang: str) -> tuple[bytes, str]:
+        """Text -> WAV. The same text in the same language and voice always gives the same clip, so clips are kept
+        (in memory and on disk): a card read once is instant for everyone afterwards."""
         voice = {"mr": settings.gnani_tts_voice_mr, "hi": settings.gnani_tts_voice_hi, "en": settings.gnani_tts_voice_en,
                  "gu": settings.gnani_tts_voice_gu}.get(lang) or settings.gnani_tts_voice
+        rate = settings.gnani_tts_sample_rate
+        key = hashlib.sha256("|".join([text, LANG_CODES.get(lang, "en-IN"), voice, settings.gnani_tts_model, str(rate)]).encode()).hexdigest()
+        clip = self._cached(key)
+        if clip is not None:
+            return clip, "audio/wav"
         payload = {"text": text, "voice": voice, "model": settings.gnani_tts_model,
                    "language": LANG_CODES.get(lang, "en-IN"), "speed": 1.0,
-                   "audio_config": {"sample_rate": 24000, "num_channels": 1, "sample_width": 2,
+                   "audio_config": {"sample_rate": rate, "num_channels": 1, "sample_width": 2,
                                     "encoding": "linear_pcm", "container": "wav"}}
-        r = _http().post(settings.gnani_tts_url, headers={**self.headers, "Content-Type": "application/json"}, json=payload)
+        with _lock:
+            clip = self._cached(key)             # another request may have made it while this one waited
+            if clip is not None:
+                return clip, "audio/wav"
+            r = _post(settings.gnani_tts_url, headers={**self.headers, "Content-Type": "application/json"}, json=payload)
         if r.status_code != 200 or not r.content:
             raise GnaniError(f"TTS HTTP {r.status_code}: {r.text[:200]}")
+        self._store(key, r.content)
         return r.content, r.headers.get("content-type", "audio/wav").split(";")[0]
+
+    def _cached(self, key: str) -> bytes | None:
+        if key in _clips:
+            return _clips[key]
+        f = settings.tts_cache_dir / f"{key}.wav"
+        try:
+            if f.exists():
+                _clips[key] = f.read_bytes()
+                return _clips[key]
+        except OSError:
+            pass
+        return None
+
+    def _store(self, key: str, clip: bytes):
+        _clips[key] = clip
+        while len(_clips) > MAX_CLIPS_IN_MEMORY:
+            _clips.pop(next(iter(_clips)))
+        try:
+            settings.tts_cache_dir.mkdir(parents=True, exist_ok=True)
+            (settings.tts_cache_dir / f"{key}.wav").write_bytes(clip)
+        except OSError:
+            pass                                   # a read-only disk only costs the speed-up
 
 
 def get_provider():

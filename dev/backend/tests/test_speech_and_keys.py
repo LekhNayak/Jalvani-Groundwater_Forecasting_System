@@ -90,3 +90,39 @@ def test_speech_endpoints_with_a_fake_provider(monkeypatch):
     r = client.post("/api/speech/tts", json={"text": "hello", "lang": "en"})
     assert r.status_code == 200 and r.headers["content-type"] == "audio/wav"
     assert client.get("/api/meta").json()["features"]["speech"] is True
+
+
+def test_tts_clip_is_made_once_then_served_from_the_cache(monkeypatch):
+    calls = []
+
+    def fake_post(url, headers=None, data=None, files=None, json=None, timeout=None):
+        calls.append(json["text"])
+        return FakeResp(200, content=b"RIFF" + json["text"].encode(), headers={"content-type": "audio/wav"})
+
+    monkeypatch.setattr(gnani, "settings", replace(gnani.settings, gnani_api_key="k"))
+    monkeypatch.setattr(gnani, "_http", lambda: types.SimpleNamespace(post=fake_post))
+    p = gnani.GnaniProvider()
+    a1, _ = p.synthesize("पाणी वर येण्याची शक्यता", "mr")
+    a2, _ = p.synthesize("पाणी वर येण्याची शक्यता", "mr")
+    assert a1 == a2 and calls == ["पाणी वर येण्याची शक्यता"]           # second call: no request
+    gnani._clips.clear()                                                    # a restart: the disk copy is used
+    assert p.synthesize("पाणी वर येण्याची शक्यता", "mr")[0] == a1 and len(calls) == 1
+    p.synthesize("पाणी वर येण्याची शक्यता", "hi")                            # another language is another clip
+    p.synthesize("पाणी खाली जाण्याची शक्यता", "mr")
+    assert len(calls) == 3
+    assert gnani.settings.tts_cache_dir.exists() and len(list(gnani.settings.tts_cache_dir.glob("*.wav"))) == 3
+
+
+def test_tts_retries_when_the_service_says_busy(monkeypatch):
+    seen = []
+
+    def fake_post(url, headers=None, data=None, files=None, json=None, timeout=None):
+        seen.append(1)
+        if len(seen) < 3:
+            return FakeResp(429, {"detail": {"error_code": "RATE_LIMITED"}})
+        return FakeResp(200, content=b"RIFFok", headers={"content-type": "audio/wav"})
+
+    monkeypatch.setattr(gnani, "settings", replace(gnani.settings, gnani_api_key="k"))
+    monkeypatch.setattr(gnani, "_http", lambda: types.SimpleNamespace(post=fake_post))
+    monkeypatch.setattr(gnani.time, "sleep", lambda s: None)
+    assert gnani.GnaniProvider().synthesize("नमस्कार", "mr")[0] == b"RIFFok" and len(seen) == 3
